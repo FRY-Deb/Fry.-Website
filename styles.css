@@ -360,7 +360,11 @@ ul { list-style: none; padding: 0; }
 /* --- Marquee --- */
 .marquee-section { border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 22px 0; overflow: hidden; }
 .marquee { overflow: hidden; position: relative; }
-.marquee-track { display: inline-flex; gap: 3rem; white-space: nowrap; will-change: transform; }
+.marquee-track {
+  display: flex; flex-wrap: nowrap;
+  gap: 3rem; width: max-content; white-space: nowrap;
+  animation: marquee-scroll 22s linear infinite;
+}
 .marquee-track span {
   font-family: var(--display);
   font-size: clamp(28px, 5vw, 48px);
@@ -368,6 +372,10 @@ ul { list-style: none; padding: 0; }
   color: var(--cream-mute);
 }
 .marquee-track span.accent { color: var(--red); }
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
 
 /* --- Manifesto / grid section --- */
 .manifesto { padding: 100px 0; border-bottom: 1px solid var(--line); }

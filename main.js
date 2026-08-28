@@ -124,30 +124,7 @@
     $$("a", panel).forEach(a => a.addEventListener("click", close));
   }
 
-  // ---------------------------------------------------------------
-  // Marquee ticker (uses GSAP if available; otherwise stays static)
-  // ---------------------------------------------------------------
-  function initMarquee() {
-    if (!window.gsap) return;
-    $$("[data-marquee]").forEach(track => {
-      if (track.dataset.bound) return;
-      track.dataset.bound = "1";
-      const clone = track.cloneNode(true);
-      clone.removeAttribute("data-marquee");
-      clone.removeAttribute("aria-hidden");
-      track.setAttribute("aria-hidden", "true");
-      track.parentNode.appendChild(clone);
-      const distance = track.scrollWidth;
-      const speed = 55;
-      gsap.to([track, clone], {
-        x: -distance,
-        duration: distance / speed,
-        ease: "none",
-        repeat: -1,
-        modifiers: { x: gsap.utils.unitize(x => parseFloat(x) % distance) },
-      });
-    });
-  }
+  // (Marquesina: ahora se anima solo con CSS — @keyframes marquee-scroll en styles.css)
 
   // (Animación del hero: gestionada por intro.js — ver ese archivo)
 
@@ -186,7 +163,6 @@
     safe(initReveals, "initReveals");
     safe(initNavScroll, "initNavScroll");
     safe(initMobileNav, "initMobileNav");
-    safe(initMarquee, "initMarquee");
     safe(initCursor, "initCursor");
     document.documentElement.classList.add("is-ready");
   }
