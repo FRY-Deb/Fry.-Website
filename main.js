@@ -1,94 +1,175 @@
 (function () {
   "use strict";
 
-  window.__BRAND__ = {
-    name: "FRY.",
-    tagline: "HOT. CRISPY. LOUD.",
-    manifesto: "FRY. es actitud. Es sabor sin filtros. Es crujiente, picante y real. No pedimos permiso. Solo freímos. Y lo hacemos bien.",
-    est: "2026",
-    zone: "Villaverde, Madrid",
+  const data = window.__BRAND__ || {};
+  const $ = (sel, scope) => (scope || document).querySelector(sel);
+  const $$ = (sel, scope) => Array.from((scope || document).querySelectorAll(sel));
+  const fineHover = matchMedia("(hover: hover) and (pointer: fine)").matches;
 
-    whatsapp: "34669765785",
-    whatsappMessage: "Hola! Quiero hacer un pedido en FRY.",
+  function safe(fn, name) {
+    try { fn(); } catch (e) { console.warn("[" + name + "] failed:", e); }
+  }
 
-    delivery: {
-      mode: "Únicamente a domicilio",
-      villaverde: "2€",
-      fuera: "Fuera de zona: consultar con el local",
-    },
+  // ---------------------------------------------------------------
+  // Mount: WhatsApp links + delivery/social data from manifest
+  // ---------------------------------------------------------------
+  function mountBrandLinks() {
+    if (!data.whatsapp) return;
+    const msg = encodeURIComponent(data.whatsappMessage || "Hola!");
+    const href = "https://wa.me/" + data.whatsapp + "?text=" + msg;
+    $$("[data-whatsapp-link]").forEach(el => {
+      if (el.dataset.bound) return;
+      el.dataset.bound = "1";
+      el.setAttribute("href", href);
+    });
+    $$("[data-instagram-link]").forEach(el => { el.setAttribute("href", data.social?.instagram || "#"); });
+    $$("[data-tiktok-link]").forEach(el => { el.setAttribute("href", data.social?.tiktok || "#"); });
+  }
 
-    social: {
-      instagram: "https://www.instagram.com/fry_group?igsi=azF1aW1yaThhMm9q&utm_source=qr",
-      tiktok: "#", // TODO: enlace real de TikTok
-    },
+  // ---------------------------------------------------------------
+  // Mount: full menu (carta.html) — only fills if container is empty
+  // ---------------------------------------------------------------
+  function mountMenu() {
+    const target = $("[data-menu-categories]");
+    if (!target || target.children.length > 0 || !data.categories) return;
+    target.innerHTML = data.categories.map(cat => `
+      <div class="menu-category" data-reveal>
+        <div class="menu-category-head">
+          <h3 class="menu-category-label">${escHTML(cat.label)}</h3>
+        </div>
+        ${cat.note ? `<p class="menu-category-note">${escHTML(cat.note)}</p>` : ""}
+        <div>
+          ${cat.items.map(item => `
+            <div class="menu-card">
+              <span class="menu-card-name">${escHTML(item.name)}</span>
+              <span class="menu-card-price">${escHTML(item.price)}</span>
+              ${item.desc ? `<span class="menu-card-desc">${escHTML(item.desc)}</span>` : ""}
+              ${item.highlight ? `<span class="menu-card-badge">Más pedido</span>` : ""}
+              ${item.promo ? `<span class="menu-card-badge">Promo</span>` : ""}
+            </div>
+          `).join("")}
+        </div>
+        ${cat.upcoming ? `<div class="menu-upcoming"><strong>Próximamente:</strong> ${cat.upcoming.map(escHTML).join(" · ")}</div>` : ""}
+      </div>
+    `).join("");
+  }
 
-    categories: [
-      {
-        id: "piezas",
-        label: "Piezas de Pollo",
-        note: "Pechuga entera marinada en buttermilk, doble rebozado bien picante.",
-        items: [
-          { name: "Pechuga Entera", desc: "220 g de pechuga, rebozado crujiente, glaseado picante de la casa.", price: "8,50€" },
-          { name: "Menú 2 Piezas", desc: "2 pechugas enteras + patatas fritas + bebida.", price: "13,50€", highlight: true },
-          { name: "Menú 3 Piezas", desc: "3 pechugas enteras + patatas fritas + bebida.", price: "17,50€" },
-        ],
-      },
-      {
-        id: "tiras",
-        label: "Tiras Grandes",
-        note: "Muslo deshuesado, doble rebozado, cortado en tiras grandes.",
-        items: [
-          { name: "Ración 4 Tiras", desc: "4 tiras grandes de pollo, rebozado crujiente y picante.", price: "7,50€" },
-          { name: "Menú 2 Tiras", desc: "2 tiras + patatas fritas + bebida.", price: "6,50€" },
-          { name: "Menú 3 Tiras", desc: "3 tiras + patatas fritas + bebida.", price: "7,50€" },
-          { name: "Menú 4 Tiras", desc: "4 tiras + patatas fritas + bebida.", price: "8,50€", highlight: true },
-        ],
-      },
-      {
-        id: "hamburguesas",
-        label: "Hamburguesas",
-        note: "Filete de muslo entero rebozado, sin picar. Brioche, pepinillos, salsa FRY.",
-        items: [
-          { name: "Hamburguesa FRY.", desc: "Filete de muslo rebozado, pepinillos agridulces, salsa FRY, brioche.", price: "8,00€" },
-          { name: "Combo 2 Hamburguesas", desc: "2 hamburguesas + 2 patatas + 2 bebidas + cubo de salsa FRY. ¡GRATIS! (aquí está la promo)", price: "24,00€", promo: true },
-        ],
-      },
-      {
-        id: "guarniciones",
-        label: "Guarniciones",
-        items: [
-          { name: "Patatas Fritas", desc: "Sazón propio, distinto al del pollo.", price: "3,40€" },
-          { name: "CHEESE. FRY.", desc: "Bolitas de queso fundente, con el mismo rebozado crujiente del pollo. 4 unidades.", price: "4,50€" },
-          { name: "CHEESE. FRY. (7 uds)", desc: "Bolitas de queso fundente, con el mismo rebozado crujiente del pollo. 7 unidades.", price: "6,90€" },
-          { name: "Mazorca FRY.", desc: "Mazorca bañada en mantequilla y un cajun intenso de la casa.", price: "3,50€" },
-        ],
-      },
-      {
-        id: "salsas",
-        label: "Salsas Extra",
-        note: "Tarrinas individuales, listas para mojar o echar por encima.",
-        items: [
-          { name: "Cubo de Salsa FRY.", desc: "Cremosa, con paprika, mostaza y un toque de miel. 227 g, cubo grande para sumergir la pieza entera.", price: "3,95€" },
-          { name: "Tarrina de Salsa Bourbon", desc: "40 g. Glaseado dulce y ahumado con bourbon real, sirope de arce puro y un fondo de mostaza y soja.", price: "1,90€" },
-          { name: "Tarrina de Salsa Sweet Chilli", desc: "40 g. Guindilla fresca y ajo salteado, dulce con un toque picante de fondo.", price: "1,00€" },
-          { name: "Tarrina de Salsa Habanero Mango", desc: "40 g. Mango fresco y habanero, picante afrutado y con punch.", price: "1,20€" },
-        ],
-      },
-      {
-        id: "bebidas",
-        label: "Bebidas",
-        note: "Solo en botella — no servimos de grifo.",
-        items: [
-          { name: "Refrescos 500ml", desc: "Coca-Cola, Coca-Cola Zero, Fanta Naranja, Aquarius Limón o Nestea, a elegir.", price: "2,90€" },
-          { name: "Agua Embotellada", desc: "500 ml.", price: "1,20€" },
-        ],
-      },
-    ],
+  function mountCombos() {
+    const target = $("[data-combos]");
+    if (!target || target.children.length > 0 || !data.combos) return;
+    target.innerHTML = data.combos.map(c => `
+      <a class="combo-card" href="carta.html" data-reveal>
+        <span class="combo-card-name">${escHTML(c.name)}</span>
+        <span class="combo-card-price">${escHTML(c.price)}</span>
+        <span class="combo-card-tag">${escHTML(c.tag)}</span>
+      </a>
+    `).join("");
+  }
 
-    combos: [
-      { name: "Combo 2 Hamburguesas", price: "24€", tag: "+ cubo de salsa FRY. ¡GRATIS!" },
-      { name: "Menú 2 Piezas", price: "13,50€", tag: "pechuga entera x2 + patatas + bebida" },
-      { name: "Menú 4 Tiras", price: "8,50€", tag: "tiras grandes x4 + patatas + bebida" },
-    ],
-  };
+  function escHTML(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, c =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+  }
+
+  // ---------------------------------------------------------------
+  // Reveal on scroll
+  // ---------------------------------------------------------------
+  function initReveals() {
+    const els = $$("[data-reveal]");
+    if (!els.length) return;
+    const io = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add("is-revealed");
+          io.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.01, rootMargin: "0px 0px -2% 0px" });
+    els.forEach(el => io.observe(el));
+
+    setTimeout(() => {
+      $$("[data-reveal]:not(.is-revealed)").forEach(el => {
+        if (el.getBoundingClientRect().top < window.innerHeight) el.classList.add("is-revealed");
+      });
+    }, 6000);
+  }
+
+  // ---------------------------------------------------------------
+  // Sticky nav — transparent -> solid on scroll
+  // ---------------------------------------------------------------
+  function initNavScroll() {
+    const nav = $(".nav");
+    if (!nav) return;
+    const onScroll = () => {
+      if (window.scrollY > 30) nav.classList.add("is-solid");
+      else nav.classList.remove("is-solid");
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+  }
+
+  // ---------------------------------------------------------------
+  // Mobile fullscreen nav
+  // ---------------------------------------------------------------
+  function initMobileNav() {
+    const burger = $("[data-nav-burger]");
+    const panel = $("[data-nav-mobile]");
+    if (!burger || !panel) return;
+    const close = () => { burger.setAttribute("aria-expanded", "false"); panel.setAttribute("aria-hidden", "true"); };
+    const open = () => { burger.setAttribute("aria-expanded", "true"); panel.setAttribute("aria-hidden", "false"); };
+    burger.addEventListener("click", () => {
+      const expanded = burger.getAttribute("aria-expanded") === "true";
+      expanded ? close() : open();
+    });
+    $$("a", panel).forEach(a => a.addEventListener("click", close));
+  }
+
+  // (Marquesina: ahora se anima solo con CSS — @keyframes marquee-scroll en styles.css)
+
+  // (Animación del hero: gestionada por intro.js — ver ese archivo)
+
+  // ---------------------------------------------------------------
+  // Custom cursor dot (desktop, fine pointer only)
+  // ---------------------------------------------------------------
+  function initCursor() {
+    if (!fineHover) return;
+    const dot = document.createElement("div");
+    dot.className = "cursor-dot";
+    dot.setAttribute("aria-hidden", "true");
+    document.body.appendChild(dot);
+
+    let ready = false;
+    window.addEventListener("mousemove", e => {
+      dot.style.transform = `translate3d(${e.clientX}px, ${e.clientY}px, 0)`;
+      if (!ready) { ready = true; dot.classList.add("is-ready"); }
+    });
+
+    const hoverables = "a, button, .menu-card, .combo-card";
+    document.addEventListener("mouseover", e => {
+      if (e.target.closest(hoverables)) dot.classList.add("is-hover");
+    });
+    document.addEventListener("mouseout", e => {
+      if (e.target.closest(hoverables) && !e.relatedTarget?.closest?.(hoverables)) dot.classList.remove("is-hover");
+    });
+  }
+
+  // ---------------------------------------------------------------
+  // Boot
+  // ---------------------------------------------------------------
+  function boot() {
+    safe(mountBrandLinks, "mountBrandLinks");
+    safe(mountMenu, "mountMenu");
+    safe(mountCombos, "mountCombos");
+    safe(initReveals, "initReveals");
+    safe(initNavScroll, "initNavScroll");
+    safe(initMobileNav, "initMobileNav");
+    safe(initCursor, "initCursor");
+    document.documentElement.classList.add("is-ready");
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", boot);
+  } else {
+    boot();
+  }
 })();
