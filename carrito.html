@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260904" />
+<link rel="stylesheet" href="styles.css?v=20260905" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -73,9 +73,45 @@
         <p class="cart-shipping-hint" data-shipping-hint style="display:none;">Fuera de nuestro radio habitual de reparto — te confirmamos el envío por WhatsApp antes de cerrar el pedido.</p>
       </div>
 
+      <div class="cart-extra-field">
+        <span class="cart-shipping-label">Tiempo estimado de entrega</span>
+        <p class="cart-time-estimate" data-time-estimate>Elige tu zona para verlo</p>
+      </div>
+
+      <div class="cart-extra-field">
+        <span class="cart-shipping-label">¿Cuándo lo quieres?</span>
+        <div class="cart-schedule-options">
+          <label><input type="radio" name="scheduleType" value="now" checked data-schedule-radio> Lo antes posible</label>
+          <label><input type="radio" name="scheduleType" value="later" data-schedule-radio> Programar para más tarde</label>
+        </div>
+        <input type="time" class="cart-schedule-time" data-schedule-time style="display:none;" />
+      </div>
+
+      <div class="cart-extra-field">
+        <label for="paymentMethod" class="cart-shipping-label">Método de pago</label>
+        <select id="paymentMethod" data-payment-select>
+          <option value="Efectivo">Efectivo al recibir</option>
+          <option value="Bizum">Bizum</option>
+          <option value="Tarjeta">Tarjeta al recibir</option>
+        </select>
+      </div>
+
+      <div class="cart-extra-field">
+        <label for="discountCode" class="cart-shipping-label">Código de descuento</label>
+        <div class="cart-discount-row">
+          <input type="text" id="discountCode" data-discount-input placeholder="Ej: FRY.OPENING" />
+          <button type="button" class="cart-discount-btn" data-discount-apply>Aplicar</button>
+        </div>
+        <p class="cart-discount-msg" data-discount-msg></p>
+      </div>
+
       <div class="cart-total-row cart-total-row-sub">
         <span class="cart-total-label cart-total-label-sub">Subtotal</span>
         <span class="cart-total-sub" data-cart-subtotal>0,00€</span>
+      </div>
+      <div class="cart-total-row cart-total-row-sub" data-discount-row style="display:none;">
+        <span class="cart-total-label cart-total-label-sub">Descuento (FRY.OPENING)</span>
+        <span class="cart-total-sub" data-cart-discount>-0,00€</span>
       </div>
       <div class="cart-total-row cart-total-row-sub">
         <span class="cart-total-label cart-total-label-sub">Envío</span>
@@ -126,7 +162,7 @@
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
 <script defer src="lib/manifest.js"></script>
-<script defer src="main.js?v=20260904"></script>
-<script defer src="cart.js?v=20260904"></script>
+<script defer src="main.js?v=20260905"></script>
+<script defer src="cart.js?v=20260905"></script>
 </body>
 </html>

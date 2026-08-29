@@ -3,8 +3,31 @@
 
   var CART_KEY = "fryCart";
   var SHIPPING_KEY = "fryShipping";
+  var PAYMENT_KEY = "fryPayment";
+  var SCHEDULE_TYPE_KEY = "fryScheduleType";
+  var SCHEDULE_TIME_KEY = "fryScheduleTime";
+  var DISCOUNT_KEY = "fryDiscountApplied";
   var WHATSAPP_NUMBER = "34669765785"; // debe coincidir con lib/manifest.js
   var DEFAULT_SHIPPING = ""; // "" = todavía no ha elegido zona (obligatorio antes de pedir)
+  var DEFAULT_PAYMENT = "Efectivo";
+
+  var DISCOUNT_CODE = "FRY.OPENING";
+  var DISCOUNT_RATE = 0.10; // 10% sobre el subtotal de productos (no sobre el envío)
+
+  // Tiempo estimado de entrega por zona: cocina (15 min) + reparto real,
+  // con un mínimo de 30 min incluso en la zona más cercana.
+  var TIME_ESTIMATES = {
+    "Villaverde": "30-40 min",
+    "Puente de Vallecas": "35-45 min",
+    "Usera": "35-45 min",
+    "Getafe": "35-45 min",
+    "Villa de Vallecas": "35-45 min",
+    "Arganzuela": "40-50 min",
+    "Carabanchel": "40-50 min",
+    "Leganés": "40-50 min",
+    "Moratalaz": "40-50 min",
+    "Fuera de estas zonas": "A confirmar por WhatsApp"
+  };
 
   function escHTML(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -102,6 +125,54 @@
     return { zone: zone, cost: cost };
   }
 
+  function getPaymentMethod() {
+    try {
+      return localStorage.getItem(PAYMENT_KEY) || DEFAULT_PAYMENT;
+    } catch (e) {
+      return DEFAULT_PAYMENT;
+    }
+  }
+
+  function savePaymentMethod(value) {
+    try { localStorage.setItem(PAYMENT_KEY, value); } catch (e) { /* sin persistencia */ }
+  }
+
+  function getScheduleType() {
+    try {
+      return localStorage.getItem(SCHEDULE_TYPE_KEY) || "now";
+    } catch (e) {
+      return "now";
+    }
+  }
+
+  function saveScheduleType(value) {
+    try { localStorage.setItem(SCHEDULE_TYPE_KEY, value); } catch (e) { /* sin persistencia */ }
+  }
+
+  function getScheduleTime() {
+    try {
+      return localStorage.getItem(SCHEDULE_TIME_KEY) || "";
+    } catch (e) {
+      return "";
+    }
+  }
+
+  function saveScheduleTime(value) {
+    try { localStorage.setItem(SCHEDULE_TIME_KEY, value); } catch (e) { /* sin persistencia */ }
+  }
+
+  function getDiscountApplied() {
+    try {
+      return localStorage.getItem(DISCOUNT_KEY) === "1";
+    } catch (e) {
+      return false;
+    }
+  }
+
+  function saveDiscountApplied(applied) {
+    try { localStorage.setItem(DISCOUNT_KEY, applied ? "1" : "0"); } catch (e) { /* sin persistencia */ }
+  }
+
   function updateBadge() {
     var count = cartCount();
     var badges = document.querySelectorAll("[data-cart-badge]");
@@ -155,22 +226,42 @@
     if (!cart.length) return "Hola! Quisiera hacer un pedido en FRY.";
     var shipping = parseShippingValue(getShippingValue());
     var subtotal = cartTotal();
+    var discountApplied = getDiscountApplied();
+    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var subtotalConDescuento = subtotal - discountAmount;
 
     var lines = ["Hola! Quisiera hacer este pedido:", ""];
     cart.forEach(function (i) {
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
     lines.push("");
+
+    var scheduleType = getScheduleType();
+    if (scheduleType === "later" && getScheduleTime()) {
+      lines.push("Hora del pedido: programado para las " + getScheduleTime());
+    } else {
+      lines.push("Hora del pedido: lo antes posible");
+    }
+    lines.push("Método de pago: " + getPaymentMethod());
     lines.push("Zona de entrega: " + shipping.zone);
+    if (shipping.zone !== "" && TIME_ESTIMATES[shipping.zone]) {
+      lines.push("Tiempo estimado: " + TIME_ESTIMATES[shipping.zone]);
+    }
+    lines.push("");
+
+    lines.push("Subtotal: " + formatPrice(subtotal));
+    if (discountApplied) {
+      lines.push("Descuento (" + DISCOUNT_CODE + ", -" + Math.round(DISCOUNT_RATE * 100) + "%): -" + formatPrice(discountAmount));
+    }
+
     if (shipping.cost === null) {
       lines.push("Envío: a consultar con el local (fuera del radio habitual)");
       lines.push("");
-      lines.push("Subtotal: " + formatPrice(subtotal));
+      lines.push("Total (sin envío): " + formatPrice(subtotalConDescuento));
     } else {
       lines.push("Envío: " + formatPrice(shipping.cost));
       lines.push("");
-      lines.push("Subtotal: " + formatPrice(subtotal));
-      lines.push("Total: " + formatPrice(subtotal + shipping.cost));
+      lines.push("Total: " + formatPrice(subtotalConDescuento + shipping.cost));
     }
     return lines.join("\n");
   }
@@ -181,9 +272,18 @@
 
     var totalEl = document.querySelector("[data-cart-total]");
     var subtotalEl = document.querySelector("[data-cart-subtotal]");
+    var discountRowEl = document.querySelector("[data-discount-row]");
+    var discountAmountEl = document.querySelector("[data-cart-discount]");
     var shippingCostEl = document.querySelector("[data-cart-shipping-cost]");
     var shippingHintEl = document.querySelector("[data-shipping-hint]");
     var shippingSelect = document.querySelector("[data-shipping-select]");
+    var timeEstimateEl = document.querySelector("[data-time-estimate]");
+    var paymentSelect = document.querySelector("[data-payment-select]");
+    var discountInput = document.querySelector("[data-discount-input]");
+    var discountBtn = document.querySelector("[data-discount-apply]");
+    var discountMsgEl = document.querySelector("[data-discount-msg]");
+    var scheduleRadios = document.querySelectorAll("[data-schedule-radio]");
+    var scheduleTimeInput = document.querySelector("[data-schedule-time]");
     var emptyEl = document.querySelector("[data-cart-empty]");
     var summaryEl = document.querySelector("[data-cart-summary]");
     var orderBtn = document.querySelector("[data-cart-order-btn]");
@@ -232,7 +332,7 @@
       removeBtns[r].addEventListener("click", function () { removeFromCart(this.dataset.remove); });
     }
 
-    // --- zona de entrega, subtotal, envío y total ---
+    // --- zona de entrega ---
     if (shippingSelect) {
       shippingSelect.value = getShippingValue();
       if (!shippingSelect.dataset.bound) {
@@ -244,10 +344,84 @@
       }
     }
 
+    // --- tiempo estimado (depende de la zona) ---
     var shipping = parseShippingValue(getShippingValue());
+    if (timeEstimateEl) {
+      if (shipping.zone === "") {
+        timeEstimateEl.textContent = "Elige tu zona para verlo";
+      } else {
+        timeEstimateEl.textContent = TIME_ESTIMATES[shipping.zone] || "30-40 min";
+      }
+    }
+
+    // --- horario del pedido ---
+    var savedScheduleType = getScheduleType();
+    for (var s = 0; s < scheduleRadios.length; s++) {
+      scheduleRadios[s].checked = scheduleRadios[s].value === savedScheduleType;
+      if (!scheduleRadios[s].dataset.bound) {
+        scheduleRadios[s].dataset.bound = "1";
+        scheduleRadios[s].addEventListener("change", function () {
+          saveScheduleType(this.value);
+          if (scheduleTimeInput) scheduleTimeInput.style.display = this.value === "later" ? "block" : "none";
+        });
+      }
+    }
+    if (scheduleTimeInput) {
+      scheduleTimeInput.style.display = savedScheduleType === "later" ? "block" : "none";
+      scheduleTimeInput.value = getScheduleTime();
+      if (!scheduleTimeInput.dataset.bound) {
+        scheduleTimeInput.dataset.bound = "1";
+        scheduleTimeInput.addEventListener("change", function () {
+          saveScheduleTime(this.value);
+        });
+      }
+    }
+
+    // --- método de pago ---
+    if (paymentSelect) {
+      paymentSelect.value = getPaymentMethod();
+      if (!paymentSelect.dataset.bound) {
+        paymentSelect.dataset.bound = "1";
+        paymentSelect.addEventListener("change", function () {
+          savePaymentMethod(this.value);
+        });
+      }
+    }
+
+    // --- código de descuento ---
+    var discountApplied = getDiscountApplied();
+    if (discountApplied && discountInput && !discountInput.value) {
+      discountInput.value = DISCOUNT_CODE;
+    }
+    if (discountBtn && !discountBtn.dataset.bound) {
+      discountBtn.dataset.bound = "1";
+      discountBtn.addEventListener("click", function () {
+        var entered = (discountInput.value || "").trim().toUpperCase();
+        if (entered === DISCOUNT_CODE) {
+          saveDiscountApplied(true);
+          if (discountMsgEl) {
+            discountMsgEl.textContent = "¡Código aplicado! " + Math.round(DISCOUNT_RATE * 100) + "% de descuento.";
+            discountMsgEl.className = "cart-discount-msg is-ok";
+          }
+        } else {
+          saveDiscountApplied(false);
+          if (discountMsgEl) {
+            discountMsgEl.textContent = "Código no válido.";
+            discountMsgEl.className = "cart-discount-msg is-error";
+          }
+        }
+        renderCartPage();
+      });
+    }
+
+    // --- subtotal, descuento, envío y total ---
     var subtotal = cartTotal();
+    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var subtotalConDescuento = subtotal - discountAmount;
 
     if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+    if (discountRowEl) discountRowEl.style.display = discountApplied ? "flex" : "none";
+    if (discountAmountEl) discountAmountEl.textContent = "-" + formatPrice(discountAmount);
 
     if (shipping.zone === "") {
       // Todavía no ha elegido zona: obligatorio antes de poder pedir
@@ -258,12 +432,12 @@
     } else if (shipping.cost === null) {
       if (shippingCostEl) shippingCostEl.textContent = "A consultar";
       if (shippingHintEl) shippingHintEl.style.display = "block";
-      if (totalEl) totalEl.textContent = formatPrice(subtotal) + " + envío";
+      if (totalEl) totalEl.textContent = formatPrice(subtotalConDescuento) + " + envío";
       if (orderBtn) enableOrderBtn(orderBtn);
     } else {
       if (shippingCostEl) shippingCostEl.textContent = formatPrice(shipping.cost);
       if (shippingHintEl) shippingHintEl.style.display = "none";
-      if (totalEl) totalEl.textContent = formatPrice(subtotal + shipping.cost);
+      if (totalEl) totalEl.textContent = formatPrice(subtotalConDescuento + shipping.cost);
       if (orderBtn) enableOrderBtn(orderBtn);
     }
 
