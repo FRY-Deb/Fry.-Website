@@ -825,3 +825,19 @@ body.fry-intro-finished .fry-intro {
   font-size: 14px;
   color: var(--cream-2);
 }
+
+/* --- Estado bloqueado del botón de pedido hasta elegir zona --- */
+.btn.is-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: auto; /* dejamos que el click se detecte para mostrar el aviso */
+}
+.btn.is-disabled:hover { background: var(--red); color: var(--cream); transform: none; }
+#shippingZone.is-required {
+  border-color: var(--red);
+  animation: shipping-pulse 1.4s ease-in-out 2;
+}
+@keyframes shipping-pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(214, 38, 33, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(214, 38, 33, 0.25); }
+}

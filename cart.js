@@ -4,7 +4,7 @@
   var CART_KEY = "fryCart";
   var SHIPPING_KEY = "fryShipping";
   var WHATSAPP_NUMBER = "34669765785"; // debe coincidir con lib/manifest.js
-  var DEFAULT_SHIPPING = "Villaverde|2.00";
+  var DEFAULT_SHIPPING = ""; // "" = todavía no ha elegido zona (obligatorio antes de pedir)
 
   function escHTML(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -249,20 +249,55 @@
 
     if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
 
-    if (shipping.cost === null) {
+    if (shipping.zone === "") {
+      // Todavía no ha elegido zona: obligatorio antes de poder pedir
+      if (shippingCostEl) shippingCostEl.textContent = "—";
+      if (shippingHintEl) shippingHintEl.style.display = "none";
+      if (totalEl) totalEl.textContent = "Elige tu zona para ver el total";
+      if (orderBtn) disableOrderBtn(orderBtn);
+    } else if (shipping.cost === null) {
       if (shippingCostEl) shippingCostEl.textContent = "A consultar";
       if (shippingHintEl) shippingHintEl.style.display = "block";
       if (totalEl) totalEl.textContent = formatPrice(subtotal) + " + envío";
+      if (orderBtn) enableOrderBtn(orderBtn);
     } else {
       if (shippingCostEl) shippingCostEl.textContent = formatPrice(shipping.cost);
       if (shippingHintEl) shippingHintEl.style.display = "none";
       if (totalEl) totalEl.textContent = formatPrice(subtotal + shipping.cost);
+      if (orderBtn) enableOrderBtn(orderBtn);
     }
 
-    if (orderBtn) {
+    if (orderBtn && shipping.zone !== "") {
       var msg = buildWhatsAppMessage();
       orderBtn.setAttribute("href", "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg));
     }
+  }
+
+  function disableOrderBtn(btn) {
+    btn.classList.add("is-disabled");
+    btn.setAttribute("aria-disabled", "true");
+    btn.removeAttribute("href");
+    if (!btn.dataset.guardBound) {
+      btn.dataset.guardBound = "1";
+      btn.addEventListener("click", function (e) {
+        if (btn.classList.contains("is-disabled")) {
+          e.preventDefault();
+          var select = document.querySelector("[data-shipping-select]");
+          if (select) {
+            select.classList.add("is-required");
+            select.focus();
+            select.scrollIntoView({ behavior: "smooth", block: "center" });
+          }
+        }
+      });
+    }
+  }
+
+  function enableOrderBtn(btn) {
+    btn.classList.remove("is-disabled");
+    btn.removeAttribute("aria-disabled");
+    var select = document.querySelector("[data-shipping-select]");
+    if (select) select.classList.remove("is-required");
   }
 
   function boot() {
