@@ -2,7 +2,9 @@
   "use strict";
 
   var CART_KEY = "fryCart";
+  var SHIPPING_KEY = "fryShipping";
   var WHATSAPP_NUMBER = "34669765785"; // debe coincidir con lib/manifest.js
+  var DEFAULT_SHIPPING = "Villaverde|2.00";
 
   function escHTML(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -77,6 +79,29 @@
     return getCart().reduce(function (sum, i) { return sum + i.qty * i.price; }, 0);
   }
 
+  function getShippingValue() {
+    try {
+      return localStorage.getItem(SHIPPING_KEY) || DEFAULT_SHIPPING;
+    } catch (e) {
+      return DEFAULT_SHIPPING;
+    }
+  }
+
+  function saveShippingValue(value) {
+    try {
+      localStorage.setItem(SHIPPING_KEY, value);
+    } catch (e) {
+      /* sin persistencia disponible */
+    }
+  }
+
+  function parseShippingValue(value) {
+    var parts = String(value).split("|");
+    var zone = parts[0];
+    var cost = parts[1] ? parseFloat(parts[1]) : null; // null = "fuera de zona, a consultar"
+    return { zone: zone, cost: cost };
+  }
+
   function updateBadge() {
     var count = cartCount();
     var badges = document.querySelectorAll("[data-cart-badge]");
@@ -128,12 +153,25 @@
   function buildWhatsAppMessage() {
     var cart = getCart();
     if (!cart.length) return "Hola! Quisiera hacer un pedido en FRY.";
+    var shipping = parseShippingValue(getShippingValue());
+    var subtotal = cartTotal();
+
     var lines = ["Hola! Quisiera hacer este pedido:", ""];
     cart.forEach(function (i) {
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
     lines.push("");
-    lines.push("Total: " + formatPrice(cartTotal()));
+    lines.push("Zona de entrega: " + shipping.zone);
+    if (shipping.cost === null) {
+      lines.push("Envío: a consultar con el local (fuera del radio habitual)");
+      lines.push("");
+      lines.push("Subtotal: " + formatPrice(subtotal));
+    } else {
+      lines.push("Envío: " + formatPrice(shipping.cost));
+      lines.push("");
+      lines.push("Subtotal: " + formatPrice(subtotal));
+      lines.push("Total: " + formatPrice(subtotal + shipping.cost));
+    }
     return lines.join("\n");
   }
 
@@ -142,6 +180,10 @@
     if (!container) return; // no estamos en carrito.html, nada que pintar
 
     var totalEl = document.querySelector("[data-cart-total]");
+    var subtotalEl = document.querySelector("[data-cart-subtotal]");
+    var shippingCostEl = document.querySelector("[data-cart-shipping-cost]");
+    var shippingHintEl = document.querySelector("[data-shipping-hint]");
+    var shippingSelect = document.querySelector("[data-shipping-select]");
     var emptyEl = document.querySelector("[data-cart-empty]");
     var summaryEl = document.querySelector("[data-cart-summary]");
     var orderBtn = document.querySelector("[data-cart-order-btn]");
@@ -177,8 +219,6 @@
       );
     }).join("");
 
-    if (totalEl) totalEl.textContent = formatPrice(cartTotal());
-
     var minusBtns = container.querySelectorAll("[data-qty-minus]");
     for (var m = 0; m < minusBtns.length; m++) {
       minusBtns[m].addEventListener("click", function () { updateQty(this.dataset.qtyMinus, -1); });
@@ -190,6 +230,33 @@
     var removeBtns = container.querySelectorAll("[data-remove]");
     for (var r = 0; r < removeBtns.length; r++) {
       removeBtns[r].addEventListener("click", function () { removeFromCart(this.dataset.remove); });
+    }
+
+    // --- zona de entrega, subtotal, envío y total ---
+    if (shippingSelect) {
+      shippingSelect.value = getShippingValue();
+      if (!shippingSelect.dataset.bound) {
+        shippingSelect.dataset.bound = "1";
+        shippingSelect.addEventListener("change", function () {
+          saveShippingValue(this.value);
+          renderCartPage();
+        });
+      }
+    }
+
+    var shipping = parseShippingValue(getShippingValue());
+    var subtotal = cartTotal();
+
+    if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
+
+    if (shipping.cost === null) {
+      if (shippingCostEl) shippingCostEl.textContent = "A consultar";
+      if (shippingHintEl) shippingHintEl.style.display = "block";
+      if (totalEl) totalEl.textContent = formatPrice(subtotal) + " + envío";
+    } else {
+      if (shippingCostEl) shippingCostEl.textContent = formatPrice(shipping.cost);
+      if (shippingHintEl) shippingHintEl.style.display = "none";
+      if (totalEl) totalEl.textContent = formatPrice(subtotal + shipping.cost);
     }
 
     if (orderBtn) {

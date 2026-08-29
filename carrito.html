@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260902" />
+<link rel="stylesheet" href="styles.css?v=20260903" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -54,6 +54,32 @@
     <div data-cart-items></div>
 
     <div data-cart-summary class="cart-summary" style="display:none;">
+
+      <div class="cart-shipping">
+        <label for="shippingZone" class="cart-shipping-label">Zona de entrega</label>
+        <select id="shippingZone" data-shipping-select>
+          <option value="Villaverde|2.00">Villaverde — 2,00€</option>
+          <option value="Puente de Vallecas|4.20">Puente de Vallecas — 4,20€</option>
+          <option value="Usera|4.30">Usera — 4,30€</option>
+          <option value="Getafe|4.40">Getafe — 4,40€</option>
+          <option value="Villa de Vallecas|4.50">Villa de Vallecas — 4,50€</option>
+          <option value="Arganzuela|5.10">Arganzuela — 5,10€</option>
+          <option value="Carabanchel|5.30">Carabanchel — 5,30€</option>
+          <option value="Leganés|5.40">Leganés — 5,40€</option>
+          <option value="Moratalaz|5.40">Moratalaz — 5,40€</option>
+          <option value="Fuera de estas zonas|">Fuera de estas zonas (consultar)</option>
+        </select>
+        <p class="cart-shipping-hint" data-shipping-hint style="display:none;">Fuera de nuestro radio habitual de reparto — te confirmamos el envío por WhatsApp antes de cerrar el pedido.</p>
+      </div>
+
+      <div class="cart-total-row cart-total-row-sub">
+        <span class="cart-total-label cart-total-label-sub">Subtotal</span>
+        <span class="cart-total-sub" data-cart-subtotal>0,00€</span>
+      </div>
+      <div class="cart-total-row cart-total-row-sub">
+        <span class="cart-total-label cart-total-label-sub">Envío</span>
+        <span class="cart-total-sub" data-cart-shipping-cost>0,00€</span>
+      </div>
       <div class="cart-total-row">
         <span class="cart-total-label">Total</span>
         <span class="cart-total-value" data-cart-total>0,00€</span>
@@ -99,7 +125,7 @@
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
 <script defer src="lib/manifest.js"></script>
-<script defer src="main.js?v=20260902"></script>
-<script defer src="cart.js?v=20260902"></script>
+<script defer src="main.js?v=20260903"></script>
+<script defer src="cart.js?v=20260903"></script>
 </body>
 </html>
