@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260831" />
+<link rel="stylesheet" href="styles.css?v=20260902" />
 </head>
 <body>
 <!-- =========================================================
@@ -31,6 +31,7 @@
       <a href="carta.html">Carta</a>
       <a href="contacto.html">Contacto</a>
     </nav>
+    <a href="carrito.html" class="nav-cart" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
     <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
     <button class="nav-burger" data-nav-burger aria-expanded="false" aria-label="Abrir menú"><span></span></button>
   </div>
@@ -40,6 +41,7 @@
   <a href="index.html">Inicio</a>
   <a href="carta.html">Carta</a>
   <a href="contacto.html">Contacto</a>
+  <a href="carrito.html" class="nav-mobile-cart">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
   <a class="nav-mobile-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
 </div>
 
@@ -77,12 +79,12 @@
       <div class="marquee-track">
         <span>Pollo Picante</span><span class="accent">·</span>
         <span>Doble Rebozado</span><span class="accent">·</span>
-        <span>Muslo Deshuesado</span><span class="accent">·</span>
+        <span>Pollo Rebozado</span><span class="accent">·</span>
         <span>Sin Filtros</span><span class="accent">·</span>
         <span>Hecho al Momento</span><span class="accent">·</span>
         <span>Pollo Picante</span><span class="accent">·</span>
         <span>Doble Rebozado</span><span class="accent">·</span>
-        <span>Muslo Deshuesado</span><span class="accent">·</span>
+        <span>Pollo Rebozado</span><span class="accent">·</span>
         <span>Sin Filtros</span><span class="accent">·</span>
         <span>Hecho al Momento</span><span class="accent">·</span>
       </div>
@@ -123,7 +125,7 @@
       <a class="combo-card" href="carta.html" data-reveal>
         <span class="combo-card-name">Combo 2 Hamburguesas</span>
         <span class="combo-card-price">24€</span>
-        <span class="combo-card-tag">+ cubo de salsa FRY. ¡GRATIS!</span>
+        <span class="combo-card-tag">+ cubo de salsa FRY. de regalo</span>
       </a>
       <a class="combo-card" href="carta.html" data-reveal>
         <span class="combo-card-name">Menú 2 Piezas</span>
@@ -190,7 +192,8 @@
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
 <script defer src="lib/manifest.js"></script>
-<script defer src="main.js?v=20260831"></script>
+<script defer src="main.js?v=20260902"></script>
+<script defer src="cart.js?v=20260902"></script>
 <script defer src="intro.js?v=20260831"></script>
 </body>
 </html>

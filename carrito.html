@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Contacto — FRY.</title>
-<meta name="description" content="Pide en FRY. por WhatsApp. Solo pedidos a domicilio." />
+<title>Tu Carrito — FRY.</title>
+<meta name="description" content="Revisa tu pedido en FRY. antes de enviarlo por WhatsApp." />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
@@ -19,9 +19,9 @@
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="index.html">Inicio</a>
       <a href="carta.html">Carta</a>
-      <a href="contacto.html" aria-current="page">Contacto</a>
+      <a href="contacto.html">Contacto</a>
     </nav>
-    <a href="carrito.html" class="nav-cart" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
+    <a href="carrito.html" class="nav-cart" aria-current="page" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
     <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
     <button class="nav-burger" data-nav-burger aria-expanded="false" aria-label="Abrir menú"><span></span></button>
   </div>
@@ -37,46 +37,31 @@
 
 <main id="main">
 
-  <section class="contact-hero container">
-    <div class="section-header" style="padding-top:0;">
-      <span class="eyebrow">Contacto</span>
-      <h1 class="section-title">Pide directo.</h1>
+  <section class="container">
+    <div class="section-header">
+      <span class="eyebrow">Tu pedido</span>
+      <h1 class="section-title">Carrito</h1>
     </div>
   </section>
 
-  <section class="container">
-    <div class="contact-grid">
+  <section class="container" style="padding-bottom:100px;">
 
-      <div class="contact-whatsapp" data-reveal>
-        <h2 class="contact-block-title">Pedidos por WhatsApp</h2>
-        <p style="color:var(--cream-2); font-size:14px;">Ahora mismo solo tomamos pedidos por WhatsApp. Escríbenos y te confirmamos tiempo y precio de envío.</p>
-        <a class="btn btn-primary" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Escribir por WhatsApp</a>
-        <hr class="rule" />
-        <div>
-          <span class="eyebrow">Síguenos</span>
-          <div class="social-row">
-            <a data-instagram-link href="https://www.instagram.com/fry_group?igsi=azF1aW1yaThhMm9q&utm_source=qr" aria-label="Instagram">IG</a>
-            <a data-tiktok-link href="#" aria-label="TikTok">TT</a>
-          </div>
-        </div>
-      </div>
-
-      <div data-reveal>
-        <h2 class="contact-block-title">Zona de entrega</h2>
-        <div class="menu-card" style="grid-template-columns:1fr auto;">
-          <span class="menu-card-name" style="font-size:20px;">Villaverde</span>
-          <span class="menu-card-price" style="font-size:20px;">2€</span>
-          <span class="menu-card-desc">Envío estándar dentro de Villaverde, Madrid.</span>
-        </div>
-        <div class="menu-card" style="grid-template-columns:1fr auto;">
-          <span class="menu-card-name" style="font-size:20px;">Fuera de zona</span>
-          <span class="menu-card-price" style="font-size:20px;">Consultar</span>
-          <span class="menu-card-desc">Escríbenos por WhatsApp con tu dirección y te confirmamos si llegamos y el coste de envío.</span>
-        </div>
-        <p style="margin-top:24px; color:var(--cream-mute); font-size:13px;">Únicamente servicio a domicilio — de momento no tenemos local para comer allí.</p>
-      </div>
-
+    <div data-cart-empty class="cart-empty" style="display:none;">
+      <p>Tu carrito está vacío</p>
+      <a class="btn btn-primary" href="carta.html">Ver la carta</a>
     </div>
+
+    <div data-cart-items></div>
+
+    <div data-cart-summary class="cart-summary" style="display:none;">
+      <div class="cart-total-row">
+        <span class="cart-total-label">Total</span>
+        <span class="cart-total-value" data-cart-total>0,00€</span>
+      </div>
+      <p class="cart-order-note">Al pulsar "Hacer pedido" se abrirá WhatsApp con tu pedido ya escrito, listo para enviar.</p>
+      <a class="btn btn-primary" data-cart-order-btn href="#" target="_blank" rel="noopener">Hacer pedido por WhatsApp</a>
+    </div>
+
   </section>
 
 </main>
