@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Panel de agotados — FRY.</title>
+<meta name="robots" content="noindex, nofollow" />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
+<link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="styles.css?v=20260909" />
+<style>
+  .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
+  .admin-login {
+    max-width: 360px; margin: 80px auto;
+    border: 1px solid var(--line-strong);
+    padding: 32px;
+  }
+  .admin-login h1 { font-size: 26px; margin-bottom: 24px; }
+  .admin-field { margin-bottom: 18px; }
+  .admin-field label { display: block; font-size: 12px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--cream-mute); margin-bottom: 8px; }
+  .admin-field input {
+    width: 100%; background: var(--bg-2); color: var(--cream);
+    border: 1px solid var(--line-strong); padding: 10px 12px;
+    font-family: var(--sans); font-size: 14px;
+  }
+  .admin-error { color: var(--red); font-size: 13px; margin-top: 14px; display: none; }
+  .admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .admin-logout { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; border: 1px solid var(--line-strong); padding: 8px 16px; }
+  .admin-logout:hover { background: var(--cream); color: var(--bg); }
+  .admin-category { margin-bottom: 36px; }
+  .admin-category-title { font-family: var(--display); font-size: 22px; text-transform: uppercase; margin-bottom: 14px; border-bottom: 1px solid var(--line); padding-bottom: 10px; }
+  .admin-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); }
+  .admin-item-name { font-size: 15px; }
+  .admin-toggle { position: relative; width: 46px; height: 26px; flex-shrink: 0; }
+  .admin-toggle input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+  .admin-toggle-track { position: absolute; inset: 0; background: var(--line-strong); transition: background-color .2s; }
+  .admin-toggle-thumb { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; background: var(--cream); transition: transform .2s; }
+  .admin-toggle input:checked + .admin-toggle-track { background: var(--red); }
+  .admin-toggle input:checked ~ .admin-toggle-thumb { transform: translateX(20px); }
+  .admin-status { font-size: 12px; color: var(--cream-mute); margin-bottom: 24px; }
+  #adminPanel { display: none; }
+</style>
+</head>
+<body>
+
+<main id="main">
+  <div class="admin-wrap">
+
+    <div id="adminLogin" class="admin-login">
+      <h1 class="logo-mark">FRY<span class="dot"></span></h1>
+      <p style="margin:10px 0 24px; color:var(--cream-mute); font-size:13px;">Panel privado — solo para gestión interna.</p>
+      <div class="admin-field">
+        <label for="adminEmail">Email</label>
+        <input type="email" id="adminEmail" autocomplete="username" />
+      </div>
+      <div class="admin-field">
+        <label for="adminPassword">Contraseña</label>
+        <input type="password" id="adminPassword" autocomplete="current-password" />
+      </div>
+      <button type="button" class="btn btn-primary" id="adminLoginBtn" style="width:100%; justify-content:center;">Entrar</button>
+      <p class="admin-error" id="adminError">Email o contraseña incorrectos.</p>
+    </div>
+
+    <div id="adminPanel">
+      <div class="admin-header">
+        <h1 class="logo-mark">FRY<span class="dot"></span></h1>
+        <button type="button" class="admin-logout" id="adminLogoutBtn">Cerrar sesión</button>
+      </div>
+      <p class="admin-status" id="adminStatus">Marca lo que esté agotado — se actualiza al instante en la carta para todos los clientes.</p>
+      <div id="adminCategories"></div>
+    </div>
+
+  </div>
+</main>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="lib/manifest.js"></script>
+<script>
+(function () {
+  "use strict";
+
+  firebase.initializeApp(FRY_FIREBASE_CONFIG);
+  var auth = firebase.auth();
+  var db = firebase.database();
+
+  function sanitizeKey(name) {
+    return String(name).replace(/[.#$\[\]\/]/g, "_");
+  }
+
+  var loginBox = document.getElementById("adminLogin");
+  var panelBox = document.getElementById("adminPanel");
+  var errorEl = document.getElementById("adminError");
+  var categoriesEl = document.getElementById("adminCategories");
+
+  document.getElementById("adminLoginBtn").addEventListener("click", function () {
+    var email = document.getElementById("adminEmail").value.trim();
+    var password = document.getElementById("adminPassword").value;
+    errorEl.style.display = "none";
+    auth.signInWithEmailAndPassword(email, password).catch(function () {
+      errorEl.style.display = "block";
+    });
+  });
+
+  document.getElementById("adminLogoutBtn").addEventListener("click", function () {
+    auth.signOut();
+  });
+
+  auth.onAuthStateChanged(function (user) {
+    if (user) {
+      loginBox.style.display = "none";
+      panelBox.style.display = "block";
+      buildPanel();
+    } else {
+      loginBox.style.display = "block";
+      panelBox.style.display = "none";
+    }
+  });
+
+  function buildPanel() {
+    if (categoriesEl.dataset.built) return;
+    categoriesEl.dataset.built = "1";
+
+    var categories = (window.__BRAND__ && window.__BRAND__.categories) || [];
+
+    db.ref("soldOut").once("value").then(function (snapshot) {
+      var soldOutMap = snapshot.val() || {};
+
+      categories.forEach(function (cat) {
+        var section = document.createElement("div");
+        section.className = "admin-category";
+
+        var title = document.createElement("h2");
+        title.className = "admin-category-title";
+        title.textContent = cat.label;
+        section.appendChild(title);
+
+        cat.items.forEach(function (item) {
+          var key = sanitizeKey(item.name);
+          var row = document.createElement("div");
+          row.className = "admin-item";
+
+          var nameSpan = document.createElement("span");
+          nameSpan.className = "admin-item-name";
+          nameSpan.textContent = item.name;
+          row.appendChild(nameSpan);
+
+          var toggleLabel = document.createElement("label");
+          toggleLabel.className = "admin-toggle";
+          var checkbox = document.createElement("input");
+          checkbox.type = "checkbox";
+          checkbox.checked = soldOutMap[key] === true;
+          checkbox.addEventListener("change", function () {
+            db.ref("soldOut/" + key).set(checkbox.checked);
+          });
+          toggleLabel.appendChild(checkbox);
+          var track = document.createElement("span");
+          track.className = "admin-toggle-track";
+          toggleLabel.appendChild(track);
+          var thumb = document.createElement("span");
+          thumb.className = "admin-toggle-thumb";
+          toggleLabel.appendChild(thumb);
+          row.appendChild(toggleLabel);
+
+          section.appendChild(row);
+        });
+
+        categoriesEl.appendChild(section);
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

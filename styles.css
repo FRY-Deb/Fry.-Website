@@ -937,3 +937,28 @@ body.fry-intro-finished .fry-intro {
 @media (min-width: 720px) {
   .stats-grid { grid-template-columns: repeat(4, 1fr); }
 }
+
+/* --- Productos agotados (en tiempo real, vía Firebase) --- */
+.menu-card.is-soldout {
+  opacity: 0.42;
+}
+.menu-card-soldout-badge {
+  display: inline-block;
+  margin-left: 10px;
+  font-family: var(--sans);
+  font-size: 10px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase;
+  background: var(--cream-mute);
+  color: var(--bg);
+  padding: 3px 7px;
+  vertical-align: middle;
+}
+.menu-card-add:disabled,
+.menu-card-add[disabled] {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+.menu-card-add:disabled:hover {
+  background: transparent;
+  color: var(--cream);
+  border-color: var(--line-strong);
+}
