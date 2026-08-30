@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260909" />
+<link rel="stylesheet" href="styles.css?v=20260910" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -40,6 +40,16 @@
   .admin-toggle input:checked ~ .admin-toggle-thumb { transform: translateX(20px); }
   .admin-status { font-size: 12px; color: var(--cream-mute); margin-bottom: 24px; }
   #adminPanel { display: none; }
+  .admin-stock-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); gap: 16px; }
+  .admin-stock-row label { font-size: 15px; }
+  .admin-stock-row input[type="number"] {
+    width: 90px; background: var(--bg-2); color: var(--cream);
+    border: 1px solid var(--line-strong); padding: 8px 10px;
+    font-family: var(--sans); font-size: 15px; text-align: center;
+  }
+  .admin-computed { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; }
+  .admin-computed.is-ok { color: #4caf50; }
+  .admin-computed.is-out { color: var(--red); }
 </style>
 </head>
 <body>
@@ -68,6 +78,13 @@
         <button type="button" class="admin-logout" id="adminLogoutBtn">Cerrar sesión</button>
       </div>
       <p class="admin-status" id="adminStatus">Marca lo que esté agotado — se actualiza al instante en la carta para todos los clientes.</p>
+
+      <div class="admin-category" id="adminStockSection">
+        <h2 class="admin-category-title">Stock de ingredientes base</h2>
+        <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Pon cuántas unidades te quedan de cada uno. Los menús y combos que los usan se marcarán agotados solos en cuanto no llegue el número.</p>
+        <div id="adminStockInputs"></div>
+      </div>
+
       <div id="adminCategories"></div>
     </div>
 
@@ -79,6 +96,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="lib/manifest.js"></script>
+<script src="stock-requirements.js"></script>
 <script>
 (function () {
   "use strict";
@@ -125,34 +143,75 @@
     categoriesEl.dataset.built = "1";
 
     var categories = (window.__BRAND__ && window.__BRAND__.categories) || [];
+    var requirements = window.FRY_STOCK_REQUIREMENTS || {};
+    var labels = window.FRY_STOCK_LABELS || {};
 
-    db.ref("soldOut").once("value").then(function (snapshot) {
-      var soldOutMap = snapshot.val() || {};
+    // --- 1) Inputs numéricos de stock base ---
+    var stockInputsEl = document.getElementById("adminStockInputs");
+    var stockInputs = {};
 
-      categories.forEach(function (cat) {
-        var section = document.createElement("div");
-        section.className = "admin-category";
+    Object.keys(labels).forEach(function (key) {
+      var row = document.createElement("div");
+      row.className = "admin-stock-row";
 
-        var title = document.createElement("h2");
-        title.className = "admin-category-title";
-        title.textContent = cat.label;
-        section.appendChild(title);
+      var label = document.createElement("label");
+      label.textContent = labels[key];
+      label.setAttribute("for", "stock_" + key);
+      row.appendChild(label);
 
-        cat.items.forEach(function (item) {
+      var input = document.createElement("input");
+      input.type = "number";
+      input.min = "0";
+      input.id = "stock_" + key;
+      input.addEventListener("change", function () {
+        var value = parseInt(input.value, 10);
+        if (isNaN(value) || value < 0) value = 0;
+        input.value = value;
+        db.ref("stock/" + key).set(value);
+      });
+      row.appendChild(input);
+
+      stockInputsEl.appendChild(row);
+      stockInputs[key] = input;
+    });
+
+    // --- 2) Productos: automáticos (calculados) o manuales (interruptor) ---
+    var computedStatusEls = []; // { el, name }
+
+    categories.forEach(function (cat) {
+      var section = document.createElement("div");
+      section.className = "admin-category";
+
+      var title = document.createElement("h2");
+      title.className = "admin-category-title";
+      title.textContent = cat.label;
+      section.appendChild(title);
+
+      cat.items.forEach(function (item) {
+        var row = document.createElement("div");
+        row.className = "admin-item";
+
+        var nameSpan = document.createElement("span");
+        nameSpan.className = "admin-item-name";
+        nameSpan.textContent = item.name;
+        row.appendChild(nameSpan);
+
+        var req = requirements[item.name];
+
+        if (req) {
+          // Producto calculado a partir del stock — solo mostramos el estado, no se toca a mano.
+          var statusSpan = document.createElement("span");
+          statusSpan.className = "admin-computed";
+          row.appendChild(statusSpan);
+          computedStatusEls.push({ el: statusSpan, req: req });
+        } else {
+          // Producto simple — interruptor manual de sí/no.
           var key = sanitizeKey(item.name);
-          var row = document.createElement("div");
-          row.className = "admin-item";
-
-          var nameSpan = document.createElement("span");
-          nameSpan.className = "admin-item-name";
-          nameSpan.textContent = item.name;
-          row.appendChild(nameSpan);
-
           var toggleLabel = document.createElement("label");
           toggleLabel.className = "admin-toggle";
           var checkbox = document.createElement("input");
           checkbox.type = "checkbox";
-          checkbox.checked = soldOutMap[key] === true;
+          checkbox.dataset.key = key;
           checkbox.addEventListener("change", function () {
             db.ref("soldOut/" + key).set(checkbox.checked);
           });
@@ -164,12 +223,40 @@
           thumb.className = "admin-toggle-thumb";
           toggleLabel.appendChild(thumb);
           row.appendChild(toggleLabel);
+          checkbox._soldOutKey = key;
+        }
 
-          section.appendChild(row);
-        });
-
-        categoriesEl.appendChild(section);
+        section.appendChild(row);
       });
+
+      categoriesEl.appendChild(section);
+    });
+
+    // --- 3) Cargar valores actuales y mantenerlos sincronizados en vivo ---
+    db.ref("stock").on("value", function (snapshot) {
+      var stock = snapshot.val() || {};
+      Object.keys(stockInputs).forEach(function (key) {
+        if (document.activeElement !== stockInputs[key]) {
+          stockInputs[key].value = typeof stock[key] === "number" ? stock[key] : 0;
+        }
+      });
+      computedStatusEls.forEach(function (item) {
+        var ok = true;
+        for (var k in item.req) {
+          var have = typeof stock[k] === "number" ? stock[k] : 0;
+          if (have < item.req[k]) { ok = false; break; }
+        }
+        item.el.textContent = ok ? "Disponible" : "Agotado";
+        item.el.className = "admin-computed " + (ok ? "is-ok" : "is-out");
+      });
+    });
+
+    db.ref("soldOut").on("value", function (snapshot) {
+      var soldOut = snapshot.val() || {};
+      var checkboxes = categoriesEl.querySelectorAll("input[type=checkbox][data-key]");
+      for (var i = 0; i < checkboxes.length; i++) {
+        checkboxes[i].checked = soldOut[checkboxes[i].dataset.key] === true;
+      }
     });
   }
 })();

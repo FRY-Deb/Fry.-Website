@@ -1,10 +1,26 @@
 (function () {
   "use strict";
 
-  // Debe coincidir EXACTAMENTE con la función usada en admin.html,
-  // para que las claves generadas sean las mismas en los dos sitios.
+  // Debe coincidir EXACTAMENTE con la función usada en admin.html.
   function sanitizeKey(name) {
     return String(name).replace(/[.#$\[\]\/]/g, "_");
+  }
+
+  function isAvailable(name, stockMap, soldOutMap) {
+    var req = window.FRY_STOCK_REQUIREMENTS ? window.FRY_STOCK_REQUIREMENTS[name] : null;
+
+    if (req) {
+      // Producto cuya disponibilidad se calcula sola a partir del stock compartido.
+      for (var key in req) {
+        var have = (stockMap && typeof stockMap[key] === "number") ? stockMap[key] : 0;
+        if (have < req[key]) return false;
+      }
+      return true;
+    }
+
+    // Producto simple: se controla a mano con el interruptor del panel.
+    var soldOutKey = sanitizeKey(name);
+    return !(soldOutMap && soldOutMap[soldOutKey] === true);
   }
 
   function markSoldOut(card) {
@@ -46,7 +62,10 @@
     if (select) select.disabled = false;
   }
 
-  function applySoldOutState(soldOutMap) {
+  var lastStock = {};
+  var lastSoldOut = {};
+
+  function applyAll() {
     var cards = document.querySelectorAll(".menu-card");
     for (var i = 0; i < cards.length; i++) {
       var card = cards[i];
@@ -54,11 +73,11 @@
       if (!nameEl) continue;
       // el badge puede haberse insertado antes: cogemos solo el texto del nombre real
       var name = nameEl.childNodes[0] ? nameEl.childNodes[0].textContent.trim() : nameEl.textContent.trim();
-      var key = sanitizeKey(name);
-      if (soldOutMap && soldOutMap[key] === true) {
-        markSoldOut(card);
-      } else {
+
+      if (isAvailable(name, lastStock, lastSoldOut)) {
         markAvailable(card);
+      } else {
+        markSoldOut(card);
       }
     }
   }
@@ -72,10 +91,19 @@
     }
 
     var db = firebase.database();
-    db.ref("soldOut").on("value", function (snapshot) {
-      applySoldOutState(snapshot.val() || {});
+
+    db.ref("stock").on("value", function (snapshot) {
+      lastStock = snapshot.val() || {};
+      applyAll();
     }, function (error) {
-      console.warn("No se pudo comprobar el estado de productos agotados:", error);
+      console.warn("No se pudo comprobar el stock:", error);
+    });
+
+    db.ref("soldOut").on("value", function (snapshot) {
+      lastSoldOut = snapshot.val() || {};
+      applyAll();
+    }, function (error) {
+      console.warn("No se pudo comprobar el estado de agotados:", error);
     });
   }
 
