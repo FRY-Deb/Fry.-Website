@@ -305,6 +305,18 @@
     return Math.round(n * 100) / 100;
   }
 
+  function ensureFirebaseInitialized() {
+    if (typeof firebase === "undefined" || typeof FRY_FIREBASE_CONFIG === "undefined") return false;
+    if (!firebase.apps.length) {
+      try {
+        firebase.initializeApp(FRY_FIREBASE_CONFIG);
+      } catch (e) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   function saveOrderAndProceed(callback) {
     var finished = false;
     function done(code) {
@@ -315,7 +327,7 @@
 
     // Si Firebase no está disponible (sin conexión, bloqueado, etc.)
     // no bloqueamos al cliente: seguimos sin código de verificación.
-    if (typeof firebase === "undefined" || !firebase.apps || !firebase.apps.length) {
+    if (!ensureFirebaseInitialized()) {
       done(null);
       return;
     }
