@@ -221,7 +221,7 @@
     }, 900);
   }
 
-  function buildWhatsAppMessage() {
+  function buildWhatsAppMessage(orderCode) {
     var cart = getCart();
     if (!cart.length) return "Hola! Quisiera hacer un pedido en FRY.";
     var shipping = parseShippingValue(getShippingValue());
@@ -231,6 +231,10 @@
     var subtotalConDescuento = subtotal - discountAmount;
 
     var lines = ["Hola! Quisiera hacer este pedido:", ""];
+    if (orderCode) {
+      lines.push("Pedido #" + orderCode);
+      lines.push("");
+    }
     cart.forEach(function (i) {
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
@@ -264,6 +268,76 @@
       lines.push("Total: " + formatPrice(subtotalConDescuento + shipping.cost));
     }
     return lines.join("\n");
+  }
+
+  // ---------------------------------------------------------------
+  // Guardar el pedido en Firebase antes de abrir WhatsApp, para
+  // poder comprobar después que el precio que llega por WhatsApp
+  // no se ha tocado (el cliente puede editar el texto antes de
+  // enviarlo — esto da un código de referencia con el precio real).
+  // ---------------------------------------------------------------
+  function buildOrderData() {
+    var cart = getCart();
+    var shipping = parseShippingValue(getShippingValue());
+    var subtotal = cartTotal();
+    var discountApplied = getDiscountApplied();
+    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var total = shipping.cost === null ? null : (subtotal - discountAmount + shipping.cost);
+
+    return {
+      items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }),
+      subtotal: round2(subtotal),
+      discountApplied: discountApplied,
+      discountAmount: round2(discountAmount),
+      shippingZone: shipping.zone,
+      shippingCost: shipping.cost === null ? null : round2(shipping.cost),
+      total: total === null ? null : round2(total),
+      paymentMethod: getPaymentMethod(),
+      scheduleType: getScheduleType(),
+      scheduleTime: getScheduleTime(),
+      timestamp: (typeof firebase !== "undefined" && firebase.database && firebase.database.ServerValue)
+        ? firebase.database.ServerValue.TIMESTAMP
+        : Date.now()
+    };
+  }
+
+  function round2(n) {
+    return Math.round(n * 100) / 100;
+  }
+
+  function saveOrderAndProceed(callback) {
+    var finished = false;
+    function done(code) {
+      if (finished) return;
+      finished = true;
+      callback(code);
+    }
+
+    // Si Firebase no está disponible (sin conexión, bloqueado, etc.)
+    // no bloqueamos al cliente: seguimos sin código de verificación.
+    if (typeof firebase === "undefined" || !firebase.apps || !firebase.apps.length) {
+      done(null);
+      return;
+    }
+
+    // Nunca esperamos más de 3s a Firebase — el pedido tiene que poder
+    // enviarse igualmente aunque la base de datos vaya lenta.
+    var timeout = setTimeout(function () { done(null); }, 3000);
+
+    try {
+      var ref = firebase.database().ref("orders").push();
+      ref.set(buildOrderData()).then(function () {
+        clearTimeout(timeout);
+        var code = ref.key.slice(-6).toUpperCase();
+        done(code);
+      }).catch(function () {
+        clearTimeout(timeout);
+        done(null);
+      });
+    } catch (e) {
+      clearTimeout(timeout);
+      done(null);
+    }
   }
 
   function renderCartPage() {
@@ -442,8 +516,29 @@
     }
 
     if (orderBtn && shipping.zone !== "") {
-      var msg = buildWhatsAppMessage();
-      orderBtn.setAttribute("href", "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg));
+      // Guardamos un href "de reserva" sin código, por si algo falla en
+      // el proceso de guardado — el pedido nunca debe quedarse bloqueado.
+      var fallbackMsg = buildWhatsAppMessage(null);
+      orderBtn.setAttribute("href", "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(fallbackMsg));
+
+      if (!orderBtn.dataset.clickBound) {
+        orderBtn.dataset.clickBound = "1";
+        orderBtn.addEventListener("click", function (e) {
+          if (orderBtn.classList.contains("is-disabled")) return; // el guardia de zona ya lo gestiona
+          e.preventDefault();
+          orderBtn.classList.add("is-sending");
+          var originalText = orderBtn.textContent;
+          orderBtn.textContent = "Preparando pedido…";
+
+          saveOrderAndProceed(function (code) {
+            var msg = buildWhatsAppMessage(code);
+            var url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg);
+            orderBtn.classList.remove("is-sending");
+            orderBtn.textContent = originalText;
+            window.open(url, "_blank", "noopener");
+          });
+        });
+      }
     }
   }
 

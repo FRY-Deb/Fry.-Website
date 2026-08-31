@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260910" />
+<link rel="stylesheet" href="styles.css?v=20260911" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -50,6 +50,14 @@
   .admin-computed { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; }
   .admin-computed.is-ok { color: #4caf50; }
   .admin-computed.is-out { color: var(--red); }
+  .admin-order-card { border: 1px solid var(--line-strong); padding: 16px; margin-bottom: 12px; }
+  .admin-order-code { font-family: var(--display); font-size: 20px; color: var(--red); text-transform: uppercase; }
+  .admin-order-time { font-size: 11px; color: var(--cream-mute); float: right; }
+  .admin-order-items { margin: 10px 0; font-size: 13px; color: var(--cream-2); }
+  .admin-order-items div { padding: 2px 0; }
+  .admin-order-total { font-family: var(--display); font-size: 22px; color: var(--cream); margin-top: 8px; }
+  .admin-order-meta { font-size: 12px; color: var(--cream-mute); margin-top: 6px; }
+  .admin-orders-empty { color: var(--cream-mute); font-size: 13px; }
 </style>
 </head>
 <body>
@@ -78,6 +86,12 @@
         <button type="button" class="admin-logout" id="adminLogoutBtn">Cerrar sesión</button>
       </div>
       <p class="admin-status" id="adminStatus">Marca lo que esté agotado — se actualiza al instante en la carta para todos los clientes.</p>
+
+      <div class="admin-category" id="adminOrdersSection">
+        <h2 class="admin-category-title">Pedidos recientes</h2>
+        <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Cuando te llegue un pedido por WhatsApp con un código (ej. "Pedido #A3F92"), búscalo aquí y compara el total real con el que te diga el mensaje.</p>
+        <div id="adminOrders"></div>
+      </div>
 
       <div class="admin-category" id="adminStockSection">
         <h2 class="admin-category-title">Stock de ingredientes base</h2>
@@ -132,6 +146,7 @@
       loginBox.style.display = "none";
       panelBox.style.display = "block";
       buildPanel();
+      loadOrders();
     } else {
       loginBox.style.display = "block";
       panelBox.style.display = "none";
@@ -257,6 +272,61 @@
       for (var i = 0; i < checkboxes.length; i++) {
         checkboxes[i].checked = soldOut[checkboxes[i].dataset.key] === true;
       }
+    });
+  }
+
+  var ordersEl = document.getElementById("adminOrders");
+  var ordersLoaded = false;
+
+  function formatEuro(n) {
+    if (n === null || typeof n === "undefined") return "A consultar";
+    return n.toFixed(2).replace(".", ",") + "€";
+  }
+
+  function formatTimestamp(ts) {
+    if (!ts) return "";
+    var d = new Date(ts);
+    return d.toLocaleDateString("es-ES") + " " + d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
+  }
+
+  function loadOrders() {
+    if (ordersLoaded) return;
+    ordersLoaded = true;
+
+    db.ref("orders").orderByChild("timestamp").limitToLast(20).on("value", function (snapshot) {
+      var orders = [];
+      snapshot.forEach(function (child) {
+        orders.push({ key: child.key, data: child.val() });
+      });
+      orders.reverse(); // el más reciente primero
+
+      if (!orders.length) {
+        ordersEl.innerHTML = '<p class="admin-orders-empty">Todavía no ha llegado ningún pedido.</p>';
+        return;
+      }
+
+      ordersEl.innerHTML = orders.map(function (o) {
+        var code = o.key.slice(-6).toUpperCase();
+        var itemsHtml = (o.data.items || []).map(function (i) {
+          return "<div>" + i.qty + "x " + i.name + " — " + formatEuro(i.price * i.qty) + "</div>";
+        }).join("");
+        var discountHtml = o.data.discountApplied
+          ? "<div>Descuento aplicado: -" + formatEuro(o.data.discountAmount) + "</div>"
+          : "";
+        return (
+          '<div class="admin-order-card">' +
+            '<span class="admin-order-code">#' + code + '</span>' +
+            '<span class="admin-order-time">' + formatTimestamp(o.data.timestamp) + '</span>' +
+            '<div class="admin-order-items">' + itemsHtml + discountHtml + '</div>' +
+            '<div class="admin-order-total">Total real: ' + formatEuro(o.data.total) + '</div>' +
+            '<div class="admin-order-meta">' +
+              'Zona: ' + (o.data.shippingZone || "-") + ' · ' +
+              'Envío: ' + formatEuro(o.data.shippingCost) + ' · ' +
+              'Pago: ' + (o.data.paymentMethod || "-") +
+            '</div>' +
+          '</div>'
+        );
+      }).join("");
     });
   }
 })();

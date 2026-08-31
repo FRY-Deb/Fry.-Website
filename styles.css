@@ -962,3 +962,10 @@ body.fry-intro-finished .fry-intro {
   color: var(--cream);
   border-color: var(--line-strong);
 }
+
+/* --- Botón de pedido mientras se guarda en Firebase --- */
+.btn.is-sending {
+  opacity: 0.7;
+  cursor: wait;
+  pointer-events: none;
+}
