@@ -7,9 +7,17 @@
   var SCHEDULE_TYPE_KEY = "fryScheduleType";
   var SCHEDULE_TIME_KEY = "fryScheduleTime";
   var DISCOUNT_KEY = "fryDiscountApplied";
+  var NAME_KEY = "fryCustomerName";
+  var STREET_KEY = "fryStreet";
+  var FLOOR_KEY = "fryFloor";
+  var ACCESS_NOTES_KEY = "fryAccessNotes";
+  var HOW_FOUND_KEY = "fryHowFound";
+  var LAST_ORDER_KEY = "fryLastOrder";
   var WHATSAPP_NUMBER = "34669765785"; // debe coincidir con lib/manifest.js
   var DEFAULT_SHIPPING = ""; // "" = todavía no ha elegido zona (obligatorio antes de pedir)
   var DEFAULT_PAYMENT = "Efectivo";
+
+  var HOW_FOUND_OPTIONS = ["Instagram", "TikTok", "Boca a boca", "Vi el flyer", "Otro"];
 
   var DISCOUNT_CODE = "FRY.OPENING";
   var DISCOUNT_RATE = 0.10; // 10% sobre el subtotal de productos (no sobre el envío)
@@ -173,6 +181,89 @@
     try { localStorage.setItem(DISCOUNT_KEY, applied ? "1" : "0"); } catch (e) { /* sin persistencia */ }
   }
 
+  // --- datos del cliente: nombre, dirección, notas, cómo nos conoció ---
+  function getField(key) {
+    try { return localStorage.getItem(key) || ""; } catch (e) { return ""; }
+  }
+  function saveField(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* sin persistencia */ }
+  }
+
+  // Recalcula si el botón de pedido debe estar activo (zona, nombre,
+  // dirección, horario) sin tener que reconstruir toda la lista de
+  // productos del carrito — se llama en cada pulsación de tecla.
+  function refreshOrderButtonState() {
+    renderCartPage();
+  }
+
+  function bindPersistedField(elementId, storageKey) {
+    var el = document.getElementById(elementId);
+    if (!el) return;
+    if (!el.dataset.filled) {
+      el.dataset.filled = "1";
+      el.value = getField(storageKey);
+    }
+    if (!el.dataset.bound) {
+      el.dataset.bound = "1";
+      el.addEventListener("input", function () {
+        saveField(storageKey, el.value);
+        refreshOrderButtonState();
+      });
+    }
+  }
+
+  // --- repetir último pedido ---
+  function saveLastOrder(cart) {
+    try { localStorage.setItem(LAST_ORDER_KEY, JSON.stringify(cart)); } catch (e) { /* sin persistencia */ }
+  }
+  function getLastOrder() {
+    try {
+      var raw = localStorage.getItem(LAST_ORDER_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+  function repeatLastOrder() {
+    var last = getLastOrder();
+    if (!last || !last.length) return false;
+    saveCart(last.map(function (i) { return { name: i.name, price: i.price, qty: i.qty }; }));
+    renderCartPage();
+    return true;
+  }
+  window.__fryRepeatLastOrder = repeatLastOrder;
+  window.__fryHasLastOrder = function () { var l = getLastOrder(); return !!(l && l.length); };
+
+  // --- horario de apertura ---
+  var cachedHours = (typeof FRY_HOURS_DEFAULT !== "undefined") ? FRY_HOURS_DEFAULT : null;
+
+  function refreshHoursFromFirebase() {
+    if (!ensureFirebaseInitialized()) return;
+    try {
+      firebase.database().ref("hours").on("value", function (snapshot) {
+        var val = snapshot.val();
+        if (val) cachedHours = val;
+        renderCartPage();
+      });
+    } catch (e) { /* usamos el horario por defecto */ }
+  }
+
+  function getEffectiveOrderDate() {
+    var scheduleType = getScheduleType();
+    if (scheduleType === "later" && getScheduleTime()) {
+      var now = new Date();
+      var parts = getScheduleTime().split(":");
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), parseInt(parts[0], 10), parseInt(parts[1], 10));
+      return d;
+    }
+    return new Date();
+  }
+
+  function isCurrentlyOpenForOrder() {
+    if (!cachedHours || typeof fryIsWithinHours !== "function") return true; // sin datos de horario: no bloqueamos
+    return fryIsWithinHours(getEffectiveOrderDate(), cachedHours);
+  }
+
   function updateBadge() {
     var count = cartCount();
     var badges = document.querySelectorAll("[data-cart-badge]");
@@ -235,10 +326,32 @@
       lines.push("Pedido #" + orderCode);
       lines.push("");
     }
+
+    var name = getField(NAME_KEY);
+    var street = getField(STREET_KEY);
+    var floor = getField(FLOOR_KEY);
+    var accessNotes = getField(ACCESS_NOTES_KEY);
+    var orderNotes = document.getElementById("orderNotes") ? document.getElementById("orderNotes").value.trim() : "";
+    var howFound = getField(HOW_FOUND_KEY);
+
+    if (name) lines.push("Nombre: " + name);
+    if (street) {
+      var addressLine = "Dirección: " + street;
+      if (floor) addressLine += ", " + floor;
+      lines.push(addressLine);
+    }
+    if (accessNotes) lines.push("Notas de acceso: " + accessNotes);
+    if (name || street || accessNotes) lines.push("");
+
     cart.forEach(function (i) {
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
     lines.push("");
+
+    if (orderNotes) {
+      lines.push("Notas del pedido: " + orderNotes);
+      lines.push("");
+    }
 
     var scheduleType = getScheduleType();
     if (scheduleType === "later" && getScheduleTime()) {
@@ -251,6 +364,7 @@
     if (shipping.zone !== "" && TIME_ESTIMATES[shipping.zone]) {
       lines.push("Tiempo estimado: " + TIME_ESTIMATES[shipping.zone]);
     }
+    if (howFound) lines.push("Nos conoció por: " + howFound);
     lines.push("");
 
     lines.push("Subtotal: " + formatPrice(subtotal));
@@ -285,6 +399,12 @@
     var total = shipping.cost === null ? null : (subtotal - discountAmount + shipping.cost);
 
     return {
+      customerName: getField(NAME_KEY),
+      street: getField(STREET_KEY),
+      floor: getField(FLOOR_KEY),
+      accessNotes: getField(ACCESS_NOTES_KEY),
+      orderNotes: document.getElementById("orderNotes") ? document.getElementById("orderNotes").value.trim() : "",
+      howFound: getField(HOW_FOUND_KEY),
       items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }),
       subtotal: round2(subtotal),
       discountApplied: discountApplied,
@@ -430,6 +550,31 @@
       }
     }
 
+    // --- nombre, dirección y notas del cliente (se guardan para la próxima visita) ---
+    bindPersistedField("customerName", NAME_KEY);
+    bindPersistedField("streetAddress", STREET_KEY);
+    bindPersistedField("floorDoor", FLOOR_KEY);
+    bindPersistedField("accessNotes", ACCESS_NOTES_KEY);
+
+    var howFoundSelect = document.getElementById("howFound");
+    if (howFoundSelect) {
+      if (!howFoundSelect.dataset.optionsBuilt) {
+        howFoundSelect.dataset.optionsBuilt = "1";
+        HOW_FOUND_OPTIONS.forEach(function (opt) {
+          var o = document.createElement("option");
+          o.value = opt; o.textContent = opt;
+          howFoundSelect.appendChild(o);
+        });
+      }
+      howFoundSelect.value = getField(HOW_FOUND_KEY);
+      if (!howFoundSelect.dataset.bound) {
+        howFoundSelect.dataset.bound = "1";
+        howFoundSelect.addEventListener("change", function () {
+          saveField(HOW_FOUND_KEY, this.value);
+        });
+      }
+    }
+
     // --- tiempo estimado (depende de la zona) ---
     var shipping = parseShippingValue(getShippingValue());
     if (timeEstimateEl) {
@@ -509,22 +654,44 @@
     if (discountRowEl) discountRowEl.style.display = discountApplied ? "flex" : "none";
     if (discountAmountEl) discountAmountEl.textContent = "-" + formatPrice(discountAmount);
 
+    var blockReason = getOrderBlockReason(shipping);
+
     if (shipping.zone === "") {
-      // Todavía no ha elegido zona: obligatorio antes de poder pedir
       if (shippingCostEl) shippingCostEl.textContent = "—";
       if (shippingHintEl) shippingHintEl.style.display = "none";
-      if (totalEl) totalEl.textContent = "Elige tu zona para ver el total";
-      if (orderBtn) disableOrderBtn(orderBtn);
     } else if (shipping.cost === null) {
       if (shippingCostEl) shippingCostEl.textContent = "A consultar";
       if (shippingHintEl) shippingHintEl.style.display = "block";
-      if (totalEl) totalEl.textContent = formatPrice(subtotalConDescuento) + " + envío";
-      if (orderBtn) enableOrderBtn(orderBtn);
     } else {
       if (shippingCostEl) shippingCostEl.textContent = formatPrice(shipping.cost);
       if (shippingHintEl) shippingHintEl.style.display = "none";
+    }
+
+    if (blockReason === "zone") {
+      if (totalEl) totalEl.textContent = "Elige tu zona para ver el total";
+    } else if (shipping.cost === null) {
+      if (totalEl) totalEl.textContent = formatPrice(subtotalConDescuento) + " + envío";
+    } else {
       if (totalEl) totalEl.textContent = formatPrice(subtotalConDescuento + shipping.cost);
-      if (orderBtn) enableOrderBtn(orderBtn);
+    }
+
+    if (orderBtn) {
+      if (blockReason) disableOrderBtn(orderBtn);
+      else enableOrderBtn(orderBtn);
+    }
+
+    var blockMsgEl = document.querySelector("[data-order-block-msg]");
+    if (blockMsgEl) {
+      if (blockReason === "contact") {
+        blockMsgEl.textContent = "Necesitamos tu nombre y tu dirección para poder enviarte el pedido.";
+        blockMsgEl.style.display = "block";
+      } else if (blockReason === "hours") {
+        var hoursText = (typeof fryTodayHoursText === "function" && cachedHours) ? fryTodayHoursText(new Date(), cachedHours) : "";
+        blockMsgEl.textContent = "Ahora mismo estamos cerrados. " + hoursText + " — puedes programar tu pedido para más tarde.";
+        blockMsgEl.style.display = "block";
+      } else {
+        blockMsgEl.style.display = "none";
+      }
     }
 
     if (orderBtn && shipping.zone !== "") {
@@ -545,6 +712,7 @@
           saveOrderAndProceed(function (code) {
             var msg = buildWhatsAppMessage(code);
             var url = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(msg);
+            saveLastOrder(getCart());
             orderBtn.classList.remove("is-sending");
             orderBtn.textContent = originalText;
             window.open(url, "_blank", "noopener");
@@ -552,6 +720,15 @@
         });
       }
     }
+  }
+
+  function getOrderBlockReason(shipping) {
+    if (shipping.zone === "") return "zone";
+    var name = getField(NAME_KEY);
+    var street = getField(STREET_KEY);
+    if (!name.trim() || !street.trim()) return "contact";
+    if (!isCurrentlyOpenForOrder()) return "hours";
+    return null;
   }
 
   function disableOrderBtn(btn) {
@@ -563,11 +740,22 @@
       btn.addEventListener("click", function (e) {
         if (btn.classList.contains("is-disabled")) {
           e.preventDefault();
-          var select = document.querySelector("[data-shipping-select]");
-          if (select) {
-            select.classList.add("is-required");
-            select.focus();
-            select.scrollIntoView({ behavior: "smooth", block: "center" });
+          var shipping = parseShippingValue(getShippingValue());
+          var reason = getOrderBlockReason(shipping);
+          var target = null;
+          if (reason === "zone") {
+            target = document.querySelector("[data-shipping-select]");
+            if (target) target.classList.add("is-required");
+          } else if (reason === "contact") {
+            var name = getField(NAME_KEY);
+            target = document.getElementById(!name.trim() ? "customerName" : "streetAddress");
+          }
+          if (target) {
+            target.focus();
+            target.scrollIntoView({ behavior: "smooth", block: "center" });
+          } else {
+            var msgEl = document.querySelector("[data-order-block-msg]");
+            if (msgEl) msgEl.scrollIntoView({ behavior: "smooth", block: "center" });
           }
         }
       });
@@ -586,6 +774,21 @@
     updateBadge();
     renderCartPage();
     maybeShowUpsell();
+    refreshHoursFromFirebase();
+    initRepeatOrderButton();
+  }
+
+  function initRepeatOrderButton() {
+    var btn = document.getElementById("repeatOrderBtn");
+    if (!btn) return;
+    if (window.__fryHasLastOrder()) {
+      btn.style.display = "inline-flex";
+      btn.addEventListener("click", function () {
+        if (repeatLastOrder()) {
+          window.location.href = "carrito.html";
+        }
+      });
+    }
   }
 
   // ---------------------------------------------------------------

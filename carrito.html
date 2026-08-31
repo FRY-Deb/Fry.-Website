@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260912" />
+<link rel="stylesheet" href="styles.css?v=20260914" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -54,6 +54,41 @@
     <div data-cart-items></div>
 
     <div data-cart-summary class="cart-summary" style="display:none;">
+
+      <div class="cart-extra-field">
+        <span class="cart-shipping-label">Tus datos</span>
+        <div class="cart-contact-grid">
+          <div class="field-inline">
+            <label for="customerName">Nombre</label>
+            <input type="text" id="customerName" placeholder="Tu nombre" />
+          </div>
+          <div class="field-inline">
+            <label for="streetAddress">Calle y número</label>
+            <input type="text" id="streetAddress" placeholder="Ej: Huertas del Río 1" />
+          </div>
+          <div class="field-inline">
+            <label for="floorDoor">Piso / Puerta (opcional)</label>
+            <input type="text" id="floorDoor" placeholder="Ej: 3º B" />
+          </div>
+          <div class="field-inline">
+            <label for="accessNotes">Notas de acceso (opcional)</label>
+            <input type="text" id="accessNotes" placeholder="Ej: Portero automático, código 1234" />
+          </div>
+        </div>
+        <p class="admin-status" id="orderBlockMsg" data-order-block-msg style="display:none; color:var(--red); margin-top:10px;"></p>
+      </div>
+
+      <div class="cart-extra-field">
+        <label for="orderNotes" class="cart-shipping-label">Notas del pedido (opcional)</label>
+        <textarea id="orderNotes" rows="2" placeholder="Ej: sin cebolla, alergia a los frutos secos…" style="width:100%; background:var(--bg-2); color:var(--cream); border:1px solid var(--line-strong); padding:10px 12px; font-family:var(--sans); font-size:14px; resize:vertical;"></textarea>
+      </div>
+
+      <div class="cart-extra-field">
+        <label for="howFound" class="cart-shipping-label">¿Cómo nos conociste? (opcional)</label>
+        <select id="howFound">
+          <option value="">— Prefiero no decirlo —</option>
+        </select>
+      </div>
 
       <div class="cart-shipping">
         <label for="shippingZone" class="cart-shipping-label">Zona de entrega</label>
@@ -166,6 +201,7 @@
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script defer src="firebase-config.js"></script>
-<script defer src="cart.js?v=20260912"></script>
+<script defer src="hours-config.js"></script>
+<script defer src="cart.js?v=20260917"></script>
 </body>
 </html>

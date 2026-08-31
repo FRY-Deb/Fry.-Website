@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260913" />
+<link rel="stylesheet" href="styles.css?v=20260915" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -65,6 +65,16 @@
   .admin-order-total { font-family: var(--display); font-size: 22px; color: var(--cream); margin-top: 8px; }
   .admin-order-meta { font-size: 12px; color: var(--cream-mute); margin-top: 6px; }
   .admin-orders-empty { color: var(--cream-mute); font-size: 13px; }
+  .admin-hours-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid var(--line); gap: 12px; flex-wrap: wrap; }
+  .admin-hours-day { font-size: 15px; min-width: 90px; }
+  .admin-hours-controls { display: flex; align-items: center; gap: 10px; }
+  .admin-hours-controls select,
+  .admin-hours-controls input[type="time"] {
+    background: var(--bg-2); color: var(--cream);
+    border: 1px solid var(--line-strong); padding: 7px 10px;
+    font-family: var(--sans); font-size: 13px;
+  }
+  .admin-hours-sep { color: var(--cream-mute); font-size: 12px; }
 </style>
 </head>
 <body>
@@ -100,6 +110,12 @@
         <div id="adminOrders"></div>
       </div>
 
+      <div class="admin-category" id="adminHoursSection">
+        <h2 class="admin-category-title">Horario de apertura</h2>
+        <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Si un cliente intenta pedir "lo antes posible" fuera de estas horas, la web le avisa y le sugiere programar el pedido para más tarde.</p>
+        <div id="adminHoursInputs"></div>
+      </div>
+
       <div class="admin-category" id="adminStockSection">
         <h2 class="admin-category-title">Stock de ingredientes base</h2>
         <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Pon cuántas unidades te quedan de cada uno. Los menús y combos que los usan se marcarán agotados solos en cuanto no llegue el número.</p>
@@ -118,6 +134,7 @@
 <script src="firebase-config.js"></script>
 <script src="lib/manifest.js"></script>
 <script src="stock-requirements.js"></script>
+<script src="hours-config.js"></script>
 <script>
 (function () {
   "use strict";
@@ -152,6 +169,8 @@
 
   var ordersEl = document.getElementById("adminOrders");
   var ordersLoaded = false;
+  var HOURS_DISPLAY_ORDER = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
+  var hoursBuilt = false;
 
   auth.onAuthStateChanged(function (user) {
     if (user) {
@@ -159,6 +178,7 @@
       panelBox.style.display = "block";
       buildPanel();
       loadOrders();
+      buildHoursPanel();
     } else {
       loginBox.style.display = "block";
       panelBox.style.display = "none";
@@ -349,6 +369,93 @@
         toggles[t].addEventListener("click", function () {
           this.closest(".admin-order-card").classList.toggle("is-open");
         });
+      }
+    });
+  }
+
+  function buildHoursPanel() {
+    if (hoursBuilt) return;
+    hoursBuilt = true;
+
+    var container = document.getElementById("adminHoursInputs");
+    var dayControls = {};
+
+    HOURS_DISPLAY_ORDER.forEach(function (day) {
+      var row = document.createElement("div");
+      row.className = "admin-hours-row";
+
+      var label = document.createElement("span");
+      label.className = "admin-hours-day";
+      label.textContent = FRY_DAY_LABELS[day];
+      row.appendChild(label);
+
+      var controls = document.createElement("div");
+      controls.className = "admin-hours-controls";
+
+      var statusSelect = document.createElement("select");
+      var optClosed = document.createElement("option");
+      optClosed.value = "closed"; optClosed.textContent = "Cerrado";
+      var optOpen = document.createElement("option");
+      optOpen.value = "open"; optOpen.textContent = "Con horario";
+      statusSelect.appendChild(optClosed);
+      statusSelect.appendChild(optOpen);
+      controls.appendChild(statusSelect);
+
+      var openInput = document.createElement("input");
+      openInput.type = "time";
+      var sep = document.createElement("span");
+      sep.className = "admin-hours-sep";
+      sep.textContent = "a";
+      var closeInput = document.createElement("input");
+      closeInput.type = "time";
+
+      controls.appendChild(openInput);
+      controls.appendChild(sep);
+      controls.appendChild(closeInput);
+      row.appendChild(controls);
+      container.appendChild(row);
+
+      function updateVisibility() {
+        var show = statusSelect.value === "open";
+        openInput.style.display = show ? "inline-block" : "none";
+        sep.style.display = show ? "inline" : "none";
+        closeInput.style.display = show ? "inline-block" : "none";
+      }
+
+      function save() {
+        var value = statusSelect.value === "open" ? { open: openInput.value, close: closeInput.value } : null;
+        db.ref("hours/" + day).set(value);
+      }
+
+      statusSelect.addEventListener("change", function () { updateVisibility(); save(); });
+      openInput.addEventListener("change", save);
+      closeInput.addEventListener("change", save);
+
+      dayControls[day] = { statusSelect: statusSelect, openInput: openInput, closeInput: closeInput, updateVisibility: updateVisibility };
+    });
+
+    db.ref("hours").once("value").then(function (snapshot) {
+      var current = snapshot.val();
+      var needsSeed = !current;
+      var source = current || FRY_HOURS_DEFAULT;
+
+      HOURS_DISPLAY_ORDER.forEach(function (day) {
+        var c = dayControls[day];
+        var dayValue = source[day];
+        if (dayValue && dayValue.open && dayValue.close) {
+          c.statusSelect.value = "open";
+          c.openInput.value = dayValue.open;
+          c.closeInput.value = dayValue.close;
+        } else {
+          c.statusSelect.value = "closed";
+        }
+        c.updateVisibility();
+      });
+
+      // primera vez que se abre el panel: guardamos los valores por defecto
+      // en Firebase, para que la web ya los lea de ahí a partir de ahora.
+      if (needsSeed) {
+        db.ref("hours").set(FRY_HOURS_DEFAULT);
       }
     });
   }
