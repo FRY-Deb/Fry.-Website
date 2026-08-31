@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260911" />
+<link rel="stylesheet" href="styles.css?v=20260913" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -50,7 +50,14 @@
   .admin-computed { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; }
   .admin-computed.is-ok { color: #4caf50; }
   .admin-computed.is-out { color: var(--red); }
-  .admin-order-card { border: 1px solid var(--line-strong); padding: 16px; margin-bottom: 12px; }
+  .admin-order-card { border: 1px solid var(--line-strong); padding: 0; margin-bottom: 12px; }
+  .admin-order-summary { display: flex; align-items: center; justify-content: space-between; padding: 16px; cursor: pointer; }
+  .admin-order-summary:hover { background: var(--bg-2); }
+  .admin-order-summary-left { display: flex; align-items: baseline; gap: 14px; }
+  .admin-order-arrow { color: var(--cream-mute); font-size: 12px; transition: transform .2s; }
+  .admin-order-card.is-open .admin-order-arrow { transform: rotate(90deg); }
+  .admin-order-details { display: none; padding: 0 16px 16px; border-top: 1px solid var(--line); }
+  .admin-order-card.is-open .admin-order-details { display: block; padding-top: 14px; }
   .admin-order-code { font-family: var(--display); font-size: 20px; color: var(--red); text-transform: uppercase; }
   .admin-order-time { font-size: 11px; color: var(--cream-mute); float: right; }
   .admin-order-items { margin: 10px 0; font-size: 13px; color: var(--cream-2); }
@@ -115,6 +122,8 @@
 (function () {
   "use strict";
 
+  function initAdmin() {
+
   firebase.initializeApp(FRY_FIREBASE_CONFIG);
   var auth = firebase.auth();
   var db = firebase.database();
@@ -140,6 +149,9 @@
   document.getElementById("adminLogoutBtn").addEventListener("click", function () {
     auth.signOut();
   });
+
+  var ordersEl = document.getElementById("adminOrders");
+  var ordersLoaded = false;
 
   auth.onAuthStateChanged(function (user) {
     if (user) {
@@ -275,9 +287,6 @@
     });
   }
 
-  var ordersEl = document.getElementById("adminOrders");
-  var ordersLoaded = false;
-
   function formatEuro(n) {
     if (n === null || typeof n === "undefined") return "A consultar";
     return n.toFixed(2).replace(".", ",") + "€";
@@ -315,19 +324,41 @@
           : "";
         return (
           '<div class="admin-order-card">' +
-            '<span class="admin-order-code">#' + code + '</span>' +
-            '<span class="admin-order-time">' + formatTimestamp(o.data.timestamp) + '</span>' +
-            '<div class="admin-order-items">' + itemsHtml + discountHtml + '</div>' +
-            '<div class="admin-order-total">Total real: ' + formatEuro(o.data.total) + '</div>' +
-            '<div class="admin-order-meta">' +
-              'Zona: ' + (o.data.shippingZone || "-") + ' · ' +
-              'Envío: ' + formatEuro(o.data.shippingCost) + ' · ' +
-              'Pago: ' + (o.data.paymentMethod || "-") +
+            '<div class="admin-order-summary" data-order-toggle>' +
+              '<div class="admin-order-summary-left">' +
+                '<span class="admin-order-code">#' + code + '</span>' +
+                '<span class="admin-order-total" style="margin-top:0;">' + formatEuro(o.data.total) + '</span>' +
+              '</div>' +
+              '<span class="admin-order-arrow">▶</span>' +
+            '</div>' +
+            '<div class="admin-order-details">' +
+              '<span class="admin-order-time">' + formatTimestamp(o.data.timestamp) + '</span>' +
+              '<div class="admin-order-items">' + itemsHtml + discountHtml + '</div>' +
+              '<div class="admin-order-meta">' +
+                'Zona: ' + (o.data.shippingZone || "-") + ' · ' +
+                'Envío: ' + formatEuro(o.data.shippingCost) + ' · ' +
+                'Pago: ' + (o.data.paymentMethod || "-") +
+              '</div>' +
             '</div>' +
           '</div>'
         );
       }).join("");
+
+      var toggles = ordersEl.querySelectorAll("[data-order-toggle]");
+      for (var t = 0; t < toggles.length; t++) {
+        toggles[t].addEventListener("click", function () {
+          this.closest(".admin-order-card").classList.toggle("is-open");
+        });
+      }
     });
+  }
+
+  } // fin de initAdmin
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initAdmin);
+  } else {
+    initAdmin();
   }
 })();
 </script>
