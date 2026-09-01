@@ -705,6 +705,14 @@
         orderBtn.addEventListener("click", function (e) {
           if (orderBtn.classList.contains("is-disabled")) return; // el guardia de zona ya lo gestiona
           e.preventDefault();
+
+          // Abrimos la pestaña YA, de forma síncrona con el clic — así el
+          // navegador nunca la bloquea. OJO: sin "noopener" aquí, porque
+          // necesitamos quedarnos con la referencia para poder redirigirla
+          // en cuanto tengamos la URL final (con "noopener" el navegador
+          // no nos deja guardar esa referencia).
+          var newTab = window.open("", "_blank");
+
           orderBtn.classList.add("is-sending");
           var originalText = orderBtn.textContent;
           orderBtn.textContent = "Preparando pedido…";
@@ -715,7 +723,13 @@
             saveLastOrder(getCart());
             orderBtn.classList.remove("is-sending");
             orderBtn.textContent = originalText;
-            window.open(url, "_blank", "noopener");
+            if (newTab && !newTab.closed) {
+              newTab.location.href = url;
+            } else {
+              // el navegador bloqueó incluso la pestaña en blanco: probamos
+              // igualmente, por si el usuario tiene que darle a "permitir".
+              window.open(url, "_blank", "noopener");
+            }
           });
         });
       }
