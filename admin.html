@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20260915" />
+<link rel="stylesheet" href="styles.css?v=20260920" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -75,6 +75,11 @@
     font-family: var(--sans); font-size: 13px;
   }
   .admin-hours-sep { color: var(--cream-mute); font-size: 12px; }
+  .admin-order-delete {
+    font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+    color: var(--red); border: 1px solid var(--red); padding: 6px 14px; margin-top: 12px;
+  }
+  .admin-order-delete:hover { background: var(--red); color: var(--cream); }
 </style>
 </head>
 <body>
@@ -107,6 +112,7 @@
       <div class="admin-category" id="adminOrdersSection">
         <h2 class="admin-category-title">Pedidos recientes</h2>
         <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Cuando te llegue un pedido por WhatsApp con un código (ej. "Pedido #A3F92"), búscalo aquí y compara el total real con el que te diga el mensaje.</p>
+        <button type="button" id="deleteAllOrdersBtn" class="admin-logout" style="margin-bottom:16px;">Borrar todos los pedidos</button>
         <div id="adminOrders"></div>
       </div>
 
@@ -359,6 +365,7 @@
                 'Envío: ' + formatEuro(o.data.shippingCost) + ' · ' +
                 'Pago: ' + (o.data.paymentMethod || "-") +
               '</div>' +
+              '<button type="button" class="admin-order-delete" data-order-delete="' + o.key + '">Eliminar este pedido</button>' +
             '</div>' +
           '</div>'
         );
@@ -369,6 +376,27 @@
         toggles[t].addEventListener("click", function () {
           this.closest(".admin-order-card").classList.toggle("is-open");
         });
+      }
+
+      var deleteBtns = ordersEl.querySelectorAll("[data-order-delete]");
+      for (var d = 0; d < deleteBtns.length; d++) {
+        deleteBtns[d].addEventListener("click", function (e) {
+          e.stopPropagation(); // que no dispare el toggle de la tarjeta
+          var key = this.dataset.orderDelete;
+          if (confirm("¿Eliminar este pedido? No se puede deshacer.")) {
+            db.ref("orders/" + key).remove();
+          }
+        });
+      }
+    });
+  }
+
+  var deleteAllBtn = document.getElementById("deleteAllOrdersBtn");
+  if (deleteAllBtn && !deleteAllBtn.dataset.bound) {
+    deleteAllBtn.dataset.bound = "1";
+    deleteAllBtn.addEventListener("click", function () {
+      if (confirm("¿Borrar TODOS los pedidos guardados? Esto no se puede deshacer.")) {
+        db.ref("orders").remove();
       }
     });
   }
