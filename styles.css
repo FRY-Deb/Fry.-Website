@@ -791,6 +791,10 @@ body.fry-intro-finished .fry-intro {
 .upsell-item:first-of-type { border-top: none; padding-top: 0; }
 .upsell-item-text { font-size: 14px; color: var(--cream-2); margin-bottom: 12px; line-height: 1.5; }
 .upsell-item-text strong { color: var(--cream); }
+.upsell-item-confirmed {
+  color: var(--red); font-weight: 700; margin-bottom: 0;
+  padding: 6px 0;
+}
 .upsell-item-price {
   font-family: var(--display);
   color: var(--red);

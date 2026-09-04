@@ -1021,6 +1021,8 @@
     var upgradeBtns = overlay.querySelectorAll("[data-upgrade-from]");
     for (var i = 0; i < upgradeBtns.length; i++) {
       (function (btn) {
+        if (btn.dataset.actionBound) return;
+        btn.dataset.actionBound = "1";
         btn.addEventListener("click", function () {
           var fromName = btn.dataset.upgradeFrom;
           var toName = btn.dataset.upgradeTo;
@@ -1035,6 +1037,8 @@
     var addonBtns = overlay.querySelectorAll("[data-upsell-add]");
     for (var j = 0; j < addonBtns.length; j++) {
       (function (btn) {
+        if (btn.dataset.actionBound) return;
+        btn.dataset.actionBound = "1";
         btn.addEventListener("click", function () {
           addToCart(btn.dataset.name, btn.dataset.price);
           flashAdded(btn);
@@ -1046,7 +1050,10 @@
     var sauceAddBtns = overlay.querySelectorAll("[data-sauce-add]");
     for (var s = 0; s < sauceAddBtns.length; s++) {
       (function (btn) {
+        if (btn.dataset.actionBound) return;
+        btn.dataset.actionBound = "1";
         btn.addEventListener("click", function () {
+          var itemEl = btn.closest(".upsell-item");
           var baseName = btn.dataset.sauceAdd;
           var mode = btn.dataset.sauceMode; // "ontop" | "bathed"
           var qty = parseInt(btn.dataset.sauceQty, 10);
@@ -1054,16 +1061,22 @@
           var selectEl = overlay.querySelector('[data-sauce-select-for="' + baseName + '"]');
           var flavor = selectEl ? selectEl.value : SAUCE_FLAVORS[0];
 
-          var newName, newPrice;
+          var newName, newPrice, confirmMsg;
           if (mode === "ontop") {
             newName = baseName + " (salsa " + flavor + " por encima)";
             newPrice = basePrice + SAUCE_ONTOP_EXTRA;
+            confirmMsg = "Añadida salsa " + flavor + " por encima a " + baseName;
           } else {
             newName = baseName + " (bañada en salsa " + flavor + ")";
             newPrice = basePrice + SAUCE_BATHED_EXTRA;
+            confirmMsg = baseName + " bañada en salsa " + flavor;
           }
           convertCartItemSauce(baseName, newName, newPrice, qty);
-          maybeShowUpsell(); // refrescar el popup para reflejar el nuevo estado
+
+          if (itemEl) {
+            showSauceConfirmation(itemEl, confirmMsg);
+            settleSauceItem(itemEl, newName);
+          }
         });
       })(sauceAddBtns[s]);
     }
@@ -1072,7 +1085,10 @@
     var sauceUpgradeBtns = overlay.querySelectorAll("[data-sauce-upgrade]");
     for (var u = 0; u < sauceUpgradeBtns.length; u++) {
       (function (btn) {
+        if (btn.dataset.actionBound) return;
+        btn.dataset.actionBound = "1";
         btn.addEventListener("click", function () {
+          var itemEl = btn.closest(".upsell-item");
           var oldName = btn.dataset.sauceUpgrade;
           var baseName = btn.dataset.sauceBase;
           var flavor = btn.dataset.sauceFlavor;
@@ -1081,44 +1097,75 @@
           var newName = baseName + " (bañada en salsa " + flavor + ")";
           var newPrice = basePrice + SAUCE_BATHED_EXTRA;
           convertCartItemSauce(oldName, newName, newPrice, qty);
-          maybeShowUpsell();
+
+          if (itemEl) {
+            showSauceConfirmation(itemEl, baseName + " bañada en salsa " + flavor);
+            settleSauceItem(itemEl, newName);
+          }
         });
       })(sauceUpgradeBtns[u]);
     }
   }
 
-  function buildSauceItemsHtml(cart) {
-    var htmlParts = [];
-    cart.forEach(function (i) {
-      var parsed = parseSaucedName(i.name);
-      if (!SAUCE_ELIGIBLE_PRICES.hasOwnProperty(parsed.base)) return;
-      if (parsed.state === "bathed") return; // ya al máximo, no mostramos nada
+  function buildSauceItemBlockHtml(item) {
+    var parsed = parseSaucedName(item.name);
+    if (!SAUCE_ELIGIBLE_PRICES.hasOwnProperty(parsed.base)) return "";
+    if (parsed.state === "bathed") return ""; // ya al máximo, no mostramos nada
 
-      if (parsed.state === "none") {
-        var flavorOptions = SAUCE_FLAVORS.map(function (f) {
-          return '<option value="' + f + '">' + escHTML(f) + '</option>';
-        }).join("");
-        htmlParts.push(
-          '<div class="upsell-item">' +
-            '<p class="upsell-item-text"><strong>' + escHTML(i.name) + '</strong> (x' + i.qty + ') — ¿le añadimos salsa?</p>' +
-            '<select class="upsell-sauce-select" data-sauce-select-for="' + i.name + '">' + flavorOptions + '</select>' +
-            '<div class="upsell-sauce-btn-row">' +
-              '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + i.name + '" data-sauce-mode="ontop" data-sauce-qty="' + i.qty + '">Salsa por encima (+' + formatPrice(SAUCE_ONTOP_EXTRA) + '/ud)</button>' +
-              '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + i.name + '" data-sauce-mode="bathed" data-sauce-qty="' + i.qty + '">Bañarla en salsa (+' + formatPrice(SAUCE_BATHED_EXTRA) + '/ud)</button>' +
-            '</div>' +
-          '</div>'
-        );
-      } else if (parsed.state === "ontop") {
-        htmlParts.push(
-          '<div class="upsell-item">' +
-            '<p class="upsell-item-text"><strong>' + escHTML(parsed.base) + '</strong> — salsa ' + escHTML(parsed.flavor) + ' por encima (x' + i.qty + ')</p>' +
-            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-upgrade="' + i.name + '" data-sauce-base="' + parsed.base + '" data-sauce-flavor="' + parsed.flavor + '" data-sauce-qty="' + i.qty + '">Bañarla también (+' + formatPrice(SAUCE_BATHED_EXTRA - SAUCE_ONTOP_EXTRA) + '/ud más)</button>' +
-          '</div>'
-        );
-      }
-    });
-    return htmlParts.join("");
+    if (parsed.state === "none") {
+      var flavorOptions = SAUCE_FLAVORS.map(function (f) {
+        return '<option value="' + f + '">' + escHTML(f) + '</option>';
+      }).join("");
+      return (
+        '<div class="upsell-item">' +
+          '<p class="upsell-item-text"><strong>' + escHTML(item.name) + '</strong> (x' + item.qty + ') — ¿le añadimos salsa?</p>' +
+          '<select class="upsell-sauce-select" data-sauce-select-for="' + item.name + '">' + flavorOptions + '</select>' +
+          '<div class="upsell-sauce-btn-row">' +
+            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + item.name + '" data-sauce-mode="ontop" data-sauce-qty="' + item.qty + '">Salsa por encima (+' + formatPrice(SAUCE_ONTOP_EXTRA) + '/ud)</button>' +
+            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + item.name + '" data-sauce-mode="bathed" data-sauce-qty="' + item.qty + '">Bañarla en salsa (+' + formatPrice(SAUCE_BATHED_EXTRA) + '/ud)</button>' +
+          '</div>' +
+        '</div>'
+      );
+    } else if (parsed.state === "ontop") {
+      return (
+        '<div class="upsell-item">' +
+          '<p class="upsell-item-text"><strong>' + escHTML(parsed.base) + '</strong> — salsa ' + escHTML(parsed.flavor) + ' por encima (x' + item.qty + ')</p>' +
+          '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-upgrade="' + item.name + '" data-sauce-base="' + parsed.base + '" data-sauce-flavor="' + parsed.flavor + '" data-sauce-qty="' + item.qty + '">Bañarla también (+' + formatPrice(SAUCE_BATHED_EXTRA - SAUCE_ONTOP_EXTRA) + '/ud más)</button>' +
+        '</div>'
+      );
+    }
+    return "";
   }
+
+  function buildSauceItemsHtml(cart) {
+    return cart.map(buildSauceItemBlockHtml).join("");
+  }
+
+  // Muestra una confirmación clara (sin botones) en el sitio exacto donde
+  // estaba el botón pulsado, para que un segundo clic accidental no caiga
+  // sobre una acción distinta que haya aparecido en ese mismo hueco.
+  function showSauceConfirmation(itemEl, message) {
+    itemEl.innerHTML = '<p class="upsell-item-text upsell-item-confirmed">✓ ' + escHTML(message) + '</p>';
+  }
+
+  // Tras la confirmación, sustituye SOLO ese bloque por su siguiente estado
+  // real (o lo elimina si ya no hay nada más que ofrecer ahí).
+  function settleSauceItem(itemEl, newName) {
+    setTimeout(function () {
+      if (!itemEl.parentNode) return; // el usuario ya cerró el popup
+      var cart = getCart();
+      var updated = cart.filter(function (i) { return i.name === newName; })[0];
+      var nextHtml = updated ? buildSauceItemBlockHtml(updated) : "";
+      if (!nextHtml) {
+        itemEl.remove();
+      } else {
+        itemEl.outerHTML = nextHtml;
+        var overlay = document.querySelector("[data-upsell-overlay]");
+        if (overlay) bindUpsellActions(overlay);
+      }
+    }, 1100);
+  }
+
 
   function maybeShowUpsell() {
     // solo tiene sentido en la página del carrito
