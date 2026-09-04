@@ -627,11 +627,31 @@ body.fry-intro-finished .fry-intro {
   font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
   color: var(--cream);
   border: 1px solid var(--line-strong);
-  padding: 8px 16px;
+  border-radius: 999px;
+  padding: 8px 18px;
   transition: background-color .25s var(--ease-out), color .25s var(--ease-out), border-color .25s var(--ease-out);
 }
 .menu-card-add:hover { background: var(--cream); color: var(--bg); border-color: var(--cream); }
 .menu-card-add.is-added { background: var(--red); color: var(--cream); border-color: var(--red); }
+
+/* --- Control de cantidad tipo píldora: "− N +", usado en la carta y en la
+   ventana emergente. Comparte look con el stepper del carrito (.cart-row-qty). --- */
+.qty-control { grid-column: 1 / -1; margin-top: 10px; }
+.qty-stepper {
+  display: inline-flex; align-items: center; gap: 16px;
+  border: 1px solid var(--line-strong);
+  border-radius: 999px;
+  padding: 7px 20px;
+}
+.qty-stepper-btn {
+  font-family: var(--display);
+  font-size: 18px; line-height: 1;
+  color: var(--cream);
+  width: 18px; height: 18px;
+  display: flex; align-items: center; justify-content: center;
+}
+.qty-stepper-btn:hover { color: var(--red); }
+.qty-stepper-num { font-family: var(--sans); font-size: 14px; font-weight: 700; min-width: 14px; text-align: center; }
 
 /* --- Página del carrito --- */
 .cart-empty {
@@ -655,7 +675,8 @@ body.fry-intro-finished .fry-intro {
 .cart-row-qty {
   display: flex; align-items: center; gap: 10px;
   border: 1px solid var(--line-strong);
-  padding: 4px 10px;
+  border-radius: 999px;
+  padding: 6px 16px;
 }
 .cart-row-qty button {
   font-family: var(--display);

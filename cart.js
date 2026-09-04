@@ -59,6 +59,7 @@
       /* almacenamiento no disponible: seguimos sin persistencia */
     }
     updateBadge();
+    refreshAllQtyControls();
   }
 
   function parsePrice(str) {
@@ -310,6 +311,95 @@
       btn.textContent = original;
       btn.classList.remove("is-added");
     }, 900);
+  }
+
+  // ---------------------------------------------------------------
+  // Control de cantidad tipo píldora ("+ Añadir" -> "− N +")
+  // Se usa en cada producto de la carta y en la ventana emergente.
+  // ---------------------------------------------------------------
+  function qtyStepperHTML(qty) {
+    return (
+      '<div class="qty-stepper">' +
+        '<button type="button" class="qty-stepper-btn" data-qty-dec aria-label="Quitar uno">−</button>' +
+        '<span class="qty-stepper-num">' + qty + '</span>' +
+        '<button type="button" class="qty-stepper-btn" data-qty-inc aria-label="Añadir uno">+</button>' +
+      '</div>'
+    );
+  }
+
+  function renderQtyControl(container) {
+    var name = container.dataset.name;
+    var priceStr = container.dataset.price;
+    var cart = getCart();
+    var item = cart.filter(function (i) { return i.name === name; })[0];
+    var qty = item ? item.qty : 0;
+
+    if (qty <= 0) {
+      container.innerHTML = '<button type="button" class="menu-card-add" data-qty-add>+ Añadir</button>';
+    } else {
+      container.innerHTML = qtyStepperHTML(qty);
+    }
+
+    if (!container.dataset.bound) {
+      container.dataset.bound = "1";
+      container.addEventListener("click", function (e) {
+        if (e.target.closest("[data-qty-add]") || e.target.closest("[data-qty-inc]")) {
+          addToCart(name, priceStr);
+        } else if (e.target.closest("[data-qty-dec]")) {
+          updateQty(name, -1);
+        }
+      });
+    }
+  }
+
+  // Variante con selector de sabor (Refrescos): la cantidad depende de
+  // cuál esté elegido en el desplegable en cada momento.
+  function renderVariantQtyControl(wrapper) {
+    var select = wrapper.querySelector("[data-variant-select]");
+    var container = wrapper.querySelector("[data-qty-control-variant]");
+    if (!select || !container) return;
+
+    var priceStr = container.dataset.price;
+    var cart = getCart();
+    var item = cart.filter(function (i) { return i.name === select.value; })[0];
+    var qty = item ? item.qty : 0;
+
+    if (qty <= 0) {
+      container.innerHTML = '<button type="button" class="menu-card-add" data-qty-add>+ Añadir</button>';
+    } else {
+      container.innerHTML = qtyStepperHTML(qty);
+    }
+
+    if (!container.dataset.bound) {
+      container.dataset.bound = "1";
+      container.addEventListener("click", function (e) {
+        if (e.target.closest("[data-qty-add]") || e.target.closest("[data-qty-inc]")) {
+          addToCart(select.value, priceStr);
+        } else if (e.target.closest("[data-qty-dec]")) {
+          updateQty(select.value, -1);
+        }
+      });
+    }
+    if (!select.dataset.qtyBound) {
+      select.dataset.qtyBound = "1";
+      select.addEventListener("change", function () { renderVariantQtyControl(wrapper); });
+    }
+  }
+
+  function initQtyControls() {
+    var containers = document.querySelectorAll("[data-qty-control]");
+    for (var i = 0; i < containers.length; i++) renderQtyControl(containers[i]);
+
+    var variantWrappers = document.querySelectorAll(".menu-card-variant");
+    for (var j = 0; j < variantWrappers.length; j++) renderVariantQtyControl(variantWrappers[j]);
+  }
+
+  function refreshAllQtyControls() {
+    var containers = document.querySelectorAll("[data-qty-control]");
+    for (var i = 0; i < containers.length; i++) renderQtyControl(containers[i]);
+
+    var variantWrappers = document.querySelectorAll(".menu-card-variant");
+    for (var j = 0; j < variantWrappers.length; j++) renderVariantQtyControl(variantWrappers[j]);
   }
 
   function buildWhatsAppMessage(orderCode) {
@@ -785,6 +875,7 @@
 
   function boot() {
     bindAddButtons();
+    initQtyControls();
     updateBadge();
     renderCartPage();
     maybeShowUpsell();
@@ -906,6 +997,7 @@
     overlay.querySelector("[data-upsell-content]").innerHTML = html;
     overlay.classList.add("is-open");
     bindUpsellActions(overlay);
+    initQtyControls();
   }
 
   function closeUpsell() {
@@ -1046,8 +1138,8 @@
         EXTRA_ADDONS.map(function (a) {
           return (
             '<div class="upsell-item">' +
-              '<p class="upsell-item-text">' + escHTML(a.text) + "</p>" +
-              '<button type="button" class="upsell-btn" data-upsell-add data-name="' + escHTML(a.name) + '" data-price="' + escHTML(a.price) + '">+ Añadir por ' + escHTML(a.price) + "</button>" +
+              '<p class="upsell-item-text">' + escHTML(a.text) + " (" + escHTML(a.price) + ")</p>" +
+              '<div class="qty-control" data-qty-control data-name="' + escHTML(a.name) + '" data-price="' + escHTML(a.price) + '"></div>' +
             "</div>"
           );
         }).join("") +
