@@ -406,6 +406,16 @@ ul { list-style: none; padding: 0; }
   font-size: 13px; color: var(--cream-mute);
 }
 .menu-upcoming strong { color: var(--cream-2); }
+.menu-category-extras {
+  margin: 10px 0 20px;
+  padding: 14px 18px;
+  border: 1px solid var(--red);
+  font-size: 13px;
+  color: var(--cream);
+  line-height: 1.6;
+}
+.menu-category-extras strong { color: var(--red); }
+.menu-category-extras-fine { display: block; margin-top: 4px; color: var(--cream-mute); font-size: 11px; }
 
 /* --- Combos section --- */
 .combos-section { padding: 100px 0; border-top: 1px solid var(--line); }
