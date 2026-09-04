@@ -847,7 +847,9 @@
     "Mega Familiar": 44.90,
     "Hamburguesa FRY.": 8.00,
     "Combo 2 Hamburguesas": 24.00,
-    "Familiar 4 Hamburguesas": 31.90
+    "Familiar 4 Hamburguesas": 31.90,
+    "Dúo Tiras + Pieza": 26.90,
+    "Fiesta Mixta": 55.90
   };
 
   var SAUCE_FLAVORS = ["Bourbon", "Sweet Chilli", "Habanero Mango"];
