@@ -792,6 +792,18 @@ body.fry-intro-finished .fry-intro {
   text-decoration: underline;
 }
 .upsell-dismiss:hover { color: var(--cream); }
+.upsell-subhead {
+  font-family: var(--display); font-size: 15px; text-transform: uppercase;
+  color: var(--red); margin: 20px 0 4px; padding-top: 16px; border-top: 1px solid var(--line);
+}
+.upsell-sauce-select {
+  width: 100%; margin-bottom: 10px;
+  background: var(--bg-2); color: var(--cream);
+  border: 1px solid var(--line-strong); padding: 8px 10px;
+  font-family: var(--sans); font-size: 13px;
+}
+.upsell-sauce-btn-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.upsell-btn-small { font-size: 11px; padding: 8px 12px; }
 
 /* --- Zona de entrega y desglose del carrito --- */
 .cart-shipping {

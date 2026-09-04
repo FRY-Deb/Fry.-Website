@@ -829,6 +829,54 @@
     { name: "Mazorca FRY.", price: "2,90€", text: "Mazorca bañada en mantequilla y sazón cajun." }
   ];
 
+  // Productos a los que se les puede añadir salsa por encima o bañarlos.
+  // El precio es el de la carta (sin ningún extra) — a partir de aquí se
+  // suma +1,00€ (por encima) o +1,50€ (bañada), SIEMPRE por unidad/combo,
+  // nunca un extra fijo repartido entre varias unidades.
+  var SAUCE_ELIGIBLE_PRICES = {
+    "Pechuga Entera": 8.50,
+    "Menú 2 Piezas": 13.50,
+    "Menú Para 2": 25.90,
+    "Menú Para 3": 37.90,
+    "Familiar 8 Piezas": 49.90,
+    "Ración 4 Tiras": 7.50,
+    "Menú 2 Tiras": 6.50,
+    "Menú 3 Tiras": 7.50,
+    "Menú 4 Tiras": 8.50,
+    "Cubo Familiar de Tiras": 29.90,
+    "Mega Familiar": 44.90,
+    "Hamburguesa FRY.": 8.00,
+    "Combo 2 Hamburguesas": 24.00,
+    "Familiar 4 Hamburguesas": 31.90
+  };
+
+  var SAUCE_FLAVORS = ["Bourbon", "Sweet Chilli", "Habanero Mango"];
+  var SAUCE_ONTOP_EXTRA = 1.00;
+  var SAUCE_BATHED_EXTRA = 1.50;
+
+  // Detecta si un nombre de carrito ya lleva salsa añadida, y con qué sabor.
+  // "Pechuga Entera (salsa Bourbon por encima)" / "Pechuga Entera (bañada en salsa Bourbon)"
+  function parseSaucedName(name) {
+    var mOntop = name.match(/^(.+) \(salsa (.+) por encima\)$/);
+    if (mOntop) return { base: mOntop[1], flavor: mOntop[2], state: "ontop" };
+    var mBathed = name.match(/^(.+) \(bañada en salsa (.+)\)$/);
+    if (mBathed) return { base: mBathed[1], flavor: mBathed[2], state: "bathed" };
+    return { base: name, flavor: null, state: "none" };
+  }
+
+  function convertCartItemSauce(oldName, newName, newPrice, qty) {
+    var cart = getCart();
+    cart = cart.filter(function (i) { return i.name !== oldName; });
+    var existing = cart.filter(function (i) { return i.name === newName; })[0];
+    if (existing) {
+      existing.qty += qty;
+    } else {
+      cart.push({ name: newName, price: newPrice, qty: qty });
+    }
+    saveCart(cart);
+    renderCartPage();
+  }
+
   function ensureModal() {
     var overlay = document.querySelector("[data-upsell-overlay]");
     if (overlay) return overlay;
@@ -899,6 +947,83 @@
         });
       })(addonBtns[j]);
     }
+
+    // Añadir salsa por encima o bañar (desde estado "sin salsa")
+    var sauceAddBtns = overlay.querySelectorAll("[data-sauce-add]");
+    for (var s = 0; s < sauceAddBtns.length; s++) {
+      (function (btn) {
+        btn.addEventListener("click", function () {
+          var baseName = btn.dataset.sauceAdd;
+          var mode = btn.dataset.sauceMode; // "ontop" | "bathed"
+          var qty = parseInt(btn.dataset.sauceQty, 10);
+          var basePrice = SAUCE_ELIGIBLE_PRICES[baseName];
+          var selectEl = overlay.querySelector('[data-sauce-select-for="' + baseName + '"]');
+          var flavor = selectEl ? selectEl.value : SAUCE_FLAVORS[0];
+
+          var newName, newPrice;
+          if (mode === "ontop") {
+            newName = baseName + " (salsa " + flavor + " por encima)";
+            newPrice = basePrice + SAUCE_ONTOP_EXTRA;
+          } else {
+            newName = baseName + " (bañada en salsa " + flavor + ")";
+            newPrice = basePrice + SAUCE_BATHED_EXTRA;
+          }
+          convertCartItemSauce(baseName, newName, newPrice, qty);
+          maybeShowUpsell(); // refrescar el popup para reflejar el nuevo estado
+        });
+      })(sauceAddBtns[s]);
+    }
+
+    // Subir de "salsa por encima" a "bañada" (+0,50€/ud más)
+    var sauceUpgradeBtns = overlay.querySelectorAll("[data-sauce-upgrade]");
+    for (var u = 0; u < sauceUpgradeBtns.length; u++) {
+      (function (btn) {
+        btn.addEventListener("click", function () {
+          var oldName = btn.dataset.sauceUpgrade;
+          var baseName = btn.dataset.sauceBase;
+          var flavor = btn.dataset.sauceFlavor;
+          var qty = parseInt(btn.dataset.sauceQty, 10);
+          var basePrice = SAUCE_ELIGIBLE_PRICES[baseName];
+          var newName = baseName + " (bañada en salsa " + flavor + ")";
+          var newPrice = basePrice + SAUCE_BATHED_EXTRA;
+          convertCartItemSauce(oldName, newName, newPrice, qty);
+          maybeShowUpsell();
+        });
+      })(sauceUpgradeBtns[u]);
+    }
+  }
+
+  function buildSauceItemsHtml(cart) {
+    var htmlParts = [];
+    cart.forEach(function (i) {
+      var parsed = parseSaucedName(i.name);
+      if (!SAUCE_ELIGIBLE_PRICES.hasOwnProperty(parsed.base)) return;
+      if (parsed.state === "bathed") return; // ya al máximo, no mostramos nada
+
+      if (parsed.state === "none") {
+        var flavorOptions = SAUCE_FLAVORS.map(function (f) {
+          return '<option value="' + f + '">' + escHTML(f) + '</option>';
+        }).join("");
+        htmlParts.push(
+          '<div class="upsell-item">' +
+            '<p class="upsell-item-text"><strong>' + escHTML(i.name) + '</strong> (x' + i.qty + ') — ¿le añadimos salsa?</p>' +
+            '<select class="upsell-sauce-select" data-sauce-select-for="' + i.name + '">' + flavorOptions + '</select>' +
+            '<div class="upsell-sauce-btn-row">' +
+              '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + i.name + '" data-sauce-mode="ontop" data-sauce-qty="' + i.qty + '">Salsa por encima (+' + formatPrice(SAUCE_ONTOP_EXTRA) + '/ud)</button>' +
+              '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + i.name + '" data-sauce-mode="bathed" data-sauce-qty="' + i.qty + '">Bañarla en salsa (+' + formatPrice(SAUCE_BATHED_EXTRA) + '/ud)</button>' +
+            '</div>' +
+          '</div>'
+        );
+      } else if (parsed.state === "ontop") {
+        htmlParts.push(
+          '<div class="upsell-item">' +
+            '<p class="upsell-item-text"><strong>' + escHTML(parsed.base) + '</strong> — salsa ' + escHTML(parsed.flavor) + ' por encima (x' + i.qty + ')</p>' +
+            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-upgrade="' + i.name + '" data-sauce-base="' + parsed.base + '" data-sauce-flavor="' + parsed.flavor + '" data-sauce-qty="' + i.qty + '">Bañarla también (+' + formatPrice(SAUCE_BATHED_EXTRA - SAUCE_ONTOP_EXTRA) + '/ud más)</button>' +
+          '</div>'
+        );
+      }
+    });
+    return htmlParts.join("");
   }
 
   function maybeShowUpsell() {
@@ -911,7 +1036,8 @@
     var hasMenu = cart.some(function (i) { return MENU_ITEM_NAMES.indexOf(i.name) !== -1; });
 
     if (hasMenu) {
-      // Ya tienen un menú completo -> ofrecer extras con descuento
+      // Ya tienen un menú completo -> ofrecer extras con descuento + salsas
+      var sauceHtml = buildSauceItemsHtml(cart);
       var html =
         '<span class="eyebrow upsell-eyebrow">Completa tu pedido</span>' +
         '<h2 class="upsell-title">¿Añadimos algo más?</h2>' +
@@ -923,6 +1049,7 @@
             "</div>"
           );
         }).join("") +
+        (sauceHtml ? '<p class="upsell-subhead">¿Le añadimos salsa a algo?</p>' + sauceHtml : "") +
         '<a href="#" class="upsell-dismiss" data-upsell-close>No, gracias</a>';
       openUpsell(html);
       return;
