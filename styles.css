@@ -397,7 +397,17 @@ ul { list-style: none; padding: 0; }
 
 /* --- Menu section --- */
 .menu-section { padding-bottom: 100px; }
+[data-menu-categories] { display: block; }
 .menu-category { margin-bottom: 64px; }
+
+@media (min-width: 760px) {
+  [data-menu-categories] {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 48px;
+    align-items: start;
+  }
+}
 .menu-category-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
 .menu-category-label { font-family: var(--display); font-size: clamp(26px, 4vw, 40px); text-transform: uppercase; }
 .menu-category-note { color: var(--cream-mute); font-size: 14px; margin-bottom: 12px; }
@@ -638,20 +648,22 @@ body.fry-intro-finished .fry-intro {
    ventana emergente. Comparte look con el stepper del carrito (.cart-row-qty). --- */
 .qty-control { grid-column: 1 / -1; margin-top: 10px; }
 .qty-stepper {
-  display: inline-flex; align-items: center; gap: 16px;
+  display: inline-flex; align-items: center; gap: 4px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
-  padding: 7px 20px;
+  padding: 4px 8px;
 }
 .qty-stepper-btn {
   font-family: var(--display);
-  font-size: 18px; line-height: 1;
+  font-size: 20px; line-height: 1;
   color: var(--cream);
-  width: 18px; height: 18px;
+  width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
 }
-.qty-stepper-btn:hover { color: var(--red); }
-.qty-stepper-num { font-family: var(--sans); font-size: 14px; font-weight: 700; min-width: 14px; text-align: center; }
+.qty-stepper-btn:hover, .qty-stepper-btn:active { color: var(--bg); background: var(--red); }
+.qty-stepper-num { font-family: var(--sans); font-size: 15px; font-weight: 700; min-width: 20px; text-align: center; }
 
 /* --- Página del carrito --- */
 .cart-empty {
@@ -673,20 +685,22 @@ body.fry-intro-finished .fry-intro {
 .cart-row-name { font-family: var(--display); font-size: clamp(17px, 2.4vw, 21px); text-transform: uppercase; }
 .cart-row-unit { font-size: 12px; color: var(--cream-mute); }
 .cart-row-qty {
-  display: flex; align-items: center; gap: 10px;
+  display: flex; align-items: center; gap: 4px;
   border: 1px solid var(--line-strong);
   border-radius: 999px;
-  padding: 6px 16px;
+  padding: 4px 8px;
 }
 .cart-row-qty button {
   font-family: var(--display);
-  font-size: 16px;
+  font-size: 18px;
   color: var(--cream);
-  width: 20px; height: 20px;
+  width: 40px; height: 40px;
   display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  -webkit-tap-highlight-color: transparent;
 }
-.cart-row-qty button:hover { color: var(--red); }
-.cart-row-qty-num { font-family: var(--sans); font-size: 14px; font-weight: 600; min-width: 16px; text-align: center; }
+.cart-row-qty button:hover, .cart-row-qty button:active { color: var(--bg); background: var(--red); }
+.cart-row-qty-num { font-family: var(--sans); font-size: 15px; font-weight: 600; min-width: 20px; text-align: center; }
 .cart-row-subtotal {
   font-family: var(--display);
   font-size: clamp(17px, 2.4vw, 21px);
@@ -744,6 +758,16 @@ body.fry-intro-finished .fry-intro {
   min-width: 160px;
 }
 .menu-card-variant .menu-card-add { margin-top: 0; grid-column: auto; }
+
+.menu-card-sauce-variant {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 10px;
+  margin-top: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.menu-card-sauce-variant .menu-card-add { margin-top: 0; grid-column: auto; }
 
 /* --- Ventana emergente de upsell en el carrito --- */
 .upsell-overlay {
