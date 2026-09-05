@@ -359,7 +359,11 @@
     var container = wrapper.querySelector("[data-qty-control-variant]");
     if (!select || !container) return;
 
-    var priceStr = container.dataset.price;
+    function currentPriceStr() {
+      var opt = select.options[select.selectedIndex];
+      return (opt && opt.dataset.price) ? opt.dataset.price : container.dataset.price;
+    }
+
     var cart = getCart();
     var item = cart.filter(function (i) { return i.name === select.value; })[0];
     var qty = item ? item.qty : 0;
@@ -374,7 +378,7 @@
       container.dataset.bound = "1";
       container.addEventListener("click", function (e) {
         if (e.target.closest("[data-qty-add]") || e.target.closest("[data-qty-inc]")) {
-          addToCart(select.value, priceStr);
+          addToCart(select.value, currentPriceStr());
         } else if (e.target.closest("[data-qty-dec]")) {
           updateQty(select.value, -1);
         }
@@ -386,12 +390,75 @@
     }
   }
 
+  // Control de cantidad con elección de salsa integrada en la propia carta
+  // (Piezas, Tiras, Hamburguesas, Combos Mixtos). Igual que el desplegable
+  // de sabor de los refrescos, pero combinando "modo de salsa" + "sabor".
+  function renderSauceVariantQtyControl(wrapper) {
+    var modeSelect = wrapper.querySelector("[data-sauce-mode-select]");
+    var flavorField = wrapper.querySelector("[data-sauce-flavor-field]");
+    var flavorSelect = wrapper.querySelector("[data-sauce-flavor-select]");
+    var container = wrapper.querySelector("[data-qty-control-sauce]");
+    if (!modeSelect || !container) return;
+
+    var baseName = container.dataset.baseName;
+    var basePrice = parseFloat(container.dataset.basePrice);
+
+    function current() {
+      var mode = modeSelect.value;
+      if (mode === "none") return { name: baseName, price: basePrice };
+      var flavor = flavorSelect ? flavorSelect.value : SAUCE_FLAVORS[0];
+      if (mode === "ontop") {
+        return { name: baseName + " (salsa " + flavor + " por encima)", price: basePrice + 1.00 };
+      }
+      return { name: baseName + " (bañada en salsa " + flavor + ")", price: basePrice + 1.50 };
+    }
+
+    function render() {
+      if (flavorField) flavorField.style.display = modeSelect.value === "none" ? "none" : "inline-block";
+      var c = current();
+      var cart = getCart();
+      var item = cart.filter(function (i) { return i.name === c.name; })[0];
+      var qty = item ? item.qty : 0;
+      if (qty <= 0) {
+        container.innerHTML = '<button type="button" class="menu-card-add" data-qty-add>+ Añadir</button>';
+      } else {
+        container.innerHTML = qtyStepperHTML(qty);
+      }
+    }
+
+    render();
+
+    if (!container.dataset.bound) {
+      container.dataset.bound = "1";
+      container.addEventListener("click", function (e) {
+        var c = current();
+        var priceStr = formatPrice(c.price);
+        if (e.target.closest("[data-qty-add]") || e.target.closest("[data-qty-inc]")) {
+          addToCart(c.name, priceStr);
+        } else if (e.target.closest("[data-qty-dec]")) {
+          updateQty(c.name, -1);
+        }
+      });
+    }
+    if (!modeSelect.dataset.bound) {
+      modeSelect.dataset.bound = "1";
+      modeSelect.addEventListener("change", render);
+    }
+    if (flavorSelect && !flavorSelect.dataset.bound) {
+      flavorSelect.dataset.bound = "1";
+      flavorSelect.addEventListener("change", render);
+    }
+  }
+
   function initQtyControls() {
     var containers = document.querySelectorAll("[data-qty-control]");
     for (var i = 0; i < containers.length; i++) renderQtyControl(containers[i]);
 
     var variantWrappers = document.querySelectorAll(".menu-card-variant");
     for (var j = 0; j < variantWrappers.length; j++) renderVariantQtyControl(variantWrappers[j]);
+
+    var sauceWrappers = document.querySelectorAll(".menu-card-sauce-variant");
+    for (var k = 0; k < sauceWrappers.length; k++) renderSauceVariantQtyControl(sauceWrappers[k]);
   }
 
   function refreshAllQtyControls() {
@@ -400,6 +467,9 @@
 
     var variantWrappers = document.querySelectorAll(".menu-card-variant");
     for (var j = 0; j < variantWrappers.length; j++) renderVariantQtyControl(variantWrappers[j]);
+
+    var sauceWrappers = document.querySelectorAll(".menu-card-sauce-variant");
+    for (var k = 0; k < sauceWrappers.length; k++) renderSauceVariantQtyControl(sauceWrappers[k]);
   }
 
   function buildWhatsAppMessage(orderCode) {
@@ -901,18 +971,12 @@
   // ---------------------------------------------------------------
 
   // Todo lo que ya es un menú/combo completo (con patatas y bebida incluidas).
-  var MENU_ITEM_NAMES = [
-    "Menú 2 Piezas", "Menú 2 Tiras", "Menú 3 Tiras", "Menú 4 Tiras",
-    "Combo 2 Hamburguesas", "Menú Para 2", "Menú Para 3", "Familiar 8 Piezas",
-    "Cubo Familiar de Tiras", "Mega Familiar", "Familiar 4 Hamburguesas",
-    "Dúo Tiras + Pieza", "Fiesta Mixta"
-  ];
+  // Con el modelo à la carte, el único que queda es Fiesta Mixta.
+  var MENU_ITEM_NAMES = ["Fiesta Mixta"];
 
-  // Piezas sueltas que tienen un menú equivalente directo al que subir.
-  var MENU_UPGRADES = {
-    "Pechuga Entera": { menuName: "Menú 2 Piezas", menuPrice: 13.50 },
-    "Ración 4 Tiras": { menuName: "Menú 4 Tiras", menuPrice: 8.50 }
-  };
+  // Ya no hay piezas sueltas con un "menú equivalente" al que subir —
+  // con el modelo à la carte, el cliente se monta el menú él mismo.
+  var MENU_UPGRADES = {};
 
   var EXTRA_ADDONS = [
     { name: "CHEESE. FRY. (4 uds)", price: "3,90€", text: "Bolitas de queso fundente, 4 unidades." },
@@ -925,23 +989,10 @@
   // suma +1,00€ (por encima) o +1,50€ (bañada), SIEMPRE por unidad/combo,
   // nunca un extra fijo repartido entre varias unidades.
   var SAUCE_ELIGIBLE_PRICES = {
-    "Pechuga Entera": 8.50,
-    "Menú 2 Piezas": 13.50,
-    "Menú Para 2": 25.90,
-    "Menú Para 3": 37.90,
-    "Familiar 8 Piezas": 49.90,
+    "Ración 2 Piezas": 11.50,
     "Ración 4 Tiras": 7.50,
-    "Menú 2 Tiras": 6.50,
-    "Menú 3 Tiras": 7.50,
-    "Menú 4 Tiras": 8.50,
-    "Cubo Familiar de Tiras": 29.90,
-    "Mega Familiar": 44.90,
     "Hamburguesa FRY.": 8.00,
-    "Menú Hamburguesa": 12.50,
-    "Combo 2 Hamburguesas": 24.00,
-    "Familiar 4 Hamburguesas": 31.90,
-    "Dúo Tiras + Pieza": 26.90,
-    "Fiesta Mixta": 55.90
+    "Fiesta Mixta": 56.90
   };
 
   var SAUCE_FLAVORS = ["Bourbon", "Sweet Chilli", "Habanero Mango"];
@@ -1175,47 +1226,24 @@
     var cart = getCart();
     if (!cart.length) return;
 
-    var hasMenu = cart.some(function (i) { return MENU_ITEM_NAMES.indexOf(i.name) !== -1; });
-
-    if (hasMenu) {
-      // Ya tienen un menú completo -> ofrecer extras con descuento + salsas
-      var sauceHtml = buildSauceItemsHtml(cart);
-      var html =
-        '<span class="eyebrow upsell-eyebrow">Completa tu pedido</span>' +
-        '<h2 class="upsell-title">¿Añadimos algo más?</h2>' +
-        EXTRA_ADDONS.map(function (a) {
-          return (
-            '<div class="upsell-item">' +
-              '<p class="upsell-item-text">' + escHTML(a.text) + " (" + escHTML(a.price) + ")</p>" +
-              '<div class="qty-control" data-qty-control data-name="' + escHTML(a.name) + '" data-price="' + escHTML(a.price) + '"></div>' +
-            "</div>"
-          );
-        }).join("") +
-        (sauceHtml ? '<p class="upsell-subhead">¿Le añadimos salsa a algo?</p>' + sauceHtml : "") +
-        '<a href="#" class="upsell-dismiss" data-upsell-close>No, gracias</a>';
-      openUpsell(html);
-      return;
-    }
-
-    // No tienen ningún menú -> ofrecer subir de pieza suelta a menú
-    var upgradable = cart.filter(function (i) { return MENU_UPGRADES[i.name]; });
-    if (!upgradable.length) return;
-
-    var html2 =
-      '<span class="eyebrow upsell-eyebrow">Hazlo menú</span>' +
-      '<h2 class="upsell-title">Llévate el menú completo</h2>' +
-      upgradable.map(function (i) {
-        var up = MENU_UPGRADES[i.name];
-        var diff = up.menuPrice - i.price;
+    // Con el modelo à la carte ya no hay "menús" que completar primero —
+    // siempre que haya algo en el carrito, ofrecemos salsa/bañado para
+    // lo que aplique, y los complementos de siempre.
+    var sauceHtml = buildSauceItemsHtml(cart);
+    var html =
+      '<span class="eyebrow upsell-eyebrow">Completa tu pedido</span>' +
+      '<h2 class="upsell-title">¿Añadimos algo más?</h2>' +
+      EXTRA_ADDONS.map(function (a) {
         return (
           '<div class="upsell-item">' +
-            '<p class="upsell-item-text">Tu <strong>' + escHTML(i.name) + "</strong> (" + formatPrice(i.price) + ") puede ser <strong>" + escHTML(up.menuName) + "</strong> (con patatas y bebida) por solo <span class=\"upsell-item-price\">+" + formatPrice(diff) + "</span> más.</p>" +
-            '<button type="button" class="upsell-btn" data-upgrade-from="' + escHTML(i.name) + '" data-upgrade-to="' + escHTML(up.menuName) + '" data-upgrade-price="' + up.menuPrice + '">Convertir a menú</button>' +
+            '<p class="upsell-item-text">' + escHTML(a.text) + " (" + escHTML(a.price) + ")</p>" +
+            '<div class="qty-control" data-qty-control data-name="' + escHTML(a.name) + '" data-price="' + escHTML(a.price) + '"></div>' +
           "</div>"
         );
       }).join("") +
+      (sauceHtml ? '<p class="upsell-subhead">¿Le añadimos salsa a algo?</p>' + sauceHtml : "") +
       '<a href="#" class="upsell-dismiss" data-upsell-close>No, gracias</a>';
-    openUpsell(html2);
+    openUpsell(html);
   }
 
   if (document.readyState === "loading") {

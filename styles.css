@@ -397,17 +397,7 @@ ul { list-style: none; padding: 0; }
 
 /* --- Menu section --- */
 .menu-section { padding-bottom: 100px; }
-[data-menu-categories] { display: block; }
 .menu-category { margin-bottom: 64px; }
-
-@media (min-width: 760px) {
-  [data-menu-categories] {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0 48px;
-    align-items: start;
-  }
-}
 .menu-category-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 8px; flex-wrap: wrap; }
 .menu-category-label { font-family: var(--display); font-size: clamp(26px, 4vw, 40px); text-transform: uppercase; }
 .menu-category-note { color: var(--cream-mute); font-size: 14px; margin-bottom: 12px; }
