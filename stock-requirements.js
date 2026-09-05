@@ -16,6 +16,7 @@ var FRY_STOCK_REQUIREMENTS = {
   "Mega Familiar": { tiras: 16 },
 
   "Hamburguesa FRY.": { hamburguesas: 1 },
+  "Menú Hamburguesa": { hamburguesas: 1 },
   "Combo 2 Hamburguesas": { hamburguesas: 2 },
   "Familiar 4 Hamburguesas": { hamburguesas: 4 },
 

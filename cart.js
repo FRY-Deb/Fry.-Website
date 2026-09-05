@@ -937,6 +937,7 @@
     "Cubo Familiar de Tiras": 29.90,
     "Mega Familiar": 44.90,
     "Hamburguesa FRY.": 8.00,
+    "Menú Hamburguesa": 12.50,
     "Combo 2 Hamburguesas": 24.00,
     "Familiar 4 Hamburguesas": 31.90,
     "Dúo Tiras + Pieza": 26.90,
