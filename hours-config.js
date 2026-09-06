@@ -6,7 +6,7 @@
 // (Se acepta también un único objeto { open, close } por compatibilidad
 // con horarios guardados antes de que existieran los turnos partidos.)
 var FRY_HOURS_DEFAULT = {
-  lunes:     [{ open: "13:00", close: "17:00" }, { open: "20:00", close: "23:00" }],
+  lunes:     null,
   martes:    [{ open: "13:00", close: "17:00" }, { open: "20:00", close: "23:00" }],
   miercoles: [{ open: "13:00", close: "17:00" }, { open: "20:00", close: "23:00" }],
   jueves:    [{ open: "13:00", close: "17:00" }, { open: "20:00", close: "23:00" }],
