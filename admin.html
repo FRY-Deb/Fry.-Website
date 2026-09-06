@@ -75,6 +75,7 @@
     font-family: var(--sans); font-size: 13px;
   }
   .admin-hours-sep { color: var(--cream-mute); font-size: 12px; }
+  .admin-hours-turno2-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 12px; color: var(--cream-mute); cursor: pointer; }
   .admin-order-delete {
     font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
     color: var(--red); border: 1px solid var(--red); padding: 6px 14px; margin-top: 12px;
@@ -408,6 +409,17 @@
     var container = document.getElementById("adminHoursInputs");
     var dayControls = {};
 
+    function makeShiftInputs() {
+      var openInput = document.createElement("input");
+      openInput.type = "time";
+      var sep = document.createElement("span");
+      sep.className = "admin-hours-sep";
+      sep.textContent = "a";
+      var closeInput = document.createElement("input");
+      closeInput.type = "time";
+      return { openInput: openInput, sep: sep, closeInput: closeInput };
+    }
+
     HOURS_DISPLAY_ORDER.forEach(function (day) {
       var row = document.createElement("div");
       row.className = "admin-hours-row";
@@ -429,37 +441,63 @@
       statusSelect.appendChild(optOpen);
       controls.appendChild(statusSelect);
 
-      var openInput = document.createElement("input");
-      openInput.type = "time";
-      var sep = document.createElement("span");
-      sep.className = "admin-hours-sep";
-      sep.textContent = "a";
-      var closeInput = document.createElement("input");
-      closeInput.type = "time";
+      var shift1 = makeShiftInputs();
+      controls.appendChild(shift1.openInput);
+      controls.appendChild(shift1.sep);
+      controls.appendChild(shift1.closeInput);
 
-      controls.appendChild(openInput);
-      controls.appendChild(sep);
-      controls.appendChild(closeInput);
+      var turno2Label = document.createElement("label");
+      turno2Label.className = "admin-hours-turno2-toggle";
+      var turno2Checkbox = document.createElement("input");
+      turno2Checkbox.type = "checkbox";
+      turno2Label.appendChild(turno2Checkbox);
+      turno2Label.appendChild(document.createTextNode(" 2º turno"));
+      controls.appendChild(turno2Label);
+
+      var shift2 = makeShiftInputs();
+      controls.appendChild(shift2.openInput);
+      controls.appendChild(shift2.sep);
+      controls.appendChild(shift2.closeInput);
+
       row.appendChild(controls);
       container.appendChild(row);
 
       function updateVisibility() {
         var show = statusSelect.value === "open";
-        openInput.style.display = show ? "inline-block" : "none";
-        sep.style.display = show ? "inline" : "none";
-        closeInput.style.display = show ? "inline-block" : "none";
+        shift1.openInput.style.display = show ? "inline-block" : "none";
+        shift1.sep.style.display = show ? "inline" : "none";
+        shift1.closeInput.style.display = show ? "inline-block" : "none";
+        turno2Label.style.display = show ? "inline-flex" : "none";
+
+        var showTurno2 = show && turno2Checkbox.checked;
+        shift2.openInput.style.display = showTurno2 ? "inline-block" : "none";
+        shift2.sep.style.display = showTurno2 ? "inline" : "none";
+        shift2.closeInput.style.display = showTurno2 ? "inline-block" : "none";
       }
 
       function save() {
-        var value = statusSelect.value === "open" ? { open: openInput.value, close: closeInput.value } : null;
-        db.ref("hours/" + day).set(value);
+        if (statusSelect.value !== "open") {
+          db.ref("hours/" + day).set(null);
+          return;
+        }
+        var shifts = [{ open: shift1.openInput.value, close: shift1.closeInput.value }];
+        if (turno2Checkbox.checked && shift2.openInput.value && shift2.closeInput.value) {
+          shifts.push({ open: shift2.openInput.value, close: shift2.closeInput.value });
+        }
+        db.ref("hours/" + day).set(shifts);
       }
 
       statusSelect.addEventListener("change", function () { updateVisibility(); save(); });
-      openInput.addEventListener("change", save);
-      closeInput.addEventListener("change", save);
+      turno2Checkbox.addEventListener("change", function () { updateVisibility(); save(); });
+      shift1.openInput.addEventListener("change", save);
+      shift1.closeInput.addEventListener("change", save);
+      shift2.openInput.addEventListener("change", save);
+      shift2.closeInput.addEventListener("change", save);
 
-      dayControls[day] = { statusSelect: statusSelect, openInput: openInput, closeInput: closeInput, updateVisibility: updateVisibility };
+      dayControls[day] = {
+        statusSelect: statusSelect, shift1: shift1, shift2: shift2,
+        turno2Checkbox: turno2Checkbox, updateVisibility: updateVisibility
+      };
     });
 
     db.ref("hours").once("value").then(function (snapshot) {
@@ -469,11 +507,18 @@
 
       HOURS_DISPLAY_ORDER.forEach(function (day) {
         var c = dayControls[day];
-        var dayValue = source[day];
-        if (dayValue && dayValue.open && dayValue.close) {
+        var shifts = fryShiftsOf(source[day]);
+        if (shifts.length) {
           c.statusSelect.value = "open";
-          c.openInput.value = dayValue.open;
-          c.closeInput.value = dayValue.close;
+          c.shift1.openInput.value = shifts[0].open;
+          c.shift1.closeInput.value = shifts[0].close;
+          if (shifts.length > 1) {
+            c.turno2Checkbox.checked = true;
+            c.shift2.openInput.value = shifts[1].open;
+            c.shift2.closeInput.value = shifts[1].close;
+          } else {
+            c.turno2Checkbox.checked = false;
+          }
         } else {
           c.statusSelect.value = "closed";
         }
