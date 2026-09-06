@@ -397,6 +397,7 @@
     var modeSelect = wrapper.querySelector("[data-sauce-mode-select]");
     var flavorField = wrapper.querySelector("[data-sauce-flavor-field]");
     var flavorSelect = wrapper.querySelector("[data-sauce-flavor-select]");
+    var drinkSelect = wrapper.querySelector("[data-drink-flavor-select]");
     var container = wrapper.querySelector("[data-qty-control-sauce]");
     if (!modeSelect || !container) return;
 
@@ -404,13 +405,17 @@
     var basePrice = parseFloat(container.dataset.basePrice);
 
     function current() {
+      var namePart = baseName;
+      if (drinkSelect) {
+        namePart += " (bebida: " + drinkSelect.value + ")";
+      }
       var mode = modeSelect.value;
-      if (mode === "none") return { name: baseName, price: basePrice };
+      if (mode === "none") return { name: namePart, price: basePrice };
       var flavor = flavorSelect ? flavorSelect.value : SAUCE_FLAVORS[0];
       if (mode === "ontop") {
-        return { name: baseName + " (salsa " + flavor + " por encima)", price: basePrice + 1.00 };
+        return { name: namePart + " (salsa " + flavor + " por encima)", price: basePrice + 1.00 };
       }
-      return { name: baseName + " (bañada en salsa " + flavor + ")", price: basePrice + 1.50 };
+      return { name: namePart + " (bañada en salsa " + flavor + ")", price: basePrice + 1.50 };
     }
 
     function render() {
@@ -439,6 +444,10 @@
           updateQty(c.name, -1);
         }
       });
+    }
+    if (drinkSelect && !drinkSelect.dataset.bound) {
+      drinkSelect.dataset.bound = "1";
+      drinkSelect.addEventListener("change", render);
     }
     if (!modeSelect.dataset.bound) {
       modeSelect.dataset.bound = "1";
