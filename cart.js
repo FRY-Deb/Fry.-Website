@@ -988,7 +988,7 @@
   var MENU_UPGRADES = {};
 
   var EXTRA_ADDONS = [
-    { name: "Mazorca FRY.", price: "2,90€", text: "Mazorca bañada en mantequilla y sazón cajun." },
+    { name: "Mazorca FRY.", price: "3,50€", text: "Mazorca bañada en mantequilla y sazón cajun." },
     { name: "Ensalada Crab Roll — 450ml", price: "6,00€", text: "Pepino, delicias de cangrejo, aguacate y queso crema." },
     { name: "Ensalada Santorini — 450ml", price: "6,00€", text: "Pepino, ternera, aguacate, yogur griego y queso feta." },
     { name: "Ensalada Vegetal — 450ml", price: "6,00€", text: "Pepino, edamame, aguacate y sésamo, con salsa picante." }
