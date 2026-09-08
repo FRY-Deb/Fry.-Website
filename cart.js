@@ -988,9 +988,10 @@
   var MENU_UPGRADES = {};
 
   var EXTRA_ADDONS = [
-    { name: "CHEESE. FRY. (4 uds)", price: "3,90€", text: "Bolitas de queso fundente, 4 unidades." },
-    { name: "CHEESE. FRY. (7 uds)", price: "5,90€", text: "Bolitas de queso fundente, 7 unidades." },
-    { name: "Mazorca FRY.", price: "2,90€", text: "Mazorca bañada en mantequilla y sazón cajun." }
+    { name: "Mazorca FRY.", price: "2,90€", text: "Mazorca bañada en mantequilla y sazón cajun." },
+    { name: "Ensalada Crab Roll — 450ml", price: "6,00€", text: "Pepino, delicias de cangrejo, aguacate y queso crema." },
+    { name: "Ensalada Santorini — 450ml", price: "6,00€", text: "Pepino, ternera, aguacate, yogur griego y queso feta." },
+    { name: "Ensalada Vegetal — 450ml", price: "6,00€", text: "Pepino, edamame, aguacate y sésamo, con salsa picante." }
   ];
 
   // Productos a los que se les puede añadir salsa por encima o bañarlos.
