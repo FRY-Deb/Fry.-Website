@@ -1002,7 +1002,7 @@
     "Fiesta Mixta": 56.90
   };
 
-  var SAUCE_FLAVORS = ["Bourbon", "Sweet Chilli", "Habanero Mango"];
+  var SAUCE_FLAVORS = ["Bourbon", "Ranch FRY", "Habanero Mango"];
   var SAUCE_ONTOP_EXTRA = 1.00;
   var SAUCE_BATHED_EXTRA = 1.50;
 
