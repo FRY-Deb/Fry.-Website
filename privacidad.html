@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Política de Privacidad y Cookies — FRY.</title>
+<meta name="description" content="Política de privacidad y cookies de FRY. — cómo tratamos tus datos al hacer un pedido." />
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
+<link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
+<link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
+<link rel="stylesheet" href="styles.css?v=20260914" />
+<style>
+  .legal { padding: calc(var(--nav-h) + 60px) 0 100px; max-width: 74ch; margin: 0 auto; }
+  .legal h1 { margin-bottom: 32px; }
+  .legal h2 { font-family: var(--display); font-size: clamp(22px,3vw,30px); text-transform: uppercase; margin: 40px 0 12px; }
+  .legal p, .legal li { color: var(--cream-2); font-size: 15px; line-height: 1.7; }
+  .legal ul { margin: 0 0 16px 20px; }
+  .legal a { color: var(--red); text-decoration: underline; }
+  .legal .updated { color: var(--cream-mute); font-size: 13px; margin-bottom: 40px; }
+</style>
+</head>
+<body>
+<a class="skip-link" href="#main">Saltar al contenido</a>
+
+<header class="nav" data-nav>
+  <div class="container nav-inner">
+    <a href="index.html" class="logo-mark">FRY<span class="dot"></span></a>
+    <nav class="nav-links" aria-label="Navegación principal">
+      <a href="index.html">Inicio</a>
+      <a href="carta.html">Carta</a>
+      <a href="contacto.html">Contacto</a>
+    </nav>
+    <a href="carrito.html" class="nav-cart" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
+    <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
+    <button class="nav-burger" data-nav-burger aria-expanded="false" aria-label="Abrir menú"><span></span></button>
+  </div>
+</header>
+
+<div class="nav-mobile" data-nav-mobile aria-hidden="true">
+  <a href="index.html">Inicio</a>
+  <a href="carta.html">Carta</a>
+  <a href="contacto.html">Contacto</a>
+  <a href="carrito.html" class="nav-mobile-cart">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
+  <a class="nav-mobile-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
+</div>
+
+<main id="main">
+  <div class="container">
+    <section class="legal">
+      <span class="eyebrow">Legal</span>
+      <h1 class="section-title">Privacidad y cookies</h1>
+      <p class="updated">Última actualización: 12 de septiembre de 2026</p>
+
+      <h2>1. Quiénes somos</h2>
+      <p>FRY. es un negocio de delivery de pollo frito con sede en Villaverde, Madrid. Los pedidos se gestionan exclusivamente por WhatsApp; esta web sirve como carta digital y carrito de pedido, no como tienda con pago online.</p>
+
+      <h2>2. Qué datos recopilamos</h2>
+      <p>Al completar el formulario de pedido en el carrito podemos recoger: nombre, dirección de entrega, teléfono (si lo facilitas por WhatsApp), notas del pedido y, opcionalmente, cómo nos conociste. Estos datos se usan únicamente para gestionar tu pedido y se envían directamente a nuestro WhatsApp de negocio — no se almacenan en una base de datos de clientes ni se comparten con terceros con fines comerciales.</p>
+
+      <h2>3. Cookies que usamos</h2>
+      <p>Esta web utiliza almacenamiento local del navegador (cookies y/o <em>localStorage</em>) para:</p>
+      <ul>
+        <li><strong>Funcionamiento del carrito:</strong> recordar los productos que has añadido mientras navegas.</li>
+        <li><strong>Preferencias:</strong> recordar que ya has aceptado este aviso, para no volver a mostrártelo.</li>
+        <li><strong>Disponibilidad de productos:</strong> comprobar en tiempo real qué productos están agotados (a través de Firebase).</li>
+      </ul>
+      <p>No usamos cookies de publicidad ni de seguimiento de terceros.</p>
+
+      <h2>4. Con quién compartimos datos</h2>
+      <p>Los pedidos se envían a nuestro número de WhatsApp Business (Meta/WhatsApp Ireland Ltd. actúa como encargado del tratamiento de esos mensajes según su propia política). La comprobación de stock usa Google Firebase (Google Ireland Ltd.) únicamente para leer disponibilidad de productos, sin datos personales asociados.</p>
+
+      <h2>5. Tus derechos</h2>
+      <p>Puedes solicitar acceso, rectificación o eliminación de los datos que nos hayas facilitado por WhatsApp escribiéndonos directamente por ese mismo canal, o a través de nuestro <a href="contacto.html">formulario de contacto</a>.</p>
+
+      <h2>6. Cambios en esta política</h2>
+      <p>Podemos actualizar este aviso si cambian nuestras herramientas o forma de operar. La fecha de la última actualización aparece arriba.</p>
+    </section>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom">
+      <span>© 2026 FRY. Todos los derechos reservados.</span>
+      <span>Est. 2026 · Villaverde, Madrid</span>
+    </div>
+  </div>
+</footer>
+
+<script defer src="lib/manifest.js?v=20260912"></script>
+<script defer src="main.js?v=20260911"></script>
+<script defer src="cart.js?v=20260917"></script>
+<script defer src="lib/cookie-consent.js?v=20260912"></script>
+</body>
+</html>
