@@ -1014,6 +1014,13 @@ body.fry-intro-finished .fry-intro {
   padding: 3px 7px;
   vertical-align: middle;
 }
+.menu-card.is-comingsoon {
+  opacity: 0.55;
+}
+.menu-card-comingsoon-badge {
+  background: var(--red);
+  color: var(--cream);
+}
 .menu-card-add:disabled,
 .menu-card-add[disabled] {
   cursor: not-allowed;
