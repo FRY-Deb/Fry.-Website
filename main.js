@@ -72,6 +72,31 @@
   }
 
   // ---------------------------------------------------------------
+  // Carta: resaltar en el menú lateral la sección visible
+  // ---------------------------------------------------------------
+  function initMenuSidebar() {
+    const links = $$(".menu-sidebar a");
+    if (!links.length) return;
+    const sections = links
+      .map(a => document.getElementById(a.getAttribute("href").slice(1)))
+      .filter(Boolean);
+    if (!sections.length) return;
+
+    function setActive(id) {
+      links.forEach(a => a.classList.toggle("is-active", a.getAttribute("href") === "#" + id));
+    }
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) setActive(entry.target.id);
+      });
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: 0 });
+
+    sections.forEach(sec => observer.observe(sec));
+    setActive(sections[0].id);
+  }
+
+  // ---------------------------------------------------------------
   // Reveal on scroll
   // ---------------------------------------------------------------
   function initReveals() {
@@ -164,6 +189,7 @@
     safe(initNavScroll, "initNavScroll");
     safe(initMobileNav, "initMobileNav");
     safe(initCursor, "initCursor");
+    safe(initMenuSidebar, "initMenuSidebar");
     document.documentElement.classList.add("is-ready");
   }
 

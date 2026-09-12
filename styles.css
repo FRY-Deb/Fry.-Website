@@ -1163,3 +1163,62 @@ body.fry-intro-finished .fry-intro {
   .product-stickybar .menu-card-sauce-variant { justify-content: flex-start; }
   .product-hero { height: 62vh; }
 }
+
+/* =============================================================
+   13. Carta: menú lateral fijo + alérgenos por categoría
+   ============================================================= */
+.menu-layout {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 32px;
+}
+.menu-sidebar {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  gap: 4px;
+  position: sticky;
+  top: var(--nav-h);
+  z-index: 30;
+  background: var(--bg);
+  padding: 14px 0;
+  border-bottom: 1px solid var(--line-strong);
+  -ms-overflow-style: none; scrollbar-width: none;
+}
+.menu-sidebar::-webkit-scrollbar { display: none; }
+.menu-sidebar a {
+  flex: 0 0 auto;
+  font-family: var(--display);
+  text-transform: uppercase;
+  font-size: 13px;
+  letter-spacing: .03em;
+  color: var(--cream-mute);
+  padding: 8px 16px;
+  border: 1px solid var(--line-strong);
+  white-space: nowrap;
+  transition: color .2s var(--ease-out), border-color .2s var(--ease-out), background .2s var(--ease-out);
+}
+.menu-sidebar a:hover { color: var(--cream); border-color: var(--cream-mute); }
+.menu-sidebar a.is-active { color: var(--bg); background: var(--red); border-color: var(--red); }
+
+.menu-category-allergens {
+  font-size: 12px; color: var(--cream-mute); line-height: 1.6;
+  margin: 10px 0 18px;
+  padding-left: 2px;
+}
+
+@media (min-width: 960px) {
+  .menu-layout { grid-template-columns: 220px 1fr; align-items: start; }
+  .menu-sidebar {
+    flex-direction: column;
+    overflow-x: visible;
+    top: calc(var(--nav-h) + 32px);
+    border-bottom: none;
+    padding: 0;
+    gap: 2px;
+  }
+  .menu-sidebar a { border: none; border-left: 2px solid transparent; padding: 8px 0 8px 16px; }
+  .menu-sidebar a:hover { border-left-color: var(--line-strong); }
+  .menu-sidebar a.is-active { background: none; color: var(--red); border-left-color: var(--red); }
+}
