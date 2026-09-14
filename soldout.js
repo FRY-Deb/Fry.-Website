@@ -10,9 +10,11 @@
     var req = window.FRY_STOCK_REQUIREMENTS ? window.FRY_STOCK_REQUIREMENTS[name] : null;
 
     if (req) {
-      // Producto cuya disponibilidad se calcula sola a partir del stock compartido.
+      // Producto cuya disponibilidad se calcula sola a partir del stock compartido
+      // (incluye cantidades derivadas, p. ej. tiras a partir de la carne de hamburguesas).
+      var derived = window.FRY_deriveStock ? window.FRY_deriveStock(stockMap) : (stockMap || {});
       for (var key in req) {
-        var have = (stockMap && typeof stockMap[key] === "number") ? stockMap[key] : 0;
+        var have = typeof derived[key] === "number" ? derived[key] : 0;
         if (have < req[key]) return false;
       }
       return true;
@@ -23,7 +25,14 @@
     return !(soldOutMap && soldOutMap[soldOutKey] === true);
   }
 
-  function markSoldOut(card) {
+  function whatsappConsultLink(productName) {
+    var data = window.__BRAND__ || {};
+    if (!data.whatsapp) return null;
+    var msg = encodeURIComponent("Hola! ¿Tenéis unidades de \"" + productName + "\"?");
+    return "https://wa.me/" + data.whatsapp + "?text=" + msg;
+  }
+
+  function markSoldOut(card, productName) {
     if (card.classList.contains("is-soldout")) return;
     card.classList.add("is-soldout");
 
@@ -33,6 +42,19 @@
       badge.className = "menu-card-soldout-badge";
       badge.textContent = "AGOTADO";
       nameEl.appendChild(badge);
+    }
+
+    if (!card.querySelector(".menu-card-soldout-whatsapp")) {
+      var link = whatsappConsultLink(productName);
+      var note = document.createElement("a");
+      note.className = "menu-card-soldout-whatsapp";
+      note.textContent = "Consultar unidades por WhatsApp";
+      if (link) {
+        note.href = link;
+        note.target = "_blank";
+        note.rel = "noopener";
+      }
+      card.appendChild(note);
     }
 
     var addBtn = card.querySelector("[data-add-to-cart]");
@@ -51,6 +73,9 @@
 
     var badge = card.querySelector(".menu-card-soldout-badge");
     if (badge) badge.remove();
+
+    var note = card.querySelector(".menu-card-soldout-whatsapp");
+    if (note) note.remove();
 
     var addBtn = card.querySelector("[data-add-to-cart]");
     if (addBtn) { addBtn.disabled = false; addBtn.textContent = "+ Añadir"; }
@@ -77,7 +102,7 @@
       if (isAvailable(name, lastStock, lastSoldOut)) {
         markAvailable(card);
       } else {
-        markSoldOut(card);
+        markSoldOut(card, name);
       }
     }
   }

@@ -47,6 +47,7 @@
     border: 1px solid var(--line-strong); padding: 8px 10px;
     font-family: var(--sans); font-size: 15px; text-align: center;
   }
+  .admin-stock-hint { font-size: 12px; color: var(--cream-mute); white-space: nowrap; }
   .admin-computed { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; }
   .admin-computed.is-ok { color: #4caf50; }
   .admin-computed.is-out { color: var(--red); }
@@ -225,6 +226,14 @@
       });
       row.appendChild(input);
 
+      if (key === "hamburguesas") {
+        var hint = document.createElement("span");
+        hint.id = "stockTirasHint";
+        hint.className = "admin-stock-hint";
+        hint.textContent = "= 0 raciones de tiras (misma carne)";
+        row.appendChild(hint);
+      }
+
       stockInputsEl.appendChild(row);
       stockInputs[key] = input;
     });
@@ -294,15 +303,24 @@
           stockInputs[key].value = typeof stock[key] === "number" ? stock[key] : 0;
         }
       });
+      var derivedStock = window.FRY_deriveStock ? window.FRY_deriveStock(stock) : stock;
       computedStatusEls.forEach(function (item) {
         var ok = true;
         for (var k in item.req) {
-          var have = typeof stock[k] === "number" ? stock[k] : 0;
+          var have = typeof derivedStock[k] === "number" ? derivedStock[k] : 0;
           if (have < item.req[k]) { ok = false; break; }
         }
         item.el.textContent = ok ? "Disponible" : "Agotado";
         item.el.className = "admin-computed " + (ok ? "is-ok" : "is-out");
       });
+
+      if (stockInputs.hamburguesas) {
+        var tirasHint = document.getElementById("stockTirasHint");
+        if (tirasHint) {
+          var tirasDisponibles = derivedStock.tiras || 0;
+          tirasHint.textContent = "= " + tirasDisponibles + " raciones de tiras (misma carne)";
+        }
+      }
     });
 
     db.ref("soldOut").on("value", function (snapshot) {
