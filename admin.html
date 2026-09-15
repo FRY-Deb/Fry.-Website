@@ -130,6 +130,12 @@
         <div id="adminStockInputs"></div>
       </div>
 
+      <div class="admin-category" id="adminOffersSection">
+        <h2 class="admin-category-title">Ofertas</h2>
+        <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Activa o desactiva cada código cuando quieras. Si un cliente introduce un código desactivado, la web le avisa de que esa oferta ya ha caducado.</p>
+        <div id="adminOffersInputs"></div>
+      </div>
+
       <div id="adminCategories"></div>
     </div>
 
@@ -142,6 +148,7 @@
 <script src="firebase-config.js"></script>
 <script src="lib/manifest.js?v=20260912"></script>
 <script src="stock-requirements.js"></script>
+<script src="offers-requirements.js"></script>
 <script src="hours-config.js"></script>
 <script>
 (function () {
@@ -236,6 +243,48 @@
 
       stockInputsEl.appendChild(row);
       stockInputs[key] = input;
+    });
+
+    // --- 1b) Ofertas: activar/desactivar cada código ---
+    var offers = window.FRY_OFFERS || {};
+    var offersInputsEl = document.getElementById("adminOffersInputs");
+    var offerCheckboxes = {};
+
+    Object.keys(offers).forEach(function (code) {
+      var offerKey = sanitizeKey(code);
+      var row = document.createElement("div");
+      row.className = "admin-item";
+
+      var nameSpan = document.createElement("span");
+      nameSpan.className = "admin-item-name";
+      nameSpan.textContent = offers[code].label;
+      row.appendChild(nameSpan);
+
+      var toggleLabel = document.createElement("label");
+      toggleLabel.className = "admin-toggle";
+      var checkbox = document.createElement("input");
+      checkbox.type = "checkbox";
+      checkbox.addEventListener("change", function () {
+        db.ref("offers/" + offerKey).set(checkbox.checked);
+      });
+      toggleLabel.appendChild(checkbox);
+      var track = document.createElement("span");
+      track.className = "admin-toggle-track";
+      toggleLabel.appendChild(track);
+      var thumb = document.createElement("span");
+      thumb.className = "admin-toggle-thumb";
+      toggleLabel.appendChild(thumb);
+      row.appendChild(toggleLabel);
+
+      offersInputsEl.appendChild(row);
+      offerCheckboxes[offerKey] = checkbox;
+    });
+
+    db.ref("offers").on("value", function (snapshot) {
+      var active = snapshot.val() || {};
+      Object.keys(offerCheckboxes).forEach(function (offerKey) {
+        offerCheckboxes[offerKey].checked = active[offerKey] === true;
+      });
     });
 
     // --- 2) Productos: automáticos (calculados) o manuales (interruptor) ---

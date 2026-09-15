@@ -19,8 +19,9 @@
 
   var HOW_FOUND_OPTIONS = ["Instagram", "TikTok", "Boca a boca", "Vi el flyer", "Otro"];
 
-  var DISCOUNT_CODE = "FRY.OPENING";
-  var DISCOUNT_RATE = 0.10; // 10% sobre el subtotal de productos (no sobre el envío)
+  // Los códigos y sus porcentajes viven en offers-requirements.js
+  // (FRY_OFFERS); aquí solo se guarda qué código tiene aplicado el
+  // cliente y se comprueba en vivo si el admin lo tiene activado.
 
   // Tiempo estimado de entrega por zona: cocina (15 min) + reparto real,
   // con un mínimo de 30 min incluso en la zona más cercana.
@@ -170,16 +171,45 @@
     try { localStorage.setItem(SCHEDULE_TIME_KEY, value); } catch (e) { /* sin persistencia */ }
   }
 
-  function getDiscountApplied() {
+  function getAppliedOfferCode() {
     try {
-      return localStorage.getItem(DISCOUNT_KEY) === "1";
+      return localStorage.getItem(DISCOUNT_KEY) || "";
     } catch (e) {
-      return false;
+      return "";
     }
   }
 
-  function saveDiscountApplied(applied) {
-    try { localStorage.setItem(DISCOUNT_KEY, applied ? "1" : "0"); } catch (e) { /* sin persistencia */ }
+  function saveAppliedOfferCode(code) {
+    try { localStorage.setItem(DISCOUNT_KEY, code || ""); } catch (e) { /* sin persistencia */ }
+  }
+
+  // Estado en vivo (Firebase) de qué códigos están activados desde el admin.
+  var lastOffersActive = {};
+
+  function isOfferActive(code) {
+    return !!(FRY_OFFERS && FRY_OFFERS[code]) && lastOffersActive[sanitizeOfferKey(code)] === true;
+  }
+
+  function sanitizeOfferKey(code) {
+    return String(code).replace(/[.#$\[\]\/]/g, "_");
+  }
+
+  function refreshOffersFromFirebase() {
+    if (!ensureFirebaseInitialized()) return;
+    try {
+      firebase.database().ref("offers").on("value", function (snapshot) {
+        lastOffersActive = snapshot.val() || {};
+        renderCartPage();
+      });
+    } catch (e) { /* sin ofertas en vivo: ninguna se considera activa */ }
+  }
+
+  // Descuento (en €) que aporta el código que el cliente tiene guardado,
+  // solo si ese código sigue activo ahora mismo.
+  function currentDiscountAmount(cart, subtotal) {
+    var code = getAppliedOfferCode();
+    if (!code || !isOfferActive(code)) return 0;
+    return typeof FRY_computeOfferDiscount === "function" ? FRY_computeOfferDiscount(code, cart, subtotal) : 0;
   }
 
   // --- datos del cliente: nombre, dirección, notas, cómo nos conoció ---
@@ -486,8 +516,8 @@
     if (!cart.length) return "Hola! Quisiera hacer un pedido en FRY.";
     var shipping = parseShippingValue(getShippingValue());
     var subtotal = cartTotal();
-    var discountApplied = getDiscountApplied();
-    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var appliedCode = getAppliedOfferCode();
+    var discountAmount = currentDiscountAmount(cart, subtotal);
     var subtotalConDescuento = subtotal - discountAmount;
 
     var lines = ["Hola! Quisiera hacer este pedido:", ""];
@@ -537,8 +567,8 @@
     lines.push("");
 
     lines.push("Subtotal: " + formatPrice(subtotal));
-    if (discountApplied) {
-      lines.push("Descuento (" + DISCOUNT_CODE + ", -" + Math.round(DISCOUNT_RATE * 100) + "%): -" + formatPrice(discountAmount));
+    if (discountAmount > 0) {
+      lines.push("Descuento (" + appliedCode + "): -" + formatPrice(discountAmount));
     }
 
     if (shipping.cost === null) {
@@ -563,8 +593,7 @@
     var cart = getCart();
     var shipping = parseShippingValue(getShippingValue());
     var subtotal = cartTotal();
-    var discountApplied = getDiscountApplied();
-    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var discountAmount = currentDiscountAmount(cart, subtotal);
     var total = shipping.cost === null ? null : (subtotal - discountAmount + shipping.cost);
 
     return {
@@ -576,7 +605,7 @@
       howFound: getField(HOW_FOUND_KEY),
       items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }),
       subtotal: round2(subtotal),
-      discountApplied: discountApplied,
+      offerCode: getAppliedOfferCode(),
       discountAmount: round2(discountAmount),
       shippingZone: shipping.zone,
       shippingCost: shipping.cost === null ? null : round2(shipping.cost),
@@ -649,6 +678,7 @@
     var subtotalEl = document.querySelector("[data-cart-subtotal]");
     var discountRowEl = document.querySelector("[data-discount-row]");
     var discountAmountEl = document.querySelector("[data-cart-discount]");
+    var discountLabelEl = document.querySelector("[data-discount-label]");
     var shippingCostEl = document.querySelector("[data-cart-shipping-cost]");
     var shippingHintEl = document.querySelector("[data-shipping-hint]");
     var shippingSelect = document.querySelector("[data-shipping-select]");
@@ -789,25 +819,33 @@
     }
 
     // --- código de descuento ---
-    var discountApplied = getDiscountApplied();
-    if (discountApplied && discountInput && !discountInput.value) {
-      discountInput.value = DISCOUNT_CODE;
+    var appliedCode = getAppliedOfferCode();
+    if (appliedCode && discountInput && !discountInput.value) {
+      discountInput.value = appliedCode;
     }
     if (discountBtn && !discountBtn.dataset.bound) {
       discountBtn.dataset.bound = "1";
       discountBtn.addEventListener("click", function () {
         var entered = (discountInput.value || "").trim().toUpperCase();
-        if (entered === DISCOUNT_CODE) {
-          saveDiscountApplied(true);
-          if (discountMsgEl) {
-            discountMsgEl.textContent = "¡Código aplicado! " + Math.round(DISCOUNT_RATE * 100) + "% de descuento.";
-            discountMsgEl.className = "cart-discount-msg is-ok";
-          }
-        } else {
-          saveDiscountApplied(false);
+        var offer = window.FRY_OFFERS ? window.FRY_OFFERS[entered] : null;
+
+        if (!offer) {
+          saveAppliedOfferCode("");
           if (discountMsgEl) {
             discountMsgEl.textContent = "Código no válido.";
             discountMsgEl.className = "cart-discount-msg is-error";
+          }
+        } else if (!isOfferActive(entered)) {
+          saveAppliedOfferCode("");
+          if (discountMsgEl) {
+            discountMsgEl.textContent = "Esta oferta ya ha caducado.";
+            discountMsgEl.className = "cart-discount-msg is-error";
+          }
+        } else {
+          saveAppliedOfferCode(entered);
+          if (discountMsgEl) {
+            discountMsgEl.textContent = "¡Código aplicado! " + offer.label + ".";
+            discountMsgEl.className = "cart-discount-msg is-ok";
           }
         }
         renderCartPage();
@@ -816,12 +854,21 @@
 
     // --- subtotal, descuento, envío y total ---
     var subtotal = cartTotal();
-    var discountAmount = discountApplied ? subtotal * DISCOUNT_RATE : 0;
+    var discountAmount = currentDiscountAmount(getCart(), subtotal);
     var subtotalConDescuento = subtotal - discountAmount;
 
+    // Si el cliente ya tenía un código guardado y el admin lo ha
+    // desactivado mientras tanto, avisamos en cuanto se vuelve a renderizar
+    // (no hace falta que vuelva a pulsar "Aplicar").
+    if (appliedCode && !isOfferActive(appliedCode) && discountMsgEl && !discountMsgEl.textContent) {
+      discountMsgEl.textContent = "Esta oferta ya ha caducado.";
+      discountMsgEl.className = "cart-discount-msg is-error";
+    }
+
     if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
-    if (discountRowEl) discountRowEl.style.display = discountApplied ? "flex" : "none";
+    if (discountRowEl) discountRowEl.style.display = discountAmount > 0 ? "flex" : "none";
     if (discountAmountEl) discountAmountEl.textContent = "-" + formatPrice(discountAmount);
+    if (discountLabelEl) discountLabelEl.textContent = "Descuento" + (appliedCode ? " (" + appliedCode + ")" : "");
 
     var blockReason = getOrderBlockReason(shipping);
 
@@ -959,6 +1006,7 @@
     renderCartPage();
     maybeShowUpsell();
     refreshHoursFromFirebase();
+    refreshOffersFromFirebase();
     initRepeatOrderButton();
   }
 
