@@ -1274,12 +1274,22 @@
   }
 
 
+  var UPSELL_SHOWN_KEY = "fryUpsellShownThisSession";
+
   function maybeShowUpsell() {
     // solo tiene sentido en la página del carrito
     if (!document.querySelector("[data-cart-items]")) return;
 
     var cart = getCart();
     if (!cart.length) return;
+
+    // Solo una vez por sesión: si no, cada vez que el cliente vuelve al
+    // carrito (p. ej. a poner un código de descuento) el modal se le
+    // vuelve a poner encima y le bloquea el resto de la página.
+    try {
+      if (sessionStorage.getItem(UPSELL_SHOWN_KEY)) return;
+      sessionStorage.setItem(UPSELL_SHOWN_KEY, "1");
+    } catch (e) { /* sin sessionStorage: lo mostramos igualmente */ }
 
     // Con el modelo à la carte ya no hay "menús" que completar primero —
     // siempre que haya algo en el carrito, ofrecemos salsa/bañado para
