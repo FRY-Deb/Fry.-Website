@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Hamburguesa FRY. — FRY.</title>
-<meta name="description" content="Delicioso pollo rebozado, pepinillos agridulces, salsa FRY, brioche." />
+<meta name="description" content="Delicioso pollo rebozado, loncha de queso, pepinillos agridulces, salsa FRY, brioche." />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
@@ -42,18 +42,13 @@
         <h1>Hamburguesa FRY.</h1>
         <span class="product-stickybar-price">8,00€</span>
       </div>
-      <div class="menu-card-sauce-variant">
-              <select class="menu-card-select" data-sauce-mode-select aria-label="¿Salsa para Hamburguesa FRY.?">
-                <option value="none">Sin salsa</option>
-                <option value="ontop">Salsa por encima (+1,00€)</option>
-                <option value="bathed">Bañada en salsa (+1,50€)</option>
-              </select>
-              <select class="menu-card-select" data-sauce-flavor-select data-sauce-flavor-field style="display:none;" aria-label="Sabor de la salsa">
-                <option value="Bourbon">Bourbon</option>
-<option value="Ranch FRY">Ranch FRY</option>
-              </select>
-              <div class="qty-control" data-qty-control-sauce data-base-name="Hamburguesa FRY." data-base-price="8.00"></div>
-            </div>
+      <div class="menu-card-variant">
+        <select class="menu-card-select" data-variant-select aria-label="¿Filete extra en la hamburguesa?">
+          <option value="Hamburguesa FRY." data-price="8,00€">Sin filete extra — 8,00€</option>
+          <option value="Hamburguesa FRY. + filete extra" data-price="10,50€">Con 1 filete extra (+2,50€) — 10,50€</option>
+        </select>
+        <div class="qty-control" data-qty-control-variant data-price="8,00€"></div>
+      </div>
     </div>
   </div>
 
@@ -72,7 +67,7 @@
 
   <section class="container product-info">
     <a href="carta.html" class="product-back-link">← Volver a la carta completa</a>
-    <span class="menu-card-desc">Delicioso pollo rebozado, pepinillos agridulces, salsa FRY, brioche.</span>
+    <span class="menu-card-desc">Delicioso pollo rebozado, loncha de queso, pepinillos agridulces, salsa FRY, brioche.</span>
     <p style="color:var(--cream-mute); font-size:14px;">Delicioso pollo rebozado entero, sin picar. Brioche, pepinillos, salsa FRY.</p>
     <div class="product-allergens">
       <strong>Alérgenos e información:</strong> Gluten (pan brioche y rebozado), huevo, leche (marinado y Salsa FRY), mostaza (pepinillos agridulces).

@@ -251,7 +251,7 @@
     var offerCheckboxes = {};
 
     Object.keys(offers).forEach(function (code) {
-      var offerKey = sanitizeKey(code);
+      var offerKey = "OFERTA_" + sanitizeKey(code);
       var row = document.createElement("div");
       row.className = "admin-item";
 
@@ -265,7 +265,7 @@
       var checkbox = document.createElement("input");
       checkbox.type = "checkbox";
       checkbox.addEventListener("change", function () {
-        db.ref("offers/" + offerKey).set(checkbox.checked);
+        db.ref("soldOut/" + offerKey).set(checkbox.checked);
       });
       toggleLabel.appendChild(checkbox);
       var track = document.createElement("span");
@@ -280,7 +280,7 @@
       offerCheckboxes[offerKey] = checkbox;
     });
 
-    db.ref("offers").on("value", function (snapshot) {
+    db.ref("soldOut").on("value", function (snapshot) {
       var active = snapshot.val() || {};
       Object.keys(offerCheckboxes).forEach(function (offerKey) {
         offerCheckboxes[offerKey].checked = active[offerKey] === true;

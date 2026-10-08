@@ -185,20 +185,24 @@
 
   // Estado en vivo (Firebase) de qué códigos están activados desde el admin.
   var lastOffersActive = {};
+  var offersLoaded = false;
 
-  function isOfferActive(code) {
-    return !!(FRY_OFFERS && FRY_OFFERS[code]) && lastOffersActive[sanitizeOfferKey(code)] === true;
+  // El estado de cada oferta vive en "soldOut/OFERTA_<código>" (true = activa):
+  // es una ruta que las reglas de Firebase ya dejan leer a cualquier cliente.
+  function offerStateKey(code) {
+    return "OFERTA_" + String(code).replace(/[.#$\[\]\/]/g, "_");
   }
 
-  function sanitizeOfferKey(code) {
-    return String(code).replace(/[.#$\[\]\/]/g, "_");
+  function isOfferActive(code) {
+    return !!(FRY_OFFERS && FRY_OFFERS[code]) && lastOffersActive[offerStateKey(code)] === true;
   }
 
   function refreshOffersFromFirebase() {
     if (!ensureFirebaseInitialized()) return;
     try {
-      firebase.database().ref("offers").on("value", function (snapshot) {
+      firebase.database().ref("soldOut").on("value", function (snapshot) {
         lastOffersActive = snapshot.val() || {};
+        offersLoaded = true;
         renderCartPage();
       });
     } catch (e) { /* sin ofertas en vivo: ninguna se considera activa */ }
@@ -420,16 +424,11 @@
     }
   }
 
-  // Control de cantidad con elección de salsa integrada en la propia carta
-  // (Piezas, Tiras, Hamburguesas, Combos Mixtos). Igual que el desplegable
-  // de sabor de los refrescos, pero combinando "modo de salsa" + "sabor".
+  // Control de cantidad con selector de bebida integrado (Fiesta Mixta).
   function renderSauceVariantQtyControl(wrapper) {
-    var modeSelect = wrapper.querySelector("[data-sauce-mode-select]");
-    var flavorField = wrapper.querySelector("[data-sauce-flavor-field]");
-    var flavorSelect = wrapper.querySelector("[data-sauce-flavor-select]");
     var drinkSelect = wrapper.querySelector("[data-drink-flavor-select]");
     var container = wrapper.querySelector("[data-qty-control-sauce]");
-    if (!modeSelect || !container) return;
+    if (!container) return;
 
     var baseName = container.dataset.baseName;
     var basePrice = parseFloat(container.dataset.basePrice);
@@ -439,17 +438,10 @@
       if (drinkSelect) {
         namePart += " (bebida: " + drinkSelect.value + ")";
       }
-      var mode = modeSelect.value;
-      if (mode === "none") return { name: namePart, price: basePrice };
-      var flavor = flavorSelect ? flavorSelect.value : SAUCE_FLAVORS[0];
-      if (mode === "ontop") {
-        return { name: namePart + " (salsa " + flavor + " por encima)", price: basePrice + 1.00 };
-      }
-      return { name: namePart + " (bañada en salsa " + flavor + ")", price: basePrice + 1.50 };
+      return { name: namePart, price: basePrice };
     }
 
     function render() {
-      if (flavorField) flavorField.style.display = modeSelect.value === "none" ? "none" : "inline-block";
       var c = current();
       var cart = getCart();
       var item = cart.filter(function (i) { return i.name === c.name; })[0];
@@ -478,14 +470,6 @@
     if (drinkSelect && !drinkSelect.dataset.bound) {
       drinkSelect.dataset.bound = "1";
       drinkSelect.addEventListener("change", render);
-    }
-    if (!modeSelect.dataset.bound) {
-      modeSelect.dataset.bound = "1";
-      modeSelect.addEventListener("change", render);
-    }
-    if (flavorSelect && !flavorSelect.dataset.bound) {
-      flavorSelect.dataset.bound = "1";
-      flavorSelect.addEventListener("change", render);
     }
   }
 
@@ -860,9 +844,13 @@
     // Si el cliente ya tenía un código guardado y el admin lo ha
     // desactivado mientras tanto, avisamos en cuanto se vuelve a renderizar
     // (no hace falta que vuelva a pulsar "Aplicar").
-    if (appliedCode && !isOfferActive(appliedCode) && discountMsgEl && !discountMsgEl.textContent) {
-      discountMsgEl.textContent = "Esta oferta ya ha caducado.";
-      discountMsgEl.className = "cart-discount-msg is-error";
+    if (appliedCode && offersLoaded && discountMsgEl) {
+      if (!isOfferActive(appliedCode)) {
+        discountMsgEl.textContent = "Esta oferta ya ha caducado.";
+        discountMsgEl.className = "cart-discount-msg is-error";
+      } else if (discountMsgEl.textContent === "Esta oferta ya ha caducado.") {
+        discountMsgEl.textContent = "";
+      }
     }
 
     if (subtotalEl) subtotalEl.textContent = formatPrice(subtotal);
@@ -1004,7 +992,6 @@
     initQtyControls();
     updateBadge();
     renderCartPage();
-    maybeShowUpsell();
     refreshHoursFromFirebase();
     refreshOffersFromFirebase();
     initRepeatOrderButton();
@@ -1021,294 +1008,6 @@
         }
       });
     }
-  }
-
-  // ---------------------------------------------------------------
-  // Ventana emergente en el carrito
-  // ---------------------------------------------------------------
-
-  // Todo lo que ya es un menú/combo completo (con patatas y bebida incluidas).
-  // Con el modelo à la carte, el único que queda es Fiesta Mixta.
-  var MENU_ITEM_NAMES = ["Fiesta Mixta"];
-
-  // Ya no hay piezas sueltas con un "menú equivalente" al que subir —
-  // con el modelo à la carte, el cliente se monta el menú él mismo.
-  var MENU_UPGRADES = {};
-
-  var EXTRA_ADDONS = [
-    { name: "Mazorca FRY.", price: "3,50€", text: "Mazorca bañada en mantequilla y sazón cajun." }
-  ];
-
-  // Productos a los que se les puede añadir salsa por encima o bañarlos.
-  // El precio es el de la carta (sin ningún extra) — a partir de aquí se
-  // suma +1,00€ (por encima) o +1,50€ (bañada), SIEMPRE por unidad/combo,
-  // nunca un extra fijo repartido entre varias unidades.
-  var SAUCE_ELIGIBLE_PRICES = {
-    "Ración 2 Piezas": 11.50,
-    "Ración 4 Tiras": 7.50,
-    "Hamburguesa FRY.": 8.00,
-    "Fiesta Mixta": 56.90
-  };
-
-  var SAUCE_FLAVORS = ["Bourbon", "Ranch FRY", "Habanero Mango"];
-  var SAUCE_ONTOP_EXTRA = 1.00;
-  var SAUCE_BATHED_EXTRA = 1.50;
-
-  // Detecta si un nombre de carrito ya lleva salsa añadida, y con qué sabor.
-  // "Pechuga Entera (salsa Bourbon por encima)" / "Pechuga Entera (bañada en salsa Bourbon)"
-  function parseSaucedName(name) {
-    var mOntop = name.match(/^(.+) \(salsa (.+) por encima\)$/);
-    if (mOntop) return { base: mOntop[1], flavor: mOntop[2], state: "ontop" };
-    var mBathed = name.match(/^(.+) \(bañada en salsa (.+)\)$/);
-    if (mBathed) return { base: mBathed[1], flavor: mBathed[2], state: "bathed" };
-    return { base: name, flavor: null, state: "none" };
-  }
-
-  function convertCartItemSauce(oldName, newName, newPrice, qty) {
-    var cart = getCart();
-    cart = cart.filter(function (i) { return i.name !== oldName; });
-    var existing = cart.filter(function (i) { return i.name === newName; })[0];
-    if (existing) {
-      existing.qty += qty;
-    } else {
-      cart.push({ name: newName, price: newPrice, qty: qty });
-    }
-    saveCart(cart);
-    renderCartPage();
-  }
-
-  function ensureModal() {
-    var overlay = document.querySelector("[data-upsell-overlay]");
-    if (overlay) return overlay;
-
-    overlay = document.createElement("div");
-    overlay.className = "upsell-overlay";
-    overlay.setAttribute("data-upsell-overlay", "");
-    overlay.innerHTML =
-      '<div class="upsell-box">' +
-        '<button type="button" class="upsell-close" data-upsell-close aria-label="Cerrar">×</button>' +
-        '<div data-upsell-content></div>' +
-      "</div>";
-    document.body.appendChild(overlay);
-
-    overlay.addEventListener("click", function (e) {
-      if (e.target === overlay) closeUpsell();
-    });
-    overlay.querySelector("[data-upsell-close]").addEventListener("click", closeUpsell);
-
-    return overlay;
-  }
-
-  function openUpsell(html) {
-    var overlay = ensureModal();
-    overlay.querySelector("[data-upsell-content]").innerHTML = html;
-    overlay.classList.add("is-open");
-    bindUpsellActions(overlay);
-    initQtyControls();
-  }
-
-  function closeUpsell() {
-    var overlay = document.querySelector("[data-upsell-overlay]");
-    if (overlay) overlay.classList.remove("is-open");
-  }
-
-  function bindUpsellActions(overlay) {
-    var closeEls = overlay.querySelectorAll("[data-upsell-close]");
-    for (var c = 0; c < closeEls.length; c++) {
-      (function (el) {
-        if (el.dataset.closeBound) return;
-        el.dataset.closeBound = "1";
-        el.addEventListener("click", function (e) {
-          e.preventDefault();
-          closeUpsell();
-        });
-      })(closeEls[c]);
-    }
-
-    var upgradeBtns = overlay.querySelectorAll("[data-upgrade-from]");
-    for (var i = 0; i < upgradeBtns.length; i++) {
-      (function (btn) {
-        if (btn.dataset.actionBound) return;
-        btn.dataset.actionBound = "1";
-        btn.addEventListener("click", function () {
-          var fromName = btn.dataset.upgradeFrom;
-          var toName = btn.dataset.upgradeTo;
-          var toPrice = btn.dataset.upgradePrice;
-          updateQty(fromName, -1); // quita 1 unidad de la pieza suelta
-          addToCart(toName, toPrice); // añade 1 unidad del menú equivalente
-          closeUpsell();
-        });
-      })(upgradeBtns[i]);
-    }
-
-    var addonBtns = overlay.querySelectorAll("[data-upsell-add]");
-    for (var j = 0; j < addonBtns.length; j++) {
-      (function (btn) {
-        if (btn.dataset.actionBound) return;
-        btn.dataset.actionBound = "1";
-        btn.addEventListener("click", function () {
-          addToCart(btn.dataset.name, btn.dataset.price);
-          flashAdded(btn);
-        });
-      })(addonBtns[j]);
-    }
-
-    // Añadir salsa por encima o bañar (desde estado "sin salsa")
-    var sauceAddBtns = overlay.querySelectorAll("[data-sauce-add]");
-    for (var s = 0; s < sauceAddBtns.length; s++) {
-      (function (btn) {
-        if (btn.dataset.actionBound) return;
-        btn.dataset.actionBound = "1";
-        btn.addEventListener("click", function () {
-          var itemEl = btn.closest(".upsell-item");
-          var baseName = btn.dataset.sauceAdd;
-          var mode = btn.dataset.sauceMode; // "ontop" | "bathed"
-          var qty = parseInt(btn.dataset.sauceQty, 10);
-          var basePrice = SAUCE_ELIGIBLE_PRICES[baseName];
-          var selectEl = overlay.querySelector('[data-sauce-select-for="' + baseName + '"]');
-          var flavor = selectEl ? selectEl.value : SAUCE_FLAVORS[0];
-
-          var newName, newPrice, confirmMsg;
-          if (mode === "ontop") {
-            newName = baseName + " (salsa " + flavor + " por encima)";
-            newPrice = basePrice + SAUCE_ONTOP_EXTRA;
-            confirmMsg = "Añadida salsa " + flavor + " por encima a " + baseName;
-          } else {
-            newName = baseName + " (bañada en salsa " + flavor + ")";
-            newPrice = basePrice + SAUCE_BATHED_EXTRA;
-            confirmMsg = baseName + " bañada en salsa " + flavor;
-          }
-          convertCartItemSauce(baseName, newName, newPrice, qty);
-
-          if (itemEl) {
-            showSauceConfirmation(itemEl, confirmMsg);
-            settleSauceItem(itemEl, newName);
-          }
-        });
-      })(sauceAddBtns[s]);
-    }
-
-    // Subir de "salsa por encima" a "bañada" (+0,50€/ud más)
-    var sauceUpgradeBtns = overlay.querySelectorAll("[data-sauce-upgrade]");
-    for (var u = 0; u < sauceUpgradeBtns.length; u++) {
-      (function (btn) {
-        if (btn.dataset.actionBound) return;
-        btn.dataset.actionBound = "1";
-        btn.addEventListener("click", function () {
-          var itemEl = btn.closest(".upsell-item");
-          var oldName = btn.dataset.sauceUpgrade;
-          var baseName = btn.dataset.sauceBase;
-          var flavor = btn.dataset.sauceFlavor;
-          var qty = parseInt(btn.dataset.sauceQty, 10);
-          var basePrice = SAUCE_ELIGIBLE_PRICES[baseName];
-          var newName = baseName + " (bañada en salsa " + flavor + ")";
-          var newPrice = basePrice + SAUCE_BATHED_EXTRA;
-          convertCartItemSauce(oldName, newName, newPrice, qty);
-
-          if (itemEl) {
-            showSauceConfirmation(itemEl, baseName + " bañada en salsa " + flavor);
-            settleSauceItem(itemEl, newName);
-          }
-        });
-      })(sauceUpgradeBtns[u]);
-    }
-  }
-
-  function buildSauceItemBlockHtml(item) {
-    var parsed = parseSaucedName(item.name);
-    if (!SAUCE_ELIGIBLE_PRICES.hasOwnProperty(parsed.base)) return "";
-    if (parsed.state === "bathed") return ""; // ya al máximo, no mostramos nada
-
-    if (parsed.state === "none") {
-      var flavorOptions = SAUCE_FLAVORS.map(function (f) {
-        return '<option value="' + f + '">' + escHTML(f) + '</option>';
-      }).join("");
-      return (
-        '<div class="upsell-item">' +
-          '<p class="upsell-item-text"><strong>' + escHTML(item.name) + '</strong> (x' + item.qty + ') — ¿le añadimos salsa?</p>' +
-          '<select class="upsell-sauce-select" data-sauce-select-for="' + item.name + '">' + flavorOptions + '</select>' +
-          '<div class="upsell-sauce-btn-row">' +
-            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + item.name + '" data-sauce-mode="ontop" data-sauce-qty="' + item.qty + '">Salsa por encima (+' + formatPrice(SAUCE_ONTOP_EXTRA) + '/ud)</button>' +
-            '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-add="' + item.name + '" data-sauce-mode="bathed" data-sauce-qty="' + item.qty + '">Bañarla en salsa (+' + formatPrice(SAUCE_BATHED_EXTRA) + '/ud)</button>' +
-          '</div>' +
-        '</div>'
-      );
-    } else if (parsed.state === "ontop") {
-      return (
-        '<div class="upsell-item">' +
-          '<p class="upsell-item-text"><strong>' + escHTML(parsed.base) + '</strong> — salsa ' + escHTML(parsed.flavor) + ' por encima (x' + item.qty + ')</p>' +
-          '<button type="button" class="upsell-btn upsell-btn-small" data-sauce-upgrade="' + item.name + '" data-sauce-base="' + parsed.base + '" data-sauce-flavor="' + parsed.flavor + '" data-sauce-qty="' + item.qty + '">Bañarla también (+' + formatPrice(SAUCE_BATHED_EXTRA - SAUCE_ONTOP_EXTRA) + '/ud más)</button>' +
-        '</div>'
-      );
-    }
-    return "";
-  }
-
-  function buildSauceItemsHtml(cart) {
-    return cart.map(buildSauceItemBlockHtml).join("");
-  }
-
-  // Muestra una confirmación clara (sin botones) en el sitio exacto donde
-  // estaba el botón pulsado, para que un segundo clic accidental no caiga
-  // sobre una acción distinta que haya aparecido en ese mismo hueco.
-  function showSauceConfirmation(itemEl, message) {
-    itemEl.innerHTML = '<p class="upsell-item-text upsell-item-confirmed">✓ ' + escHTML(message) + '</p>';
-  }
-
-  // Tras la confirmación, sustituye SOLO ese bloque por su siguiente estado
-  // real (o lo elimina si ya no hay nada más que ofrecer ahí).
-  function settleSauceItem(itemEl, newName) {
-    setTimeout(function () {
-      if (!itemEl.parentNode) return; // el usuario ya cerró el popup
-      var cart = getCart();
-      var updated = cart.filter(function (i) { return i.name === newName; })[0];
-      var nextHtml = updated ? buildSauceItemBlockHtml(updated) : "";
-      if (!nextHtml) {
-        itemEl.remove();
-      } else {
-        itemEl.outerHTML = nextHtml;
-        var overlay = document.querySelector("[data-upsell-overlay]");
-        if (overlay) bindUpsellActions(overlay);
-      }
-    }, 1100);
-  }
-
-
-  var UPSELL_SHOWN_KEY = "fryUpsellShownThisSession";
-
-  function maybeShowUpsell() {
-    // solo tiene sentido en la página del carrito
-    if (!document.querySelector("[data-cart-items]")) return;
-
-    var cart = getCart();
-    if (!cart.length) return;
-
-    // Solo una vez por sesión: si no, cada vez que el cliente vuelve al
-    // carrito (p. ej. a poner un código de descuento) el modal se le
-    // vuelve a poner encima y le bloquea el resto de la página.
-    try {
-      if (sessionStorage.getItem(UPSELL_SHOWN_KEY)) return;
-      sessionStorage.setItem(UPSELL_SHOWN_KEY, "1");
-    } catch (e) { /* sin sessionStorage: lo mostramos igualmente */ }
-
-    // Con el modelo à la carte ya no hay "menús" que completar primero —
-    // siempre que haya algo en el carrito, ofrecemos salsa/bañado para
-    // lo que aplique, y los complementos de siempre.
-    var sauceHtml = buildSauceItemsHtml(cart);
-    var html =
-      '<span class="eyebrow upsell-eyebrow">Completa tu pedido</span>' +
-      '<h2 class="upsell-title">¿Añadimos algo más?</h2>' +
-      EXTRA_ADDONS.map(function (a) {
-        return (
-          '<div class="upsell-item">' +
-            '<p class="upsell-item-text">' + escHTML(a.text) + " (" + escHTML(a.price) + ")</p>" +
-            '<div class="qty-control" data-qty-control data-name="' + escHTML(a.name) + '" data-price="' + escHTML(a.price) + '"></div>' +
-          "</div>"
-        );
-      }).join("") +
-      (sauceHtml ? '<p class="upsell-subhead">¿Le añadimos salsa a algo?</p>' + sauceHtml : "") +
-      '<a href="#" class="upsell-dismiss" data-upsell-close>No, gracias</a>';
-    openUpsell(html);
   }
 
   if (document.readyState === "loading") {
