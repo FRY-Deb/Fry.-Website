@@ -208,6 +208,13 @@
     } catch (e) { /* sin ofertas en vivo: ninguna se considera activa */ }
   }
 
+  // Regalo (0€) del código aplicado, si está activo y se cumplen las condiciones.
+  function currentFreeItem(subtotal) {
+    var code = getAppliedOfferCode();
+    if (!code || !isOfferActive(code) || typeof FRY_computeFreeItem !== "function") return null;
+    return FRY_computeFreeItem(code, subtotal);
+  }
+
   // Descuento (en €) que aporta el código que el cliente tiene guardado,
   // solo si ese código sigue activo ahora mismo.
   function currentDiscountAmount(cart, subtotal) {
@@ -529,6 +536,8 @@
     cart.forEach(function (i) {
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
+    var freeItem = currentFreeItem(subtotal);
+    if (freeItem) lines.push("- 1x " + freeItem.name + " (0,00€) = 0,00€");
     lines.push("");
 
     if (orderNotes) {
@@ -587,7 +596,9 @@
       accessNotes: getField(ACCESS_NOTES_KEY),
       orderNotes: document.getElementById("orderNotes") ? document.getElementById("orderNotes").value.trim() : "",
       howFound: getField(HOW_FOUND_KEY),
-      items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }),
+      items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }).concat(
+        currentFreeItem(subtotal) ? [{ name: currentFreeItem(subtotal).name, qty: 1, price: 0 }] : []
+      ),
       subtotal: round2(subtotal),
       offerCode: getAppliedOfferCode(),
       discountAmount: round2(discountAmount),
@@ -708,6 +719,19 @@
       );
     }).join("");
 
+    var freeNow = currentFreeItem(cartTotal());
+    if (freeNow) {
+      container.insertAdjacentHTML("beforeend",
+        '<div class="cart-row">' +
+          '<div class="cart-row-main">' +
+            '<span class="cart-row-name">' + escHTML(freeNow.name) + "</span>" +
+            '<span class="cart-row-unit">Regalo con tu código</span>' +
+          "</div>" +
+          '<div class="cart-row-qty"><span class="cart-row-qty-num">1</span></div>' +
+          '<div class="cart-row-subtotal">' + formatPrice(0) + "</div>" +
+        "</div>");
+    }
+
     var minusBtns = container.querySelectorAll("[data-qty-minus]");
     for (var m = 0; m < minusBtns.length; m++) {
       minusBtns[m].addEventListener("click", function () { updateQty(this.dataset.qtyMinus, -1); });
@@ -819,6 +843,12 @@
             discountMsgEl.textContent = "Código no válido.";
             discountMsgEl.className = "cart-discount-msg is-error";
           }
+        } else if (isOfferActive(entered) && !FRY_offerValidToday(entered)) {
+          saveAppliedOfferCode("");
+          if (discountMsgEl) {
+            discountMsgEl.textContent = "Este código solo es válido miércoles y jueves.";
+            discountMsgEl.className = "cart-discount-msg is-error";
+          }
         } else if (!isOfferActive(entered)) {
           saveAppliedOfferCode("");
           if (discountMsgEl) {
@@ -828,7 +858,8 @@
         } else {
           saveAppliedOfferCode(entered);
           if (discountMsgEl) {
-            discountMsgEl.textContent = "¡Código aplicado! " + offer.label + ".";
+            discountMsgEl.textContent = "¡Código aplicado! " + offer.label + "." +
+              (offer.scope === "freeitem" && !(cartTotal() > offer.minSubtotal) ? " Se añadirá cuando tu pedido supere los " + offer.minSubtotal + "€." : "");
             discountMsgEl.className = "cart-discount-msg is-ok";
           }
         }
