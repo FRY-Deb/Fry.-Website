@@ -4,6 +4,8 @@
   if (!form) return;
 
   var TO_EMAIL = "info.frygroup@gmail.com";
+  // Identificador de FormSubmit para este correo (así el email no va a la vista en el envío).
+  var FORM_ID = "076952f42b32a670adb2b0cef4a40aa9";
   var errorEl = document.getElementById("cfError");
 
   function val(id) { return (document.getElementById(id).value || "").trim(); }
@@ -71,7 +73,7 @@
     btn.disabled = true;
     btn.textContent = "Enviando…";
 
-    fetch("https://formsubmit.co/ajax/" + TO_EMAIL, {
+    fetch("https://formsubmit.co/ajax/" + FORM_ID, {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify(payload)
