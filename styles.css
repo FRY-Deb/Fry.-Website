@@ -1270,22 +1270,25 @@ body.fry-intro-finished .fry-intro {
 
 /* --- Catering --- */
 .catering-hero {
-  position: relative; overflow: hidden; isolation: isolate;
+  position: relative;
   min-height: 78svh; display: flex; align-items: center;
   padding: calc(var(--nav-h) + 40px) 0 72px;
 }
-.catering-bg {
-  position: absolute; inset: 0; width: 100%; height: 100%;
-  object-fit: cover; opacity: 0.3; z-index: -2; pointer-events: none;
+/* Fondo fijo: se queda quieto detrás mientras se hace scroll */
+.catering-bg-fixed {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: url("assets/fry-catering-corporativo.jpg") center bottom / contain no-repeat;
+  opacity: 0.3;
 }
-.catering-hero::after {
-  content: ""; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-  background: linear-gradient(90deg, rgba(10,10,10,0.78) 0%, rgba(10,10,10,0.35) 60%, rgba(10,10,10,0.55) 100%);
+.catering-bg-fixed ~ main, .catering-bg-fixed ~ footer { position: relative; z-index: 1; }
+.catering-bg-fixed::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, rgba(10,10,10,0.55) 0%, rgba(10,10,10,0.1) 60%, rgba(10,10,10,0.3) 100%);
 }
 .catering-hero-inner { position: relative; z-index: 1; }
 .catering-hero .section-header, .catering-block .section-header { gap: 28px; }
 .catering-hero .section-title, .catering-block .section-title { line-height: 1.12; }
-.catering-hero .section-title .dot { width: 0.16em; height: 0.16em; margin-left: 0.04em; }
+.catering-hero .section-title .dot { width: 0.21em; height: 0.21em; margin-left: -0.03em; margin-right: 0.06em; }
 .catering-lead { max-width: 64ch; color: var(--cream-2); font-size: 18px; line-height: 1.7; }
 .catering-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; }
 .catering-banner { padding-top: 56px; }
