@@ -45,10 +45,23 @@
     });
   }
 
+  // Precios vigentes. Un carrito guardado antes de un cambio de precio
+  // conserva el precio viejo en el navegador del cliente; aquí se corrige.
+  var CURRENT_PRICES = {
+    "Ración 2 Piezas": 11.5,
+    "Ración 4 Tiras": 9.5,
+    "Hamburguesa FRY.": 9,
+    "Hamburguesa FRY. + filete extra": 11.5
+  };
+
   function getCart() {
     try {
       var raw = localStorage.getItem(CART_KEY);
-      return raw ? JSON.parse(raw) : [];
+      var cart = raw ? JSON.parse(raw) : [];
+      cart.forEach(function (i) {
+        if (CURRENT_PRICES.hasOwnProperty(i.name)) i.price = CURRENT_PRICES[i.name];
+      });
+      return cart;
     } catch (e) {
       return [];
     }
