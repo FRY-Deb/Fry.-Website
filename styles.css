@@ -1332,3 +1332,13 @@ body.fry-intro-finished .fry-intro {
 .cf-checks input, .cf-consent input { accent-color: var(--red); }
 .cf-error { color: var(--red); font-size: 14px; margin: 0; }
 .catering-form .btn { align-self: flex-start; }
+
+/* Hover de las columnas de "Qué llevamos", igual que las tarjetas de la carta */
+.catering-menu > div {
+  border-top: 1px solid var(--line);
+  padding: 22px 16px 22px 0;
+  transition: background-color .3s var(--ease-out), padding-left .3s var(--ease-out);
+}
+.catering-menu > div:hover { background: var(--bg-2); padding-left: 12px; }
+.cf-success { color: #4caf50; font-size: 16px; font-weight: 600; }
+.catering-form.is-sent { display: none; }

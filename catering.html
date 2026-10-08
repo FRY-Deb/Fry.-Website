@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261020" />
+<link rel="stylesheet" href="styles.css?v=20261021" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -87,7 +87,7 @@
       <span class="eyebrow">Cómo funciona</span>
       <h2 class="section-title">Cuéntanos y lo preparamos.</h2>
     </div>
-    <p class="catering-lead" style="margin-bottom:32px;">Rellena el formulario con los datos de tu evento y te preparamos una propuesta para tu empresa. Al enviarlo se abre WhatsApp con tu solicitud ya escrita.</p>
+    <p class="catering-lead" style="margin-bottom:32px;">Rellena el formulario con los datos de tu evento y te preparamos una propuesta para tu empresa. Te respondemos por email o teléfono lo antes posible.</p>
 
     <form class="catering-form" id="cateringForm" novalidate data-reveal>
       <div class="catering-form-grid">
@@ -122,16 +122,17 @@
       </fieldset>
 
       <div class="catering-form-grid">
-        <div class="cf-field"><label for="cfBudget">Presupuesto aproximado</label><input type="text" id="cfBudget" placeholder="Opcional" /></div>
+        <div class="cf-field"><label for="cfBudget">Presupuesto (€)</label><input type="text" id="cfBudget" inputmode="numeric" placeholder="Cuánto queréis invertir (opcional)" /></div>
         <div class="cf-field"><label for="cfAllergies">Alergias o intolerancias</label><input type="text" id="cfAllergies" placeholder="Opcional" /></div>
-        <div class="cf-field cf-wide"><label for="cfNotes">Comentarios</label><textarea id="cfNotes" rows="3" placeholder="Opcional"></textarea></div>
+        <div class="cf-field cf-wide"><label for="cfNotes">Describe tu proyecto</label><textarea id="cfNotes" rows="4" placeholder="Cuéntanos qué tienes en mente: FRY. se adaptará a tu evento."></textarea></div>
       </div>
 
-      <label class="cf-consent"><input type="checkbox" id="cfConsent" required /> He leído la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a> y acepto que FRY. use estos datos para responder a mi solicitud. *</label>
+      <label class="cf-consent"><input type="checkbox" id="cfConsent" required /> He leído la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a> y acepto que FRY. use estos datos para responder a mi solicitud (se envían por email a FRY.). *</label>
 
       <p class="cf-error" id="cfError" role="alert" style="display:none;"></p>
-      <button type="submit" class="btn btn-primary">Enviar solicitud por WhatsApp</button>
+      <button type="submit" class="btn btn-primary" id="cfSubmit">Enviar solicitud</button>
     </form>
+    <p class="cf-success" id="cfSuccess" role="status" style="display:none;">¡Solicitud enviada! Gracias por contar con FRY. Te contestaremos muy pronto.</p>
 </section>
 
 </main>

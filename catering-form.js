@@ -3,7 +3,7 @@
   var form = document.getElementById("cateringForm");
   if (!form) return;
 
-  var WHATSAPP = "34669765785";
+  var TO_EMAIL = "info.frygroup@gmail.com";
   var errorEl = document.getElementById("cfError");
 
   function val(id) { return (document.getElementById(id).value || "").trim(); }
@@ -45,26 +45,49 @@
       function (c) { return c.value; }
     );
 
-    var lines = [
-      "Hola! Quiero pedir presupuesto de catering para mi empresa:",
-      "",
-      "Empresa: " + val("cfCompany"),
-      "Contacto: " + val("cfName"),
-      "Teléfono: " + val("cfPhone")
-    ];
-    if (val("cfEmail")) lines.push("Email: " + val("cfEmail"));
-    lines.push("",
-      "Tipo de evento: " + val("cfType"),
-      "Personas: " + val("cfPeople"),
-      "Fecha: " + formatDate(val("cfDate")),
-      "Hora de entrega: " + val("cfTime"),
-      "Lugar: " + val("cfPlace")
-    );
-    if (items.length) lines.push("Nos interesa: " + items.join(", "));
-    if (val("cfBudget")) lines.push("Presupuesto aproximado: " + val("cfBudget"));
-    if (val("cfAllergies")) lines.push("Alergias o intolerancias: " + val("cfAllergies"));
-    if (val("cfNotes")) lines.push("", "Comentarios: " + val("cfNotes"));
+    var payload = {
+      _subject: "Solicitud de catering — " + val("cfCompany"),
+      _template: "table",
+      _captcha: "false",
+      _honey: "",
+      "Empresa": val("cfCompany"),
+      "Persona de contacto": val("cfName"),
+      "Teléfono": val("cfPhone"),
+      "Email": val("cfEmail") || "—",
+      "Tipo de evento": val("cfType"),
+      "Número de personas": val("cfPeople"),
+      "Fecha": formatDate(val("cfDate")),
+      "Hora de entrega": val("cfTime"),
+      "Lugar de entrega": val("cfPlace"),
+      "Les interesa": items.length ? items.join(", ") : "—",
+      "Presupuesto": val("cfBudget") || "—",
+      "Alergias o intolerancias": val("cfAllergies") || "—",
+      "Descripción del proyecto": val("cfNotes") || "—"
+    };
+    if (val("cfEmail")) payload._replyto = val("cfEmail");
 
-    window.open("https://wa.me/" + WHATSAPP + "?text=" + encodeURIComponent(lines.join("\n")), "_blank", "noopener");
+    var btn = document.getElementById("cfSubmit");
+    var originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = "Enviando…";
+
+    fetch("https://formsubmit.co/ajax/" + TO_EMAIL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (res) { return res.json().then(function (data) { return { ok: res.ok, data: data }; }); })
+      .then(function (r) {
+        if (!r.ok || String(r.data.success) === "false") throw new Error("send failed");
+        form.classList.add("is-sent");
+        document.getElementById("cfSuccess").style.display = "block";
+        document.getElementById("cfSuccess").scrollIntoView({ behavior: "smooth", block: "center" });
+      })
+      .catch(function () {
+        btn.disabled = false;
+        btn.textContent = originalText;
+        errorEl.textContent = "No hemos podido enviar la solicitud. Inténtalo de nuevo o escríbenos a " + TO_EMAIL + ".";
+        errorEl.style.display = "block";
+      });
   });
 })();
