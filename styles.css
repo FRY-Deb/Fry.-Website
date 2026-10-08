@@ -1307,6 +1307,7 @@ body.fry-intro-finished .fry-intro {
 .catering-tile { background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--red); padding: 22px; }
 .catering-tile-name { font-family: var(--display); font-size: 22px; text-transform: uppercase; }
 .catering-menu { display: grid; gap: 28px; }
-@media (min-width: 900px) { .catering-menu { grid-template-columns: repeat(3, 1fr); } }
+@media (min-width: 640px) { .catering-menu { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1100px) { .catering-menu { grid-template-columns: repeat(4, 1fr); } }
 .catering-menu-title { font-family: var(--display); font-size: 26px; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
 .catering-menu-text { color: var(--cream-2); font-size: 15px; line-height: 1.6; }
