@@ -1311,3 +1311,24 @@ body.fry-intro-finished .fry-intro {
 @media (min-width: 1100px) { .catering-menu { grid-template-columns: repeat(4, 1fr); } }
 .catering-menu-title { font-family: var(--display); font-size: 26px; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
 .catering-menu-text { color: var(--cream-2); font-size: 15px; line-height: 1.6; }
+
+/* --- Formulario de catering --- */
+.catering-form { display: flex; flex-direction: column; gap: 28px; max-width: 880px; }
+.catering-form-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .catering-form-grid { grid-template-columns: 1fr 1fr; } .cf-wide { grid-column: 1 / -1; } }
+.cf-field label { display: block; font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cream-mute); margin-bottom: 6px; }
+.cf-field input, .cf-field select, .cf-field textarea {
+  width: 100%; background: var(--bg-2); color: var(--cream);
+  border: 1px solid var(--line-strong); padding: 11px 12px;
+  font-family: var(--sans); font-size: 14px; border-radius: 0;
+}
+.cf-field textarea { resize: vertical; }
+.cf-field input:focus, .cf-field select:focus, .cf-field textarea:focus { outline: none; border-color: var(--red); }
+.cf-checks { border: 1px solid var(--line-strong); padding: 16px 18px; display: flex; flex-wrap: wrap; gap: 10px 24px; margin: 0; }
+.cf-checks legend { font-size: 11px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cream-mute); padding: 0 8px; }
+.cf-checks label, .cf-consent { font-size: 14px; color: var(--cream-2); display: flex; align-items: center; gap: 8px; }
+.cf-consent { align-items: flex-start; font-size: 13px; line-height: 1.5; }
+.cf-consent a { color: var(--red); text-decoration: underline; }
+.cf-checks input, .cf-consent input { accent-color: var(--red); }
+.cf-error { color: var(--red); font-size: 14px; margin: 0; }
+.catering-form .btn { align-self: flex-start; }
