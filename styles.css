@@ -1249,3 +1249,21 @@ body.fry-intro-finished .fry-intro {
   .menu-sidebar a:hover { border-left-color: var(--line-strong); }
   .menu-sidebar a.is-active { background: none; color: var(--red); border-left-color: var(--red); }
 }
+
+/* --- Portada: salsas y reseñas --- */
+.home-salsas, .home-reviews { padding-top: 80px; }
+.soon-row { margin-top: 36px; }
+.soon-label { display: block; text-align: center; margin-bottom: 14px; font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--red); }
+.soon-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .soon-grid { grid-template-columns: repeat(3, 1fr); } }
+.soon-tile { background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--red); padding: 18px 22px; }
+.soon-name { font-family: var(--display); font-size: 22px; text-transform: uppercase; color: var(--cream-mute); }
+.reviews-grid { display: grid; gap: 20px; grid-template-columns: 1fr; }
+@media (min-width: 720px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (min-width: 1024px) { .reviews-grid { grid-template-columns: repeat(2, 1fr); } }
+.review-card { margin: 0; border: 1px solid var(--line-strong); padding: 20px; display: flex; flex-direction: column; gap: 14px; }
+.review-img { width: 100%; max-width: 220px; aspect-ratio: 1 / 1; object-fit: cover; display: block; border-radius: 12px; }
+.review-stars { color: var(--red); font-size: 18px; letter-spacing: 2px; }
+.review-text { margin: 0; font-size: 15px; line-height: 1.6; color: var(--cream-2); }
+.review-author { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cream-mute); }
+.reviews-cta { text-align: center; margin-top: 40px; }
