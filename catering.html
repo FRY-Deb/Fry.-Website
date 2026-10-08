@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Contacto — FRY.</title>
-<meta name="description" content="Pide en FRY. por WhatsApp. Solo pedidos a domicilio." />
+<title>Catering para empresas — FRY.</title>
+<meta name="description" content="Catering corporativo FRY.: pollo frito, hamburguesas y patatas para reuniones, eventos, formaciones, afterworks y celebraciones de empresa." />
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
@@ -19,8 +19,8 @@
     <nav class="nav-links" aria-label="Navegación principal">
       <a href="index.html">Inicio</a>
       <a href="carta.html">Carta</a>
-      <a href="catering.html">Catering</a>
-      <a href="contacto.html" aria-current="page">Contacto</a>
+      <a href="catering.html" aria-current="page">Catering</a>
+      <a href="contacto.html">Contacto</a>
     </nav>
     <a href="carrito.html" class="nav-cart" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
     <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
@@ -39,45 +39,56 @@
 
 <main id="main">
 
-  <section class="contact-hero container">
+  <section class="catering-hero container">
     <div class="section-header" style="padding-top:0;">
-      <span class="eyebrow">Contacto</span>
-      <h1 class="section-title">Pide directo.</h1>
+      <span class="eyebrow">Catering corporativo</span>
+      <h1 class="section-title">FRY. también va a tu empresa.</h1>
+    </div>
+    <p class="catering-lead">¿Reunión, formación, evento o afterwork? Llevamos el pollo frito más crujiente de Madrid a tu oficina: caliente, picante y listo para compartir. Tu equipo se acordará de la comida, no de la reunión.</p>
+    <div class="catering-actions">
+      <a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/34669765785?text=Hola!%20Somos%20una%20empresa%20y%20queremos%20pedir%20informaci%C3%B3n%20sobre%20vuestro%20catering.">Pedir presupuesto por WhatsApp</a>
+      <a class="btn btn-outline" href="carta.html">Ver la carta</a>
     </div>
   </section>
 
-  <section class="container">
-    <div class="contact-grid">
+  <section class="container catering-banner" data-reveal>
+    <img src="assets/fry-catering-corporativo.jpg" alt="Grupo FRY. Catering corporativo — Fried chicken, burgers, fries. Hot. Crispy. Loud." loading="lazy" />
+  </section>
 
-      <div class="contact-whatsapp" data-reveal>
-        <h2 class="contact-block-title">Pedidos por WhatsApp</h2>
-        <p style="color:var(--cream-2); font-size:14px;">Ahora mismo solo tomamos pedidos por WhatsApp. Escríbenos y te confirmamos tiempo y precio de envío.</p>
-        <a class="btn btn-primary" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Escribir por WhatsApp</a>
-        <hr class="rule" />
-        <div>
-          <span class="eyebrow">Síguenos</span>
-          <div class="social-row">
-            <a data-instagram-link href="https://www.instagram.com/fry_group?igsi=azF1aW1yaThhMm9q&utm_source=qr" aria-label="Instagram">IG</a>
-            <a data-tiktok-link href="https://www.tiktok.com/@fry0815" aria-label="TikTok">TT</a>
-          </div>
-        </div>
-      </div>
+  <section class="container catering-block">
+    <div class="section-header" style="padding-top:0;">
+      <span class="eyebrow">Para cada ocasión</span>
+      <h2 class="section-title">Lo montamos contigo.</h2>
+    </div>
+    <div class="catering-occasions" data-reveal>
+      <div class="catering-tile"><span class="catering-tile-name">Reuniones</span></div>
+      <div class="catering-tile"><span class="catering-tile-name">Eventos</span></div>
+      <div class="catering-tile"><span class="catering-tile-name">Formaciones</span></div>
+      <div class="catering-tile"><span class="catering-tile-name">Afterworks</span></div>
+      <div class="catering-tile"><span class="catering-tile-name">Celebraciones</span></div>
+    </div>
+  </section>
 
-      <div data-reveal>
-        <h2 class="contact-block-title">Zona de entrega</h2>
-        <div class="menu-card" style="grid-template-columns:1fr auto;">
-          <span class="menu-card-name" style="font-size:20px;">Villaverde</span>
-          <span class="menu-card-price" style="font-size:20px;">2€</span>
-          <span class="menu-card-desc">Envío estándar dentro de Villaverde, Madrid.</span>
-        </div>
-        <div class="menu-card" style="grid-template-columns:1fr auto;">
-          <span class="menu-card-name" style="font-size:20px;">Fuera de zona</span>
-          <span class="menu-card-price" style="font-size:20px;">Consultar</span>
-          <span class="menu-card-desc">Escríbenos por WhatsApp con tu dirección y te confirmamos si llegamos y el coste de envío.</span>
-        </div>
-        <p style="margin-top:24px; color:var(--cream-mute); font-size:13px;">Únicamente servicio a domicilio — de momento no tenemos local para comer allí.</p>
-      </div>
+  <section class="container catering-block">
+    <div class="section-header" style="padding-top:0;">
+      <span class="eyebrow">Qué llevamos</span>
+      <h2 class="section-title">Fried chicken. Burgers. Fries.</h2>
+    </div>
+    <div class="catering-menu" data-reveal>
+      <div><p class="catering-menu-title">Pollo frito</p><p class="catering-menu-text">Piezas de pechuga entera y tiras grandes, doble rebozado y bien picantes.</p></div>
+      <div><p class="catering-menu-title">Hamburguesas</p><p class="catering-menu-text">Pollo rebozado, queso, pepinillos y salsa FRY. en pan brioche.</p></div>
+      <div><p class="catering-menu-title">Patatas y salsas</p><p class="catering-menu-text">Patatas con sazón cajún y nuestras salsas FRY., Ranch y miel para mojar.</p></div>
+    </div>
+  </section>
 
+  <section class="container catering-block">
+    <div class="section-header" style="padding-top:0;">
+      <span class="eyebrow">Cómo funciona</span>
+      <h2 class="section-title">Cuéntanos y lo preparamos.</h2>
+    </div>
+    <p class="catering-lead" style="margin-bottom:28px;">Escríbenos por WhatsApp con el número de personas, el día y el lugar, y te enviamos una propuesta a medida de tu empresa.</p>
+    <div class="catering-actions" data-reveal>
+      <a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/34669765785?text=Hola!%20Somos%20una%20empresa%20y%20queremos%20pedir%20informaci%C3%B3n%20sobre%20vuestro%20catering.">Hablar con FRY.</a>
     </div>
   </section>
 

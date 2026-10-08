@@ -1267,3 +1267,19 @@ body.fry-intro-finished .fry-intro {
 .review-text { margin: 0; font-size: 15px; line-height: 1.6; color: var(--cream-2); }
 .review-author { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--cream-mute); }
 .reviews-cta { text-align: center; margin-top: 40px; }
+
+/* --- Catering --- */
+.catering-hero { padding-top: calc(var(--nav-h) + 60px); }
+.catering-lead { max-width: 64ch; color: var(--cream-2); font-size: 18px; line-height: 1.7; }
+.catering-actions { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 32px; }
+.catering-banner { padding-top: 56px; }
+.catering-banner img { width: 100%; display: block; border: 1px solid var(--line-strong); }
+.catering-block { padding-top: 80px; }
+.catering-occasions { display: grid; gap: 12px; grid-template-columns: 1fr 1fr; }
+@media (min-width: 900px) { .catering-occasions { grid-template-columns: repeat(5, 1fr); } }
+.catering-tile { background: var(--bg-2); border: 1px solid var(--line); border-left: 3px solid var(--red); padding: 22px; }
+.catering-tile-name { font-family: var(--display); font-size: 22px; text-transform: uppercase; }
+.catering-menu { display: grid; gap: 28px; }
+@media (min-width: 900px) { .catering-menu { grid-template-columns: repeat(3, 1fr); } }
+.catering-menu-title { font-family: var(--display); font-size: 26px; text-transform: uppercase; color: var(--red); margin-bottom: 8px; }
+.catering-menu-text { color: var(--cream-2); font-size: 15px; line-height: 1.6; }
