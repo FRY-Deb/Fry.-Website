@@ -1277,8 +1277,16 @@ body.fry-intro-finished .fry-intro {
 /* Fondo fijo: se queda quieto detrás mientras se hace scroll */
 .catering-bg-fixed {
   position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: url("assets/fry-catering-corporativo.jpg") center bottom / contain no-repeat;
-  opacity: 0.3;
+  display: flex; align-items: flex-end; justify-content: center;
+  opacity: 0.3; overflow: hidden;
+}
+/* La imagen (3:2) se ajusta entera y se baja un 7% de su alto para que
+   "GRUPO" no quede bajo el menú, sin cortar la fila de ocasiones de abajo. */
+.catering-bg-fixed::before {
+  content: ""; flex: none;
+  width: min(100vw, 150vh); aspect-ratio: 3 / 2;
+  background: url("assets/fry-catering-corporativo.jpg") center / 100% 100% no-repeat;
+  transform: translateY(7%);
 }
 .catering-bg-fixed ~ main, .catering-bg-fixed ~ footer { position: relative; z-index: 1; }
 .catering-bg-fixed::after {
