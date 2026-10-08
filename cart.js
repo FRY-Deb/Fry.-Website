@@ -7,6 +7,7 @@
   var SCHEDULE_TYPE_KEY = "fryScheduleType";
   var SCHEDULE_TIME_KEY = "fryScheduleTime";
   var DISCOUNT_KEY = "fryDiscountApplied";
+  var MODE_KEY = "fryDeliveryMode";
   var NAME_KEY = "fryCustomerName";
   var STREET_KEY = "fryStreet";
   var FLOOR_KEY = "fryFloor";
@@ -112,7 +113,16 @@
     return getCart().reduce(function (sum, i) { return sum + i.qty * i.price; }, 0);
   }
 
+  function getDeliveryMode() {
+    try { return localStorage.getItem(MODE_KEY) === "pickup" ? "pickup" : "delivery"; } catch (e) { return "delivery"; }
+  }
+
+  function saveDeliveryMode(mode) {
+    try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* sin persistencia */ }
+  }
+
   function getShippingValue() {
+    if (getDeliveryMode() === "pickup") return "Recogida en el local|0";
     try {
       return localStorage.getItem(SHIPPING_KEY) || DEFAULT_SHIPPING;
     } catch (e) {
@@ -525,6 +535,9 @@
     var howFound = getField(HOW_FOUND_KEY);
 
     if (name) lines.push("Nombre: " + name);
+    var pickup = getDeliveryMode() === "pickup";
+    if (pickup) street = "";
+    if (pickup) accessNotes = "";
     if (street) {
       var addressLine = "Dirección: " + street;
       if (floor) addressLine += ", " + floor;
@@ -552,7 +565,8 @@
       lines.push("Hora del pedido: lo antes posible");
     }
     lines.push("Método de pago: " + getPaymentMethod());
-    lines.push("Zona de entrega: " + shipping.zone);
+    if (pickup) lines.push("Recogida: el cliente pasa a recogerlo al local");
+    else lines.push("Zona de entrega: " + shipping.zone);
     if (shipping.zone !== "" && TIME_ESTIMATES[shipping.zone]) {
       lines.push("Tiempo estimado: " + TIME_ESTIMATES[shipping.zone]);
     }
@@ -564,7 +578,11 @@
       lines.push("Descuento (" + appliedCode + "): -" + formatPrice(discountAmount));
     }
 
-    if (shipping.cost === null) {
+    if (pickup) {
+      lines.push("Envío: sin coste (recogida en local)");
+      lines.push("");
+      lines.push("Total: " + formatPrice(subtotalConDescuento));
+    } else if (shipping.cost === null) {
       lines.push("Envío: a consultar con el local (fuera del radio habitual)");
       lines.push("");
       lines.push("Total (sin envío): " + formatPrice(subtotalConDescuento));
@@ -591,9 +609,10 @@
 
     return {
       customerName: getField(NAME_KEY),
-      street: getField(STREET_KEY),
-      floor: getField(FLOOR_KEY),
-      accessNotes: getField(ACCESS_NOTES_KEY),
+      deliveryMode: getDeliveryMode(),
+      street: getDeliveryMode() === "pickup" ? "" : getField(STREET_KEY),
+      floor: getDeliveryMode() === "pickup" ? "" : getField(FLOOR_KEY),
+      accessNotes: getDeliveryMode() === "pickup" ? "" : getField(ACCESS_NOTES_KEY),
       orderNotes: document.getElementById("orderNotes") ? document.getElementById("orderNotes").value.trim() : "",
       howFound: getField(HOW_FOUND_KEY),
       items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }).concat(
@@ -889,9 +908,28 @@
     if (discountAmountEl) discountAmountEl.textContent = "-" + formatPrice(discountAmount);
     if (discountLabelEl) discountLabelEl.textContent = "Descuento" + (appliedCode ? " (" + appliedCode + ")" : "");
 
+    var modeRadios = document.querySelectorAll("[data-mode-radio]");
+    var mode = getDeliveryMode();
+    for (var mr = 0; mr < modeRadios.length; mr++) {
+      modeRadios[mr].checked = modeRadios[mr].value === mode;
+      if (!modeRadios[mr].dataset.bound) {
+        modeRadios[mr].dataset.bound = "1";
+        modeRadios[mr].addEventListener("change", function () {
+          if (this.checked) { saveDeliveryMode(this.value); renderCartPage(); }
+        });
+      }
+    }
+    var deliveryOnlyEls = document.querySelectorAll("[data-delivery-only]");
+    for (var de = 0; de < deliveryOnlyEls.length; de++) {
+      deliveryOnlyEls[de].style.display = mode === "pickup" ? "none" : "";
+    }
+
     var blockReason = getOrderBlockReason(shipping);
 
-    if (shipping.zone === "") {
+    if (mode === "pickup") {
+      if (shippingCostEl) shippingCostEl.textContent = "Recogida (0,00€)";
+      if (shippingHintEl) shippingHintEl.style.display = "none";
+    } else if (shipping.zone === "") {
       if (shippingCostEl) shippingCostEl.textContent = "—";
       if (shippingHintEl) shippingHintEl.style.display = "none";
     } else if (shipping.cost === null) {
@@ -918,7 +956,7 @@
     var blockMsgEl = document.querySelector("[data-order-block-msg]");
     if (blockMsgEl) {
       if (blockReason === "contact") {
-        blockMsgEl.textContent = "Necesitamos tu nombre y tu dirección para poder enviarte el pedido.";
+        blockMsgEl.textContent = getDeliveryMode() === "pickup" ? "Necesitamos tu nombre para preparar tu pedido." : "Necesitamos tu nombre y tu dirección para poder enviarte el pedido.";
         blockMsgEl.style.display = "block";
       } else if (blockReason === "hours") {
         var hoursText = (typeof fryTodayHoursText === "function" && cachedHours) ? fryTodayHoursText(new Date(), cachedHours) : "";
@@ -975,7 +1013,8 @@
     if (shipping.zone === "") return "zone";
     var name = getField(NAME_KEY);
     var street = getField(STREET_KEY);
-    if (!name.trim() || !street.trim()) return "contact";
+    if (!name.trim()) return "contact";
+    if (getDeliveryMode() === "delivery" && !street.trim()) return "contact";
     if (!isCurrentlyOpenForOrder()) return "hours";
     return null;
   }

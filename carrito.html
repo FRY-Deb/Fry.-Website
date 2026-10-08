@@ -56,21 +56,29 @@
     <div data-cart-summary class="cart-summary" style="display:none;">
 
       <div class="cart-extra-field">
+        <span class="cart-shipping-label">¿Cómo lo quieres?</span>
+        <div class="cart-schedule-options">
+          <label><input type="radio" name="deliveryMode" value="delivery" checked data-mode-radio> A domicilio</label>
+          <label><input type="radio" name="deliveryMode" value="pickup" data-mode-radio> Recoger en el local</label>
+        </div>
+      </div>
+
+      <div class="cart-extra-field">
         <span class="cart-shipping-label">Tus datos</span>
         <div class="cart-contact-grid">
           <div class="field-inline">
             <label for="customerName">Nombre</label>
             <input type="text" id="customerName" placeholder="Tu nombre" />
           </div>
-          <div class="field-inline">
+          <div class="field-inline" data-delivery-only>
             <label for="streetAddress">Calle y número</label>
             <input type="text" id="streetAddress" placeholder="Calle y número" />
           </div>
-          <div class="field-inline">
+          <div class="field-inline" data-delivery-only>
             <label for="floorDoor">Piso / Puerta (opcional)</label>
             <input type="text" id="floorDoor" placeholder="Piso y puerta" />
           </div>
-          <div class="field-inline">
+          <div class="field-inline" data-delivery-only>
             <label for="accessNotes">Notas de acceso (opcional)</label>
             <input type="text" id="accessNotes" placeholder="Instrucciones de acceso" />
           </div>
@@ -90,7 +98,7 @@
         </select>
       </div>
 
-      <div class="cart-shipping">
+      <div class="cart-shipping" data-delivery-only>
         <label for="shippingZone" class="cart-shipping-label">Zona de entrega</label>
         <select id="shippingZone" data-shipping-select>
           <option value="" selected disabled>— Selecciona tu zona —</option>
@@ -108,7 +116,7 @@
         <p class="cart-shipping-hint" data-shipping-hint style="display:none;">Fuera de nuestro radio habitual de reparto — te confirmamos el envío por WhatsApp antes de cerrar el pedido.</p>
       </div>
 
-      <div class="cart-extra-field">
+      <div class="cart-extra-field" data-delivery-only>
         <span class="cart-shipping-label">Tiempo estimado de entrega</span>
         <p class="cart-time-estimate" data-time-estimate>Elige tu zona para verlo</p>
       </div>
