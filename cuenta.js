@@ -126,6 +126,7 @@
           '<p class="reward-points">' + FRY_formatPoints(r.points) + " puntos</p>" +
           '<div class="reward-bar"><span style="width:' + pct + '%"></span></div>' +
           '<p class="reward-state">' + (ok ? "¡Ya la puedes canjear!" : "Te faltan " + FRY_formatPoints(r.points - bal.available) + " puntos") + "</p>" +
+          (ok ? '<button type="button" class="upsell-btn reward-redeem" data-redeem="' + id + '">Canjear</button>' : "") +
         "</div>"
       );
     }).join("");
@@ -142,6 +143,46 @@
         (gain ? "+" : "−") + FRY_formatPoints(Math.abs(p)) + "</span></div>";
     }).join("") : '<p class="account-note">Todavía no tienes movimientos. Tus puntos aparecerán aquí cuando FRY. confirme tu primer pedido.</p>';
   }
+
+  // Canje: ventana de confirmación y, al aceptar, la recompensa queda aplicada al carrito.
+  var redeemModal = null;
+  function closeRedeem() { if (redeemModal) { redeemModal.remove(); redeemModal = null; } }
+  function openRedeem(id) {
+    var r = FRY_REWARDS[id];
+    if (!r) return;
+    closeRedeem();
+    var cartHasItems = false;
+    try { cartHasItems = (JSON.parse(localStorage.getItem("fryCart") || "[]") || []).length > 0; } catch (e) {}
+    var el = document.createElement("div");
+    el.className = "upsell-overlay is-open";
+    el.setAttribute("role", "dialog");
+    el.setAttribute("aria-modal", "true");
+    el.innerHTML =
+      '<div class="upsell-box">' +
+        '<button type="button" class="upsell-close" data-rd-cancel aria-label="Cerrar">&times;</button>' +
+        '<span class="eyebrow upsell-eyebrow">Canjear puntos</span>' +
+        '<h3 class="upsell-title">Vas a canjear</h3>' +
+        '<p class="upsell-item-text"><strong>' + esc(r.label) + '</strong><br>Se descontarán ' + FRY_formatPoints(r.points) + ' puntos cuando FRY. confirme tu pedido. ' +
+        (cartHasItems ? "Se aplicará ahora a tu pedido." : "Se guardará y se aplicará en cuanto añadas productos al carrito.") +
+        ' Recuerda que el envío siempre se paga.</p>' +
+        '<button type="button" class="upsell-btn" data-rd-ok>Sí, canjear</button>' +
+        '<a href="#" class="upsell-dismiss" data-rd-cancel>Cancelar</a>' +
+      '</div>';
+    document.body.appendChild(el);
+    redeemModal = el;
+    el.addEventListener("click", function (e) {
+      if (e.target === el || e.target.closest("[data-rd-cancel]")) { e.preventDefault(); closeRedeem(); return; }
+      if (e.target.closest("[data-rd-ok]")) {
+        try { localStorage.setItem("fryReward", id); } catch (err) {}
+        window.location.href = cartHasItems ? "carrito.html" : "carta.html";
+      }
+    });
+  }
+  document.getElementById("accRewards").addEventListener("click", function (e) {
+    var b = e.target.closest("[data-redeem]");
+    if (b) openRedeem(b.getAttribute("data-redeem"));
+  });
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeRedeem(); });
 
   auth.onAuthStateChanged(function (user) {
     if (logRef) { logRef.off(); logRef = null; }

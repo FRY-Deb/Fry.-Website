@@ -1445,3 +1445,5 @@ body.fry-intro-finished .fry-intro {
 .review-card { transition: background .2s ease, transform .2s ease, border-color .2s ease; }
 .review-card:hover { background: var(--red); border-color: var(--red); transform: translateY(-4px); }
 .review-card:hover .review-stars, .review-card:hover .review-text, .review-card:hover .review-author { color: var(--cream); }
+
+.reward-redeem { margin-top: 12px; width: 100%; text-align: center; cursor: pointer; border: 0; }
