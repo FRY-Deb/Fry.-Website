@@ -127,12 +127,17 @@
     return getCart().reduce(function (sum, i) { return sum + i.qty * i.price; }, 0);
   }
 
+  // Copia en memoria: si el navegador no deja usar localStorage (navegadores
+  // integrados de Instagram/TikTok, modo privado...), el selector sigue funcionando.
+  var memDeliveryMode = null;
   function getDeliveryMode() {
+    if (memDeliveryMode) return memDeliveryMode;
     try { return localStorage.getItem(MODE_KEY) === "pickup" ? "pickup" : "delivery"; } catch (e) { return "delivery"; }
   }
 
   function saveDeliveryMode(mode) {
-    try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* sin persistencia */ }
+    memDeliveryMode = mode === "pickup" ? "pickup" : "delivery";
+    try { localStorage.setItem(MODE_KEY, memDeliveryMode); } catch (e) { /* sin persistencia */ }
   }
 
 
@@ -1174,6 +1179,9 @@
         modeRadios[mr].dataset.bound = "1";
         modeRadios[mr].addEventListener("change", function () {
           if (this.checked) { saveDeliveryMode(this.value); renderCartPage(); }
+        });
+        modeRadios[mr].addEventListener("click", function () {
+          if (getDeliveryMode() !== this.value) { saveDeliveryMode(this.value); renderCartPage(); }
         });
       }
     }
