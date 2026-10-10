@@ -1342,3 +1342,17 @@ body.fry-intro-finished .fry-intro {
 .catering-menu > div:hover { background: var(--bg-2); padding-left: 12px; }
 .cf-success { color: #4caf50; font-size: 16px; font-weight: 600; }
 .catering-form.is-sent { display: none; }
+
+/* Errores de los campos del formulario de catering */
+.cf-fielderr { display: none; margin: 6px 0 0; font-size: 13px; line-height: 1.4; color: var(--red); }
+.cf-field input.has-error, .cf-field select.has-error, .cf-field textarea.has-error { border-color: var(--red); }
+
+/* Fondo de catering en móvil: versión vertical de la imagen */
+@media (max-width: 720px) {
+  .catering-bg-fixed::before {
+    width: 100%; height: 100%; aspect-ratio: auto;
+    background: url("assets/fry-catering-corporativo-movil.jpg") center / 100% auto no-repeat;
+    transform: none;
+  }
+  .catering-bg-fixed { opacity: 0.22; }
+}
