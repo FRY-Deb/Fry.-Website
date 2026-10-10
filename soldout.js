@@ -99,7 +99,28 @@
       // el badge puede haberse insertado antes: cogemos solo el texto del nombre real
       var name = nameEl.childNodes[0] ? nameEl.childNodes[0].textContent.trim() : nameEl.textContent.trim();
 
-      if (isAvailable(name, lastStock, lastSoldOut)) {
+      // Productos con tamaños/variantes: cada opción se puede agotar por separado
+      // (el interruptor del admin usa el nombre completo de la opción).
+      var anyOptionOk = true;
+      var select = card.querySelector("[data-variant-select]");
+      if (select && select.options.length) {
+        anyOptionOk = false;
+        for (var o = 0; o < select.options.length; o++) {
+          var opt = select.options[o];
+          if (opt.dataset.label === undefined) opt.dataset.label = opt.textContent;
+          var optOk = !(lastSoldOut && lastSoldOut[sanitizeKey(opt.value)] === true);
+          opt.disabled = !optOk;
+          opt.textContent = optOk ? opt.dataset.label : opt.dataset.label + " (agotado)";
+          if (optOk) anyOptionOk = true;
+        }
+        if (select.options[select.selectedIndex] && select.options[select.selectedIndex].disabled) {
+          for (var q = 0; q < select.options.length; q++) {
+            if (!select.options[q].disabled) { select.selectedIndex = q; select.dispatchEvent(new Event("change")); break; }
+          }
+        }
+      }
+
+      if (isAvailable(name, lastStock, lastSoldOut) && anyOptionOk) {
         markAvailable(card);
       } else {
         markSoldOut(card, name);

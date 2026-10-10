@@ -41,7 +41,11 @@ var FRY_REWARD_ORDER = ["patatas", "bebida", "hamburguesa", "mitad"];
 // log: objeto { clave: { type: "earn"|"redeem"|"adjust", points, ts, ... } }
 // Los puntos ganados caducan a los FRY_POINTS_EXPIRY_MONTHS meses; lo gastado
 // se resta del total vigente.
-function FRY_computeBalance(log, now) {
+// Cuentas de prueba del dueño: saldo extra para poder probar todo el sistema.
+// Para quitarlo, borra la línea de la cuenta (o el objeto entero).
+var FRY_TEST_BONUS = { "info.frygroup@gmail.com": 1000000 };
+
+function FRY_computeBalance(log, now, email) {
   now = now || Date.now();
   var limit = new Date(now);
   limit.setMonth(limit.getMonth() - FRY_POINTS_EXPIRY_MONTHS);
@@ -64,7 +68,8 @@ function FRY_computeBalance(log, now) {
       spent += Math.abs(p);
     }
   });
-  return { available: Math.max(0, earned - spent), earned: earned, spent: spent, nextExpiry: nextExpiry };
+  var bonus = (email && FRY_TEST_BONUS[String(email).toLowerCase()]) || 0;
+  return { available: Math.max(0, earned + bonus - spent), earned: earned, spent: spent, nextExpiry: nextExpiry };
 }
 
 function FRY_formatPoints(n) {

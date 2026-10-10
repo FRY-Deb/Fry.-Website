@@ -13,7 +13,7 @@
   if (!firebase.apps.length) firebase.initializeApp(FRY_FIREBASE_CONFIG);
   var auth = firebase.auth();
   var db = firebase.database();
-  var logRef = null, profileRef = null;
+  var logRef = null, profileRef = null, profileCreating = false;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -106,7 +106,7 @@
   }
 
   function renderUser(user, profile, log) {
-    var bal = FRY_computeBalance(log);
+    var bal = FRY_computeBalance(log, Date.now(), user.email);
     document.getElementById("accHello").textContent = "Hola, " + ((profile && profile.name) || "bienvenido") + ".";
     document.getElementById("accEmail").textContent = user.email;
     document.getElementById("accBalance").textContent = FRY_formatPoints(bal.available);
@@ -144,6 +144,7 @@
   auth.onAuthStateChanged(function (user) {
     if (logRef) { logRef.off(); logRef = null; }
     if (profileRef) { profileRef.off(); profileRef = null; }
+    profileCreating = false;
     loading.style.display = "none";
     if (!user) {
       guestEl.style.display = "";
@@ -154,7 +155,15 @@
     userEl.style.display = "";
     var profile = null, log = {};
     profileRef = db.ref("users/" + user.uid);
-    profileRef.on("value", function (s) { profile = s.val(); renderUser(user, profile, log); });
+    profileRef.on("value", function (s) {
+      profile = s.val();
+      // Cuentas que ya existían sin perfil (p. ej. la del dueño): se crea uno básico.
+      if (!profile && !profileCreating) {
+        profileCreating = true;
+        profileRef.set({ name: (user.email || "cliente").split("@")[0], email: user.email || "" }).catch(function () {});
+      }
+      renderUser(user, profile, log);
+    });
     logRef = db.ref("points/" + user.uid + "/log");
     logRef.on("value", function (s) { log = s.val() || {}; renderUser(user, profile, log); });
   });

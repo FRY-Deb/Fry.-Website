@@ -1400,3 +1400,5 @@ body.fry-intro-finished .fry-intro {
 .cart-points-msg.is-ok { color: #4caf50; }
 .cart-points-msg.is-error { color: var(--red); }
 .cart-points a { color: var(--red); text-decoration: underline; }
+
+.prompt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 20px; }

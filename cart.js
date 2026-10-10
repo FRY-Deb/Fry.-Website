@@ -181,6 +181,7 @@
         userProfile = null;
         userBalance = 0;
         authReady = true;
+        if (!authUser) maybeShowAccountPrompt();
         if (pointsLogRef) { pointsLogRef.off(); pointsLogRef = null; }
         if (authUser) {
           firebase.database().ref("users/" + authUser.uid).once("value").then(function (s) {
@@ -189,13 +190,65 @@
           }).catch(function () {});
           pointsLogRef = firebase.database().ref("points/" + authUser.uid + "/log");
           pointsLogRef.on("value", function (s) {
-            userBalance = typeof FRY_computeBalance === "function" ? FRY_computeBalance(s.val() || {}).available : 0;
+            userBalance = typeof FRY_computeBalance === "function" ? FRY_computeBalance(s.val() || {}, Date.now(), authUser && authUser.email).available : 0;
             renderCartPage();
           }, function () {});
         }
         renderCartPage();
       });
     } catch (e) { authReady = true; }
+  }
+
+
+  // Puntos que daría el pedido actual (100 por cada 1€ pagado, sin envío).
+  function pointsForCurrentOrder() {
+    var cart = getCart();
+    var subtotal = cartTotal();
+    var codeDiscount = currentDiscountAmount(cart, subtotal);
+    var rewardDiscount = currentRewardDiscount(subtotal - codeDiscount);
+    var payable = Math.max(0, subtotal - codeDiscount - rewardDiscount);
+    var perEuro = typeof FRY_POINTS_PER_EURO !== "undefined" ? FRY_POINTS_PER_EURO : 100;
+    return Math.floor(payable * perEuro);
+  }
+
+  var ACCOUNT_PROMPT_KEY = "fryAccountPromptShown";
+
+  function closeAccountPrompt() {
+    var o = document.querySelector("[data-account-prompt]");
+    if (o) o.classList.remove("is-open");
+  }
+
+  // Ventana que invita a crear una cuenta (solo a quien no ha iniciado sesión,
+  // una vez por sesión del navegador).
+  function maybeShowAccountPrompt() {
+    if (!document.querySelector("[data-cart-items]")) return;
+    if (authUser || !getCart().length) return;
+    try {
+      if (sessionStorage.getItem(ACCOUNT_PROMPT_KEY)) return;
+      sessionStorage.setItem(ACCOUNT_PROMPT_KEY, "1");
+    } catch (e) { /* sin sessionStorage: se muestra igualmente */ }
+
+    var pts = pointsForCurrentOrder();
+    var overlay = document.createElement("div");
+    overlay.className = "upsell-overlay";
+    overlay.setAttribute("data-account-prompt", "");
+    overlay.innerHTML =
+      '<div class="upsell-box">' +
+        '<button type="button" class="upsell-close" data-prompt-close aria-label="Cerrar">×</button>' +
+        '<span class="eyebrow upsell-eyebrow">Programa de puntos</span>' +
+        '<h2 class="upsell-title">Crea tu cuenta y gana recompensas</h2>' +
+        '<p class="upsell-item-text">Si creas una cuenta, cada pedido te da puntos que puedes canjear por <strong>patatas, refrescos, hamburguesas gratis o un 50% de descuento</strong>. ' +
+          'Con esta compra conseguirías <strong>(' + FRY_formatPoints(pts) + ' puntos)</strong>.</p>' +
+        '<div class="prompt-actions">' +
+          '<a class="btn btn-primary" href="cuenta.html">Crear cuenta o entrar</a>' +
+          '<button type="button" class="upsell-dismiss" data-prompt-close>Seguir sin cuenta</button>' +
+        "</div>" +
+      "</div>";
+    document.body.appendChild(overlay);
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeAccountPrompt(); });
+    var closers = overlay.querySelectorAll("[data-prompt-close]");
+    for (var i = 0; i < closers.length; i++) closers[i].addEventListener("click", closeAccountPrompt);
+    setTimeout(function () { overlay.classList.add("is-open"); }, 30);
   }
 
   function renderPointsBox() {
@@ -1057,6 +1110,16 @@
     if (rewardRowEl) rewardRowEl.style.display = rewardDiscountNow > 0 ? "flex" : "none";
     if (rewardAmountEl) rewardAmountEl.textContent = "-" + formatPrice(rewardDiscountNow);
     renderPointsBox();
+    var earnRowEl = document.querySelector("[data-points-earn-row]");
+    var earnEl = document.querySelector("[data-cart-points-earn]");
+    if (earnRowEl && earnEl) {
+      if (authReady && authUser) {
+        earnRowEl.style.display = "flex";
+        earnEl.textContent = "+" + FRY_formatPoints(pointsForCurrentOrder());
+      } else {
+        earnRowEl.style.display = "none";
+      }
+    }
 
     // Si el cliente ya tenía un código guardado y el admin lo ha
     // desactivado mientras tanto, avisamos en cuanto se vuelve a renderizar
