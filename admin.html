@@ -200,7 +200,23 @@
   var HOURS_DISPLAY_ORDER = ["lunes", "martes", "miercoles", "jueves", "viernes", "sabado", "domingo"];
   var hoursBuilt = false;
 
+  var ADMIN_EMAIL = "info.frygroup@gmail.com";
+
+  function showSession(user) {
+    var el = document.getElementById("adminStatus");
+    if (!el) return;
+    var base = "Marca lo que esté agotado — se actualiza al instante en la carta para todos los clientes.";
+    if (user && (user.email || "").toLowerCase() === ADMIN_EMAIL) {
+      el.textContent = base + " Sesión: " + user.email;
+      el.style.color = "";
+    } else if (user) {
+      el.textContent = "ATENCIÓN: has entrado con " + (user.email || "otra cuenta") + ", que no es la cuenta de administrador (" + ADMIN_EMAIL + "). Los cambios, los pedidos y los clientes no se guardarán ni se verán. Cierra sesión y entra con la cuenta de administrador.";
+      el.style.color = "var(--red)";
+    }
+  }
+
   auth.onAuthStateChanged(function (user) {
+    showSession(user);
     if (user) {
       loginBox.style.display = "none";
       panelBox.style.display = "block";

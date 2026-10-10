@@ -80,6 +80,7 @@
     var phone = document.getElementById("regPhone").value.trim();
     var email = document.getElementById("regEmail").value.trim();
     var pass = document.getElementById("regPass").value;
+    var pass2 = document.getElementById("regPass2").value;
     if (name.length < 2) { showError(regForm, "Escribe tu nombre."); return; }
     var digits = phone.replace(/[\s.\-()+]/g, "");
     if (!/^\d{9,15}$/.test(digits)) { showError(regForm, "Revisa el teléfono: debe tener entre 9 y 15 cifras."); return; }
@@ -88,6 +89,7 @@
       showError(regForm, "Revisa el email: parece que hay un error al escribirlo."); return;
     }
     if (pass.length < 6) { showError(regForm, "La contraseña debe tener al menos 6 caracteres."); return; }
+    if (pass !== pass2) { showError(regForm, "Las dos contraseñas no coinciden. Escríbelas igual en los dos campos."); return; }
     if (!document.getElementById("regConsent").checked) { showError(regForm, "Tienes que aceptar la Política de Privacidad."); return; }
 
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
