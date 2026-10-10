@@ -485,7 +485,34 @@
     return new Date();
   }
 
+  // Próxima apertura (texto tipo "hoy a las 20:00" / "mañana a las 13:00").
+  function nextOpeningInfo() {
+    if (!cachedHours || typeof fryShiftsOf !== "function") return null;
+    var now = new Date();
+    for (var i = 0; i < 8; i++) {
+      var d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+      var shifts = fryShiftsOf(cachedHours[FRY_DAY_ORDER[d.getDay()]]);
+      for (var j = 0; j < shifts.length; j++) {
+        var m = fryMinutesOf(shifts[j].open);
+        var t = new Date(d.getFullYear(), d.getMonth(), d.getDate(), Math.floor(m / 60), m % 60);
+        if (t > now) {
+          var day = i === 0 ? "hoy" : i === 1 ? "mañana" : "el " + FRY_DAY_LABELS[FRY_DAY_ORDER[d.getDay()]].toLowerCase();
+          return day + " a las " + shifts[j].open;
+        }
+      }
+    }
+    return null;
+  }
+
+  function closedNowInfo() {
+    if (getScheduleType() === "later") return null;
+    if (!cachedHours || typeof fryIsWithinHours !== "function") return null;
+    if (fryIsWithinHours(new Date(), cachedHours)) return null;
+    return nextOpeningInfo();
+  }
+
   function isCurrentlyOpenForOrder() {
+    if (getScheduleType() !== "later") return true; // "lo antes posible": se permite siempre
     if (!cachedHours || typeof fryIsWithinHours !== "function") return true; // sin datos de horario: no bloqueamos
     return fryIsWithinHours(getEffectiveOrderDate(), cachedHours);
   }
@@ -740,7 +767,8 @@
     if (scheduleType === "later" && getScheduleTime()) {
       lines.push("Hora del pedido: programado para las " + getScheduleTime());
     } else {
-      lines.push("Hora del pedido: lo antes posible");
+      var nextOpen = closedNowInfo();
+      lines.push(nextOpen ? "Hora del pedido: lo antes posible (ahora cerrado; entrega " + nextOpen + " como pronto)" : "Hora del pedido: lo antes posible");
     }
     lines.push("Método de pago: " + getPaymentMethod());
     if (pickup) lines.push("Recogida: el cliente pasa a recogerlo al local");
@@ -1191,6 +1219,9 @@
       } else if (blockReason === "hours") {
         var hoursText = (typeof fryTodayHoursText === "function" && cachedHours) ? fryTodayHoursText(new Date(), cachedHours) : "";
         blockMsgEl.textContent = "Ahora mismo estamos cerrados. " + hoursText + " — puedes programar tu pedido para más tarde.";
+        blockMsgEl.style.display = "block";
+      } else if (closedNowInfo()) {
+        blockMsgEl.textContent = "Ahora mismo estamos cerrados. Puedes hacer tu pedido igualmente, pero lo más pronto que se entregaría es " + closedNowInfo() + ", a la hora de apertura.";
         blockMsgEl.style.display = "block";
       } else {
         blockMsgEl.style.display = "none";
