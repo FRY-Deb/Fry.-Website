@@ -1395,7 +1395,7 @@ body.fry-intro-finished .fry-intro {
 .cart-points-line { font-size: 14px; color: var(--cream-2); margin-bottom: 10px; }
 .cart-points-line strong { color: var(--red); }
 .cart-points-row { display: flex; gap: 10px; flex-wrap: wrap; }
-.cart-points-row select { flex: 1 1 220px; background: var(--bg-2); color: var(--cream); border: 1px solid var(--line-strong); padding: 10px 12px; font-family: var(--sans); font-size: 14px; }
+.cart-points-row select { flex: 1 1 220px; min-width: 0; max-width: 100%; background: var(--bg-2); color: var(--cream); border: 1px solid var(--line-strong); padding: 10px 12px; font-family: var(--sans); font-size: 14px; }
 .cart-points-msg { margin-top: 10px; font-size: 13px; }
 .cart-points-msg.is-ok { color: #4caf50; }
 .cart-points-msg.is-error { color: var(--red); }
@@ -1447,3 +1447,7 @@ body.fry-intro-finished .fry-intro {
 .review-card:hover .review-stars, .review-card:hover .review-text, .review-card:hover .review-author { color: var(--cream); }
 
 .reward-redeem { margin-top: 12px; width: 100%; text-align: center; cursor: pointer; border: 0; }
+
+/* Consentimiento: el texto con enlaces en línea no se parte en columnas */
+.cf-consent { display: block; position: relative; padding-left: 26px; }
+.cf-consent input { position: absolute; left: 0; top: 3px; margin: 0; }
