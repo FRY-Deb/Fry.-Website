@@ -97,6 +97,27 @@
   }
 
   // ---------------------------------------------------------------
+  // Botón de cuenta: "Iniciar sesión o registrarse" / "Mi cuenta"
+  // Firebase guarda la sesión en localStorage; se lee sin cargar el SDK.
+  // ---------------------------------------------------------------
+  function hasSession() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var k = localStorage.key(i);
+        if (k && k.indexOf("firebase:authUser:") === 0) return true;
+      }
+    } catch (e) { /* sin acceso a localStorage */ }
+    return false;
+  }
+
+  function initAccountLinks() {
+    var logged = hasSession();
+    $$("[data-nav-account]").forEach(function (a) {
+      a.textContent = logged ? "Mi cuenta" : "Iniciar sesión o registrarse";
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Reveal on scroll
   // ---------------------------------------------------------------
   function initReveals() {
@@ -190,6 +211,7 @@
     safe(initMobileNav, "initMobileNav");
     safe(initCursor, "initCursor");
     safe(initMenuSidebar, "initMenuSidebar");
+    safe(initAccountLinks, "initAccountLinks");
     document.documentElement.classList.add("is-ready");
   }
 

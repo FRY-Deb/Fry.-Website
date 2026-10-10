@@ -1402,3 +1402,14 @@ body.fry-intro-finished .fry-intro {
 .cart-points a { color: var(--red); text-decoration: underline; }
 
 .prompt-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 18px; margin-top: 20px; }
+
+/* Botón de cuenta junto a "Pedir por WhatsApp" */
+.nav-account {
+  display: none;
+  font-size: 12px; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
+  border: 1px solid var(--cream-mute); color: var(--cream);
+  padding: 9px 16px; margin-right: 10px; white-space: nowrap;
+  transition: background-color .3s var(--ease-out), color .3s var(--ease-out), border-color .3s var(--ease-out);
+}
+.nav-account:hover { background: var(--cream); color: var(--bg); border-color: var(--cream); }
+@media (min-width: 960px) { .nav-account { display: inline-flex; } }
