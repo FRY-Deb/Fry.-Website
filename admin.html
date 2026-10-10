@@ -110,6 +110,14 @@
       <p class="admin-error" id="adminError">Email o contraseña incorrectos.</p>
     </div>
 
+    <div id="adminPrivate" class="admin-login" style="display:none; text-align:center;">
+      <h1 class="logo-mark">FRY<span class="dot"></span></h1>
+      <h2 style="font-family:var(--display); font-size:28px; text-transform:uppercase; margin:22px 0 10px;">Sitio privado</h2>
+      <p style="color:var(--cream-mute); font-size:14px; margin-bottom:24px;">Esta zona es solo para la gestión interna de FRY. Tu cuenta no tiene acceso.</p>
+      <a class="btn btn-primary" href="index.html" style="justify-content:center;">Volver a la web</a>
+      <button type="button" class="admin-logout" id="adminPrivateLogout" style="margin-top:14px;">Cerrar sesión</button>
+    </div>
+
     <div id="adminPanel">
       <div class="admin-header">
         <h1 class="logo-mark">FRY<span class="dot"></span></h1>
@@ -215,18 +223,30 @@
     }
   }
 
+  var privateBox = document.getElementById("adminPrivate");
+  document.getElementById("adminPrivateLogout").addEventListener("click", function () { auth.signOut(); });
+
+  // Solo la cuenta de administrador ve el panel. (La protección real de los
+  // datos son las reglas de Firebase; esto evita enseñar el panel a nadie más.)
   auth.onAuthStateChanged(function (user) {
+    var isAdmin = !!user && (user.email || "").toLowerCase() === ADMIN_EMAIL;
     showSession(user);
-    if (user) {
+    if (isAdmin) {
       loginBox.style.display = "none";
+      privateBox.style.display = "none";
       panelBox.style.display = "block";
       buildPanel();
       loadOrders();
       loadClients();
       buildHoursPanel();
+    } else if (user) {
+      loginBox.style.display = "none";
+      panelBox.style.display = "none";
+      privateBox.style.display = "block";
     } else {
       loginBox.style.display = "block";
       panelBox.style.display = "none";
+      privateBox.style.display = "none";
     }
   });
 
