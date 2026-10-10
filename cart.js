@@ -8,6 +8,7 @@
   var SCHEDULE_TIME_KEY = "fryScheduleTime";
   var DISCOUNT_KEY = "fryDiscountApplied";
   var MODE_KEY = "fryDeliveryMode";
+  var REWARD_KEY = "fryReward";
   var NAME_KEY = "fryCustomerName";
   var STREET_KEY = "fryStreet";
   var FLOOR_KEY = "fryFloor";
@@ -132,6 +133,113 @@
 
   function saveDeliveryMode(mode) {
     try { localStorage.setItem(MODE_KEY, mode); } catch (e) { /* sin persistencia */ }
+  }
+
+
+  // ---------------------------------------------------------------
+  // Puntos y recompensas (solo con sesión iniciada)
+  // ---------------------------------------------------------------
+  var authUser = null;
+  var userProfile = null;
+  var userBalance = 0;
+  var pointsLogRef = null;
+  var authReady = false;
+
+  function getRewardId() {
+    try { return localStorage.getItem(REWARD_KEY) || ""; } catch (e) { return ""; }
+  }
+
+  function saveRewardId(id) {
+    try { localStorage.setItem(REWARD_KEY, id || ""); } catch (e) { /* sin persistencia */ }
+  }
+
+  // Recompensa aplicada y vigente (con sesión y puntos suficientes), o null.
+  function activeReward() {
+    var id = getRewardId();
+    if (!id || !authUser || typeof FRY_REWARDS === "undefined" || !FRY_REWARDS[id]) return null;
+    if (userBalance < FRY_REWARDS[id].points) return null;
+    return { id: id, def: FRY_REWARDS[id] };
+  }
+
+  function currentRewardFreeItem() {
+    var r = activeReward();
+    return r && r.def.type === "freeitem" ? { name: r.def.itemName, price: 0, qty: 1 } : null;
+  }
+
+  // Descuento (€) de la recompensa porcentual, sobre el subtotal ya con código.
+  function currentRewardDiscount(subtotalAfterCode) {
+    var r = activeReward();
+    if (!r || r.def.type !== "percent") return 0;
+    return Math.max(0, Math.min(subtotalAfterCode * r.def.rate, r.def.maxDiscount));
+  }
+
+  function initAuth() {
+    if (!ensureFirebaseInitialized() || !firebase.auth) { authReady = true; return; }
+    try {
+      firebase.auth().onAuthStateChanged(function (user) {
+        authUser = user || null;
+        userProfile = null;
+        userBalance = 0;
+        authReady = true;
+        if (pointsLogRef) { pointsLogRef.off(); pointsLogRef = null; }
+        if (authUser) {
+          firebase.database().ref("users/" + authUser.uid).once("value").then(function (s) {
+            userProfile = s.val();
+            renderCartPage();
+          }).catch(function () {});
+          pointsLogRef = firebase.database().ref("points/" + authUser.uid + "/log");
+          pointsLogRef.on("value", function (s) {
+            userBalance = typeof FRY_computeBalance === "function" ? FRY_computeBalance(s.val() || {}).available : 0;
+            renderCartPage();
+          }, function () {});
+        }
+        renderCartPage();
+      });
+    } catch (e) { authReady = true; }
+  }
+
+  function renderPointsBox() {
+    var box = document.querySelector("[data-points-box]");
+    if (!box) return;
+    if (typeof FRY_REWARDS === "undefined") { box.parentNode.style.display = "none"; return; }
+    if (!authReady) { box.innerHTML = '<p class="cart-points-line">Cargando tus puntos…</p>'; return; }
+    if (!authUser) {
+      box.innerHTML = '<p class="cart-points-line" style="margin:0;"><a href="cuenta.html">Inicia sesión o crea tu cuenta</a> y gana <strong>100 puntos por cada 1€</strong> que gastes.</p>';
+      return;
+    }
+    var applied = getRewardId();
+    var options = FRY_REWARD_ORDER.map(function (id) {
+      var r = FRY_REWARDS[id];
+      var ok = userBalance >= r.points;
+      return '<option value="' + id + '"' + (ok ? "" : " disabled") + (applied === id ? " selected" : "") + ">" +
+        escHTML(r.label) + " — " + FRY_formatPoints(r.points) + " pts" + (ok ? "" : " (te faltan " + FRY_formatPoints(r.points - userBalance) + ")") + "</option>";
+    }).join("");
+    var name = (userProfile && userProfile.name) ? escHTML(userProfile.name) : "tu cuenta";
+    box.innerHTML =
+      '<p class="cart-points-line">Hola, ' + name + '. Tienes <strong>' + FRY_formatPoints(userBalance) + '</strong> puntos. <a href="cuenta.html">Ver mi cuenta</a></p>' +
+      '<div class="cart-points-row">' +
+        '<select data-reward-select aria-label="Elegir recompensa"><option value="">— Elige una recompensa —</option>' + options + "</select>" +
+        '<button type="button" class="cart-discount-btn" data-reward-apply>Canjear</button>' +
+        (applied ? '<button type="button" class="cart-discount-btn" data-reward-remove>Quitar</button>' : "") +
+      "</div>" +
+      '<p class="cart-points-msg" data-reward-msg></p>';
+
+    var sel = box.querySelector("[data-reward-select]");
+    var msg = box.querySelector("[data-reward-msg]");
+    var applyBtn = box.querySelector("[data-reward-apply]");
+    var removeBtn = box.querySelector("[data-reward-remove]");
+    var act = activeReward();
+    if (act) {
+      msg.textContent = "Canje aplicado: " + act.def.label + ". Se descontarán " + FRY_formatPoints(act.def.points) + " puntos cuando FRY. confirme el pedido.";
+      msg.className = "cart-points-msg is-ok";
+    }
+    applyBtn.addEventListener("click", function () {
+      if (!sel.value) { msg.textContent = "Elige primero una recompensa."; msg.className = "cart-points-msg is-error"; return; }
+      if (userBalance < FRY_REWARDS[sel.value].points) { msg.textContent = "No tienes puntos suficientes para esa recompensa."; msg.className = "cart-points-msg is-error"; return; }
+      saveRewardId(sel.value);
+      renderCartPage();
+    });
+    if (removeBtn) removeBtn.addEventListener("click", function () { saveRewardId(""); renderCartPage(); });
   }
 
   function getShippingValue() {
@@ -532,7 +640,9 @@
     var subtotal = cartTotal();
     var appliedCode = getAppliedOfferCode();
     var discountAmount = currentDiscountAmount(cart, subtotal);
-    var subtotalConDescuento = subtotal - discountAmount;
+    var rewardDiscount = currentRewardDiscount(subtotal - discountAmount);
+    var rewardNow = activeReward();
+    var subtotalConDescuento = subtotal - discountAmount - rewardDiscount;
 
     var lines = ["Hola! Quisiera hacer este pedido:", ""];
     if (orderCode) {
@@ -564,6 +674,8 @@
     });
     var freeItem = currentFreeItem(subtotal);
     if (freeItem) lines.push("- 1x " + freeItem.name + " (0,00€) = 0,00€");
+    var rewardFree = currentRewardFreeItem();
+    if (rewardFree) lines.push("- 1x " + rewardFree.name + " (0,00€) = 0,00€");
     lines.push("");
 
     if (orderNotes) {
@@ -589,6 +701,12 @@
     lines.push("Subtotal: " + formatPrice(subtotal));
     if (discountAmount > 0) {
       lines.push("Descuento (" + appliedCode + "): -" + formatPrice(discountAmount));
+    }
+    if (rewardNow) {
+      lines.push("Canje de puntos: " + rewardNow.def.label + " (" + FRY_formatPoints(rewardNow.def.points) + " pts)" + (rewardDiscount > 0 ? ": -" + formatPrice(rewardDiscount) : ""));
+    }
+    if (authUser && userProfile) {
+      lines.push("Cliente con cuenta: " + (userProfile.name || "") + " (" + authUser.email + ")");
     }
 
     if (pickup) {
@@ -618,9 +736,12 @@
     var shipping = parseShippingValue(getShippingValue());
     var subtotal = cartTotal();
     var discountAmount = currentDiscountAmount(cart, subtotal);
-    var total = shipping.cost === null ? null : (subtotal - discountAmount + shipping.cost);
+    var rewardDiscount = currentRewardDiscount(subtotal - discountAmount);
+    var rewardNow = activeReward();
+    var payable = subtotal - discountAmount - rewardDiscount;
+    var total = shipping.cost === null ? null : (payable + shipping.cost);
 
-    return {
+    var data = {
       customerName: getField(NAME_KEY),
       deliveryMode: getDeliveryMode(),
       street: getDeliveryMode() === "pickup" ? "" : getField(STREET_KEY),
@@ -630,6 +751,8 @@
       howFound: getField(HOW_FOUND_KEY),
       items: cart.map(function (i) { return { name: i.name, qty: i.qty, price: i.price }; }).concat(
         currentFreeItem(subtotal) ? [{ name: currentFreeItem(subtotal).name, qty: 1, price: 0 }] : []
+      ).concat(
+        currentRewardFreeItem() ? [{ name: currentRewardFreeItem().name, qty: 1, price: 0 }] : []
       ),
       subtotal: round2(subtotal),
       offerCode: getAppliedOfferCode(),
@@ -644,6 +767,18 @@
         ? firebase.database.ServerValue.TIMESTAMP
         : Date.now()
     };
+    if (authUser) {
+      data.uid = authUser.uid;
+      data.customerEmail = authUser.email || "";
+      data.pointsBase = Math.max(0, round2(payable));
+      if (rewardNow) {
+        data.rewardId = rewardNow.id;
+        data.rewardLabel = rewardNow.def.label;
+        data.rewardPoints = rewardNow.def.points;
+        data.rewardDiscount = round2(rewardDiscount);
+      }
+    }
+    return data;
   }
 
   function round2(n) {
@@ -750,6 +885,19 @@
         "</div>"
       );
     }).join("");
+
+    var rewardFreeNow = currentRewardFreeItem();
+    if (rewardFreeNow) {
+      container.insertAdjacentHTML("beforeend",
+        '<div class="cart-row">' +
+          '<div class="cart-row-main">' +
+            '<span class="cart-row-name">' + escHTML(rewardFreeNow.name) + "</span>" +
+            '<span class="cart-row-unit">Canje de puntos</span>' +
+          "</div>" +
+          '<div class="cart-row-qty"><span class="cart-row-qty-num">1</span></div>' +
+          '<div class="cart-row-subtotal">' + formatPrice(0) + "</div>" +
+        "</div>");
+    }
 
     var freeNow = currentFreeItem(cartTotal());
     if (freeNow) {
@@ -902,7 +1050,13 @@
     // --- subtotal, descuento, envío y total ---
     var subtotal = cartTotal();
     var discountAmount = currentDiscountAmount(getCart(), subtotal);
-    var subtotalConDescuento = subtotal - discountAmount;
+    var rewardDiscountNow = currentRewardDiscount(subtotal - discountAmount);
+    var subtotalConDescuento = subtotal - discountAmount - rewardDiscountNow;
+    var rewardRowEl = document.querySelector("[data-reward-row]");
+    var rewardAmountEl = document.querySelector("[data-cart-reward]");
+    if (rewardRowEl) rewardRowEl.style.display = rewardDiscountNow > 0 ? "flex" : "none";
+    if (rewardAmountEl) rewardAmountEl.textContent = "-" + formatPrice(rewardDiscountNow);
+    renderPointsBox();
 
     // Si el cliente ya tenía un código guardado y el admin lo ha
     // desactivado mientras tanto, avisamos en cuanto se vuelve a renderizar
@@ -1077,6 +1231,7 @@
     renderCartPage();
     refreshHoursFromFirebase();
     refreshOffersFromFirebase();
+    initAuth();
     initRepeatOrderButton();
   }
 

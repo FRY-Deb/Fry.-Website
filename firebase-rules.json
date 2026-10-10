@@ -1,0 +1,44 @@
+{
+  "rules": {
+    "soldOut": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+    },
+    "stock": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+    },
+    "hours": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+    },
+    "orders": {
+      ".read": "auth != null && auth.token.email == 'info.frygroup@gmail.com'",
+      "$orderId": {
+        ".write": "(auth != null && auth.token.email == 'info.frygroup@gmail.com') || (!data.exists() && newData.exists())",
+        "uid": {
+          ".validate": "newData.isString() && auth != null && newData.val() == auth.uid"
+        },
+        "status": {
+          ".validate": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+        }
+      },
+      ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+    },
+    "users": {
+      ".read": "auth != null && auth.token.email == 'info.frygroup@gmail.com'",
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && (auth.uid == $uid || auth.token.email == 'info.frygroup@gmail.com')",
+        ".validate": "newData.hasChildren(['name', 'email'])"
+      }
+    },
+    "points": {
+      ".read": "auth != null && auth.token.email == 'info.frygroup@gmail.com'",
+      "$uid": {
+        ".read": "auth != null && auth.uid == $uid",
+        ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+      }
+    }
+  }
+}

@@ -1356,3 +1356,47 @@ body.fry-intro-finished .fry-intro {
   }
   .catering-bg-fixed { opacity: 0.22; }
 }
+
+/* --- Mi cuenta / puntos --- */
+.account-hero { padding-top: calc(var(--nav-h) + 60px); }
+.account-wrap { padding-bottom: 100px; max-width: 880px; }
+.account-tabs { display: flex; gap: 0; margin-bottom: 24px; border-bottom: 1px solid var(--line-strong); }
+.account-tab { background: none; border: 0; color: var(--cream-mute); font-family: var(--display); font-size: 22px; text-transform: uppercase; padding: 10px 22px 10px 0; cursor: pointer; }
+.account-tab.is-active { color: var(--cream); border-bottom: 2px solid var(--red); margin-bottom: -1px; }
+.account-form { display: flex; flex-direction: column; gap: 16px; max-width: 460px; }
+.account-link { background: none; border: 0; color: var(--cream-mute); text-decoration: underline; font-size: 13px; cursor: pointer; text-align: left; padding: 0; }
+.account-top { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+.account-hello { font-family: var(--display); font-size: clamp(26px, 4vw, 40px); text-transform: uppercase; }
+.account-email { color: var(--cream-mute); font-size: 14px; }
+.account-balance { background: var(--bg-2); border: 1px solid var(--line-strong); border-left: 3px solid var(--red); padding: 24px 26px; margin-bottom: 36px; display: flex; flex-direction: column; gap: 4px; }
+.account-balance-label { font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cream-mute); }
+.account-balance-num { font-family: var(--display); font-size: clamp(54px, 9vw, 84px); color: var(--red); line-height: 1; }
+.account-balance-note { font-size: 13px; color: var(--cream-mute); }
+.account-h2 { font-family: var(--display); font-size: 28px; text-transform: uppercase; margin: 8px 0 16px; }
+.account-rewards { display: grid; gap: 14px; grid-template-columns: 1fr; margin-bottom: 14px; }
+@media (min-width: 640px) { .account-rewards { grid-template-columns: 1fr 1fr; } }
+.reward-card { border: 1px solid var(--line-strong); padding: 18px 20px; display: flex; flex-direction: column; gap: 8px; }
+.reward-card.is-ready { border-color: var(--red); background: var(--bg-2); }
+.reward-name { font-family: var(--display); font-size: 22px; text-transform: uppercase; }
+.reward-points { color: var(--cream-2); font-size: 14px; }
+.reward-bar { height: 6px; background: var(--line-strong); }
+.reward-bar span { display: block; height: 100%; background: var(--red); }
+.reward-state { font-size: 13px; color: var(--cream-mute); }
+.reward-card.is-ready .reward-state { color: #4caf50; font-weight: 700; }
+.account-note { color: var(--cream-mute); font-size: 13px; line-height: 1.6; margin: 10px 0 30px; }
+.account-note a { color: var(--red); text-decoration: underline; }
+.history-row { display: flex; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--line); font-size: 14px; color: var(--cream-2); }
+.pts-plus { color: #4caf50; font-weight: 700; white-space: nowrap; }
+.pts-minus { color: var(--red); font-weight: 700; white-space: nowrap; }
+.account-history { margin-bottom: 40px; }
+
+/* Bloque de puntos en el carrito */
+.cart-points { border: 1px solid var(--line-strong); padding: 16px 18px; }
+.cart-points-line { font-size: 14px; color: var(--cream-2); margin-bottom: 10px; }
+.cart-points-line strong { color: var(--red); }
+.cart-points-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.cart-points-row select { flex: 1 1 220px; background: var(--bg-2); color: var(--cream); border: 1px solid var(--line-strong); padding: 10px 12px; font-family: var(--sans); font-size: 14px; }
+.cart-points-msg { margin-top: 10px; font-size: 13px; }
+.cart-points-msg.is-ok { color: #4caf50; }
+.cart-points-msg.is-error { color: var(--red); }
+.cart-points a { color: var(--red); text-decoration: underline; }

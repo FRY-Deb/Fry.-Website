@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261023" />
+<link rel="stylesheet" href="styles.css?v=20261024" />
 <style>
   .legal { padding: calc(var(--nav-h) + 60px) 0 100px; max-width: 74ch; margin: 0 auto; }
   .legal h1 { margin-bottom: 32px; }
@@ -30,6 +30,7 @@
       <a href="carta.html">Carta</a>
       <a href="catering.html">Catering</a>
       <a href="contacto.html">Contacto</a>
+      <a href="cuenta.html">Mi cuenta</a>
     </nav>
     <a href="carrito.html" class="nav-cart" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
     <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
@@ -42,6 +43,7 @@
   <a href="carta.html">Carta</a>
   <a href="catering.html">Catering</a>
   <a href="contacto.html">Contacto</a>
+  <a href="cuenta.html">Mi cuenta</a>
   <a href="carrito.html" class="nav-mobile-cart">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
   <a class="nav-mobile-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
 </div>
@@ -62,12 +64,16 @@
             <h2>Formulario de catering</h2>
       <p>Si solicitas un presupuesto de catering desde la página de Catering, los datos que introduzcas (empresa, persona de contacto, teléfono, email, datos del evento y comentarios) se envían por correo electrónico a FRY. a través del servicio FormSubmit, que actúa como intermediario técnico para entregarnos el mensaje. Usamos estos datos únicamente para responder a tu solicitud.</p>
 
+      <h2>Cuenta de cliente y programa de puntos</h2>
+      <p>Si creas una cuenta en la web guardamos tu nombre, teléfono, email y una contraseña (la gestiona Google Firebase Authentication; FRY. no ve tu contraseña). También guardamos los pedidos que hagas con la sesión iniciada y los puntos que acumulas y canjeas (100 puntos por cada 1€ gastado, sin contar el envío). Los puntos se suman cuando FRY. confirma el pedido y caducan a los 12 meses. Usamos estos datos únicamente para gestionar tu cuenta y el programa de puntos. Puedes pedir que borremos tu cuenta y tus datos escribiéndonos por WhatsApp o a info.frygroup@gmail.com.</p>
+
       <h2>3. Cookies que usamos</h2>
       <p>Esta web utiliza almacenamiento local del navegador (cookies y/o <em>localStorage</em>) para:</p>
       <ul>
         <li><strong>Funcionamiento del carrito:</strong> recordar los productos que has añadido mientras navegas.</li>
         <li><strong>Preferencias:</strong> recordar que ya has aceptado este aviso, para no volver a mostrártelo.</li>
         <li><strong>Disponibilidad de productos:</strong> comprobar en tiempo real qué productos están agotados (a través de Firebase).</li>
+        <li><strong>Sesión de cliente:</strong> mantener tu sesión iniciada si tienes cuenta (Firebase Authentication).</li>
       </ul>
       <p>No usamos cookies de publicidad ni de seguimiento de terceros.</p>
 
@@ -94,7 +100,7 @@
 
 <script defer src="lib/manifest.js?v=20261013"></script>
 <script defer src="main.js?v=20260911"></script>
-<script defer src="cart.js?v=20261013"></script>
+<script defer src="cart.js?v=20261024"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 </body>
 </html>

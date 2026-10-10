@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261023" />
+<link rel="stylesheet" href="styles.css?v=20261024" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -48,6 +48,8 @@
     font-family: var(--sans); font-size: 15px; text-align: center;
   }
   .admin-stock-hint { font-size: 12px; color: var(--cream-mute); white-space: nowrap; }
+  .admin-order-profile { margin-top: 12px; padding: 10px 12px; border: 1px solid var(--line-strong); font-size: 13px; line-height: 1.6; }
+  .admin-order-done { margin-top: 10px; color: #4caf50; font-weight: 700; font-size: 13px; }
   .admin-computed { font-size: 12px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; padding: 4px 10px; }
   .admin-computed.is-ok { color: #4caf50; }
   .admin-computed.is-out { color: var(--red); }
@@ -118,6 +120,12 @@
         <div id="adminOrders"></div>
       </div>
 
+      <div class="admin-category" id="adminClientsSection">
+        <h2 class="admin-category-title">Clientes con puntos</h2>
+        <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Perfiles creados en la web y sus puntos. Los puntos se suman al pulsar "Sí se hizo" en un pedido. Aquí puedes ajustarlos a mano.</p>
+        <div id="adminClients"></div>
+      </div>
+
       <div class="admin-category" id="adminHoursSection">
         <h2 class="admin-category-title">Horario de apertura</h2>
         <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Si un cliente intenta pedir "lo antes posible" fuera de estas horas, la web le avisa y le sugiere programar el pedido para más tarde.</p>
@@ -149,6 +157,7 @@
 <script src="lib/manifest.js?v=20261013"></script>
 <script src="stock-requirements.js"></script>
 <script src="offers-requirements.js"></script>
+<script src="rewards-config.js"></script>
 <script src="hours-config.js"></script>
 <script>
 (function () {
@@ -193,6 +202,7 @@
       panelBox.style.display = "block";
       buildPanel();
       loadOrders();
+      loadClients();
       buildHoursPanel();
     } else {
       loginBox.style.display = "block";
@@ -392,6 +402,96 @@
     return d.toLocaleDateString("es-ES") + " " + d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" });
   }
 
+  function esc(s) {
+    return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+
+  function confirmOrder(key) {
+    db.ref("orders/" + key).once("value").then(function (snap) {
+      var d = snap.val();
+      if (!d || !d.uid) { alert("Este pedido no tiene perfil."); return; }
+      if (d.status === "confirmed") return;
+      return db.ref("points/" + d.uid + "/log").once("value").then(function (ls) {
+        var bal = FRY_computeBalance(ls.val() || {}).available;
+        if (d.rewardId) {
+          var def = FRY_REWARDS[d.rewardId];
+          if (!def || Number(d.rewardPoints) !== def.points) { alert("El canje de este pedido no es válido."); return; }
+          if (bal < def.points) {
+            alert("El cliente no tiene puntos suficientes para ese canje (tiene " + FRY_formatPoints(bal) + ", hacen falta " + FRY_formatPoints(def.points) + "). No se ha confirmado el pedido.");
+            return;
+          }
+        }
+        var pts = Math.floor((Number(d.pointsBase) || 0) * FRY_POINTS_PER_EURO);
+        var code = key.slice(-6).toUpperCase();
+        var T = firebase.database.ServerValue.TIMESTAMP;
+        var up = {};
+        up["orders/" + key + "/status"] = "confirmed";
+        up["orders/" + key + "/confirmedAt"] = T;
+        if (pts > 0) up["points/" + d.uid + "/log/" + key] = { type: "earn", points: pts, orderCode: code, ts: T };
+        if (d.rewardId) up["points/" + d.uid + "/log/" + key + "_canje"] = { type: "redeem", points: FRY_REWARDS[d.rewardId].points, reward: FRY_REWARDS[d.rewardId].label, orderCode: code, ts: T };
+        return db.ref().update(up);
+      });
+    }).catch(function () { alert("No se ha podido confirmar el pedido. Revisa la conexión y las reglas de Firebase."); });
+  }
+
+  function undoOrder(key) {
+    if (!confirm("¿Deshacer? Se quitarán los puntos sumados y se devolverán los canjeados.")) return;
+    db.ref("orders/" + key).once("value").then(function (snap) {
+      var d = snap.val();
+      if (!d) return;
+      var up = {};
+      up["orders/" + key + "/status"] = null;
+      up["orders/" + key + "/confirmedAt"] = null;
+      if (d.uid) {
+        up["points/" + d.uid + "/log/" + key] = null;
+        up["points/" + d.uid + "/log/" + key + "_canje"] = null;
+      }
+      return db.ref().update(up);
+    }).catch(function () { alert("No se ha podido deshacer."); });
+  }
+
+  function loadClients() {
+    var el = document.getElementById("adminClients");
+    if (!el) return;
+    Promise.all([db.ref("users").once("value"), db.ref("points").once("value")]).then(function (res) {
+      var users = res[0].val() || {};
+      var points = res[1].val() || {};
+      var uids = Object.keys(users);
+      if (!uids.length) {
+        el.innerHTML = '<p class="admin-orders-empty">Todavía no se ha registrado ningún cliente.</p>';
+        return;
+      }
+      var rows = uids.map(function (uid) {
+        var bal = FRY_computeBalance((points[uid] && points[uid].log) || {}).available;
+        return { uid: uid, u: users[uid], bal: bal };
+      }).sort(function (x, y) { return y.bal - x.bal; });
+      el.innerHTML = rows.map(function (r) {
+        return '<div class="admin-item" style="gap:12px; flex-wrap:wrap;">' +
+          '<span class="admin-item-name">' + esc(r.u.name) + ' · ' + esc(r.u.email) + ' · ' + esc(r.u.phone) + '</span>' +
+          '<span><strong>' + FRY_formatPoints(r.bal) + '</strong> pts ' +
+          '<button type="button" class="admin-logout" style="padding:4px 10px;" data-adjust="' + esc(r.uid) + '">Ajustar</button></span>' +
+        '</div>';
+      }).join("");
+      var btns = el.querySelectorAll("[data-adjust]");
+      for (var i = 0; i < btns.length; i++) {
+        btns[i].addEventListener("click", function () {
+          var uid = this.dataset.adjust;
+          var v = prompt("Puntos a sumar (o restar con un número negativo):");
+          if (v === null) return;
+          var n = parseInt(v, 10);
+          if (isNaN(n) || n === 0) { alert("Escribe un número distinto de 0."); return; }
+          var note = prompt("Motivo (opcional):") || "";
+          db.ref("points/" + uid + "/log").push({ type: "adjust", points: n, note: note, ts: firebase.database.ServerValue.TIMESTAMP })
+            .then(loadClients).catch(function () { alert("No se ha podido ajustar."); });
+        });
+      }
+    }).catch(function () {
+      el.innerHTML = '<p class="admin-orders-empty">No se han podido cargar los clientes (revisa las reglas de Firebase).</p>';
+    });
+  }
+
   function loadOrders() {
     if (ordersLoaded) return;
     ordersLoaded = true;
@@ -409,36 +509,85 @@
       }
 
       ordersEl.innerHTML = orders.map(function (o) {
+        var d = o.data;
         var code = o.key.slice(-6).toUpperCase();
-        var itemsHtml = (o.data.items || []).map(function (i) {
-          return "<div>" + i.qty + "x " + i.name + " — " + formatEuro(i.price * i.qty) + "</div>";
+        var itemsHtml = (d.items || []).map(function (i) {
+          return "<div>" + esc(i.qty) + "x " + esc(i.name) + " — " + formatEuro(i.price * i.qty) + "</div>";
         }).join("");
-        var discountHtml = o.data.discountApplied
-          ? "<div>Descuento aplicado: -" + formatEuro(o.data.discountAmount) + "</div>"
+        var discountHtml = d.discountAmount > 0
+          ? "<div>Descuento" + (d.offerCode ? " (" + esc(d.offerCode) + ")" : "") + ": -" + formatEuro(d.discountAmount) + "</div>"
           : "";
+        var rewardHtml = d.rewardId
+          ? "<div>Canje de puntos: " + esc(d.rewardLabel) + " (" + FRY_formatPoints(d.rewardPoints) + " pts)</div>"
+          : "";
+        var confirmed = d.status === "confirmed";
+        var pts = d.uid ? Math.floor((Number(d.pointsBase) || 0) * FRY_POINTS_PER_EURO) : 0;
+        var profileHtml;
+        if (d.uid) {
+          profileHtml =
+            '<div class="admin-order-profile">' +
+              "<strong>Perfil:</strong> " + esc(d.customerName || "") + " · " + esc(d.customerEmail || "") +
+              ' · <span data-balance-for="' + esc(d.uid) + '">saldo…</span>' +
+              "<br>Base para puntos: " + formatEuro(d.pointsBase || 0) + " → <strong>" + FRY_formatPoints(pts) + " puntos</strong>" +
+            "</div>" +
+            (confirmed
+              ? '<div class="admin-order-done">✔ Pedido hecho — puntos sumados.</div><button type="button" class="admin-order-delete" data-order-undo="' + o.key + '">Deshacer</button>'
+              : '<button type="button" class="admin-logout" data-order-confirm="' + o.key + '" style="margin-top:10px;">Sí se hizo — sumar ' + FRY_formatPoints(pts) + " puntos" + (d.rewardId ? " y descontar " + FRY_formatPoints(d.rewardPoints) : "") + "</button>");
+        } else {
+          profileHtml = '<div class="admin-order-profile" style="color:var(--cream-mute);">Pedido sin perfil: no suma puntos.</div>';
+        }
         return (
           '<div class="admin-order-card">' +
             '<div class="admin-order-summary" data-order-toggle>' +
               '<div class="admin-order-summary-left">' +
-                '<span class="admin-order-code">#' + code + '</span>' +
-                '<span class="admin-order-total" style="margin-top:0;">' + formatEuro(o.data.total) + '</span>' +
-              '</div>' +
+                '<span class="admin-order-code">#' + code + "</span>" +
+                '<span class="admin-order-total" style="margin-top:0;">' + formatEuro(d.total) + "</span>" +
+                (confirmed ? ' <span class="admin-computed is-ok">Hecho</span>' : "") +
+              "</div>" +
               '<span class="admin-order-arrow">▶</span>' +
-            '</div>' +
+            "</div>" +
             '<div class="admin-order-details">' +
-              '<span class="admin-order-time">' + formatTimestamp(o.data.timestamp) + '</span>' +
-              '<div class="admin-order-items">' + itemsHtml + discountHtml + '</div>' +
+              '<span class="admin-order-time">' + formatTimestamp(d.timestamp) + "</span>" +
+              '<div class="admin-order-items">' + itemsHtml + discountHtml + rewardHtml + "</div>" +
               '<div class="admin-order-meta">' +
-                'Zona: ' + (o.data.shippingZone || "-") + ' · ' +
-                'Envío: ' + formatEuro(o.data.shippingCost) + ' · ' +
-                'Pago: ' + (o.data.paymentMethod || "-") +
-              '</div>' +
+                "Zona: " + esc(d.shippingZone || "-") + " · " +
+                "Envío: " + formatEuro(d.shippingCost) + " · " +
+                "Pago: " + esc(d.paymentMethod || "-") +
+              "</div>" +
+              profileHtml +
               '<button type="button" class="admin-order-delete" data-order-delete="' + o.key + '">Eliminar este pedido</button>' +
-            '</div>' +
-          '</div>'
+            "</div>" +
+          "</div>"
         );
       }).join("");
 
+      // Saldo actual de cada perfil que aparece en la lista
+      var seen = {};
+      orders.forEach(function (o) {
+        if (o.data.uid && !seen[o.data.uid]) {
+          seen[o.data.uid] = true;
+          db.ref("points/" + o.data.uid + "/log").once("value").then(function (s) {
+            var bal = FRY_computeBalance(s.val() || {}).available;
+            var els = ordersEl.querySelectorAll('[data-balance-for="' + o.data.uid + '"]');
+            for (var q = 0; q < els.length; q++) els[q].textContent = "saldo: " + FRY_formatPoints(bal) + " pts";
+          });
+        }
+      });
+
+      var confirmBtns = ordersEl.querySelectorAll("[data-order-confirm]");
+      for (var c = 0; c < confirmBtns.length; c++) {
+        confirmBtns[c].addEventListener("click", function (e) {
+          e.stopPropagation();
+          confirmOrder(this.dataset.orderConfirm);
+        });
+      }
+      var undoBtns = ordersEl.querySelectorAll("[data-order-undo]");
+      for (var u = 0; u < undoBtns.length; u++) {
+        undoBtns[u].addEventListener("click", function (e) {
+          e.stopPropagation();
+          undoOrder(this.dataset.orderUndo);
+        });
+      }
       var toggles = ordersEl.querySelectorAll("[data-order-toggle]");
       for (var t = 0; t < toggles.length; t++) {
         toggles[t].addEventListener("click", function () {

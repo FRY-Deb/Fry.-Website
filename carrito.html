@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261023" />
+<link rel="stylesheet" href="styles.css?v=20261024" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -21,6 +21,7 @@
       <a href="carta.html">Carta</a>
       <a href="catering.html">Catering</a>
       <a href="contacto.html">Contacto</a>
+      <a href="cuenta.html">Mi cuenta</a>
     </nav>
     <a href="carrito.html" class="nav-cart" aria-current="page" aria-label="Ver carrito">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
     <a class="nav-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
@@ -33,6 +34,7 @@
   <a href="carta.html">Carta</a>
   <a href="catering.html">Catering</a>
   <a href="contacto.html">Contacto</a>
+  <a href="cuenta.html">Mi cuenta</a>
   <a href="carrito.html" class="nav-mobile-cart">Carrito <span class="cart-badge" data-cart-badge>0</span></a>
   <a class="nav-mobile-cta" data-whatsapp-link href="https://wa.me/34669765785?text=Hola!%20Quiero%20hacer%20un%20pedido%20en%20FRY.">Pedir por WhatsApp</a>
 </div>
@@ -142,6 +144,11 @@
       </div>
 
       <div class="cart-extra-field">
+        <span class="cart-shipping-label">Puntos FRY.</span>
+        <div class="cart-points" data-points-box></div>
+      </div>
+
+      <div class="cart-extra-field">
         <label for="discountCode" class="cart-shipping-label">Código de descuento</label>
         <div class="cart-discount-row">
           <input type="text" id="discountCode" data-discount-input placeholder="Escribe tu código" />
@@ -153,6 +160,10 @@
       <div class="cart-total-row cart-total-row-sub">
         <span class="cart-total-label cart-total-label-sub">Subtotal</span>
         <span class="cart-total-sub" data-cart-subtotal>0,00€</span>
+      </div>
+      <div class="cart-total-row cart-total-row-sub" data-reward-row style="display:none;">
+        <span class="cart-total-label cart-total-label-sub" data-reward-label>Canje de puntos</span>
+        <span class="cart-total-sub" data-cart-reward>-0,00€</span>
       </div>
       <div class="cart-total-row cart-total-row-sub" data-discount-row style="display:none;">
         <span class="cart-total-label cart-total-label-sub" data-discount-label>Descuento</span>
@@ -212,10 +223,12 @@
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20260906"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script defer src="firebase-config.js"></script>
 <script defer src="hours-config.js"></script>
 <script defer src="offers-requirements.js"></script>
-<script defer src="cart.js?v=20261013"></script>
+<script defer src="rewards-config.js"></script>
+<script defer src="cart.js?v=20261024"></script>
 </body>
 </html>
