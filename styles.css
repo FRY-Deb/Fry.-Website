@@ -1451,3 +1451,23 @@ body.fry-intro-finished .fry-intro {
 /* Consentimiento: el texto con enlaces en línea no se parte en columnas */
 .cf-consent { display: block; position: relative; padding-left: 26px; }
 .cf-consent input { position: absolute; left: 0; top: 3px; margin: 0; }
+
+/* Página de alérgenos */
+.menu-category-allergens a { color: inherit; text-decoration: underline; }
+.alg-legend { display: grid; gap: 10px; margin-bottom: 36px; font-size: 15px; color: var(--cream-2); }
+.alg-grid { display: grid; gap: 18px; grid-template-columns: 1fr; }
+@media (min-width: 760px) { .alg-grid { grid-template-columns: repeat(2, 1fr); } }
+.alg-card { border: 1px solid var(--line-strong); padding: 22px; display: flex; flex-direction: column; gap: 12px; transition: background .25s var(--ease-out), border-color .25s var(--ease-out); }
+.alg-card:hover { background: var(--red); border-color: var(--red); }
+.alg-name { font-family: var(--display); font-size: 28px; text-transform: uppercase; line-height: 1.05; }
+.alg-desc { margin: 0; font-size: 14px; color: var(--cream-mute); line-height: 1.5; }
+.alg-card:hover .alg-desc { color: var(--cream); }
+.alg-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; }
+.alg-chip { display: inline-block; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; padding: 6px 11px; border-radius: 999px; border: 2px solid var(--red); }
+.alg-chip.is-yes { background: var(--red); color: var(--cream); }
+.alg-chip.is-maybe { background: transparent; color: var(--cream); border-style: dashed; }
+.alg-card:hover .alg-chip { border-color: var(--cream); }
+.alg-card:hover .alg-chip.is-yes { background: var(--cream); color: var(--bg); }
+.alg-none { font-size: 13px; color: var(--cream-mute); }
+.alg-card:hover .alg-none { color: var(--cream); }
+.alg-legend .alg-chip { margin-right: 10px; }
