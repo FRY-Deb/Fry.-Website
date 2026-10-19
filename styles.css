@@ -1493,3 +1493,36 @@ body.fry-intro-finished .fry-intro {
 
 .product-split-text.product-info { padding: 0; max-width: none; }
 .product-split-empty { display: flex; align-items: center; justify-content: center; text-align: center; padding: 24px; color: var(--cream-mute); font-size: 14px; background: linear-gradient(180deg, #151515, #050505); }
+
+/* Salsas: escenario de vídeo + desplegable */
+.salsa-stage { position: relative; aspect-ratio: 9 / 16; max-height: 80vh; width: 100%; overflow: hidden; background: #050505; border: 1px solid var(--line-strong); }
+.salsa-slot {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  text-align: center; padding: 24px; color: var(--cream-mute); font-size: 14px;
+  background: linear-gradient(180deg, #151515, #050505);
+  opacity: 0; transform: scale(1.04); pointer-events: none;
+  transition: opacity .6s ease, transform .8s cubic-bezier(.22, .61, .36, 1);
+}
+.salsa-slot.is-active { opacity: 1; transform: none; pointer-events: auto; z-index: 1; }
+.salsa-slot-label { font-family: var(--display); text-transform: uppercase; font-size: 28px; color: var(--cream); }
+.salsa-slot-video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+.menu-card.salsa-item { display: block; padding: 0; }
+.menu-card.salsa-item:hover { background: none; padding-left: 0; }
+.salsa-head {
+  display: grid; grid-template-columns: 1fr auto auto; align-items: baseline; gap: 6px 16px;
+  width: 100%; padding: 22px 0; text-align: left; cursor: pointer; color: inherit; background: none; border: 0;
+}
+.salsa-head .menu-card-name { transition: color .35s ease; }
+.salsa-head:hover .menu-card-name { color: var(--red); }
+.salsa-item.is-open .salsa-head .menu-card-name { color: var(--red); }
+.salsa-chev { width: 12px; height: 12px; border-right: 2px solid var(--cream-mute); border-bottom: 2px solid var(--cream-mute); transform: rotate(45deg) translateY(-3px); transition: transform .45s cubic-bezier(.22, .61, .36, 1), border-color .35s ease; }
+.salsa-item.is-open .salsa-chev { transform: rotate(225deg) translateY(-3px); border-color: var(--red); }
+.salsa-panel { display: grid; grid-template-rows: 0fr; opacity: 0; transition: grid-template-rows .5s cubic-bezier(.22, .61, .36, 1), opacity .4s ease; }
+.salsa-item.is-open .salsa-panel { grid-template-rows: 1fr; opacity: 1; }
+.salsa-panel-inner { overflow: hidden; min-height: 0; }
+.salsa-item.is-open .salsa-panel-inner { padding-bottom: 22px; }
+.menu-card.salsa-item.is-comingsoon, .salsa-item .menu-card-desc { display: block; }
+@media (prefers-reduced-motion: reduce) {
+  .salsa-slot, .salsa-panel, .salsa-chev { transition: none; }
+}

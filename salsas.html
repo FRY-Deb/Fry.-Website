@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261048" />
+<link rel="stylesheet" href="styles.css?v=20261050" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -52,43 +52,68 @@
 
   <section class="container product-split">
     <div class="product-split-media">
-      <div class="product-split-video product-split-empty"><span>Vídeo del proceso próximamente</span></div>
+      <!-- Para poner el vídeo de una salsa: dentro de su <div class="salsa-slot"> cambia el <span> por
+           <video class="salsa-slot-video" src="assets/videos/NOMBRE.mp4" muted loop playsinline preload="metadata"></video> -->
+      <div class="salsa-stage" data-salsa-stage>
+        <div class="salsa-slot is-active" data-salsa="fry"><span class="salsa-slot-label">Salsa FRY.</span><span>Vídeo del proceso próximamente</span></div>
+        <div class="salsa-slot" data-salsa="ranch"><span class="salsa-slot-label">Salsa Ranch FRY</span><span>Vídeo del proceso próximamente</span></div>
+        <div class="salsa-slot" data-salsa="miel"><span class="salsa-slot-label">Miel</span><span>Vídeo del proceso próximamente</span></div>
+      </div>
     </div>
     <div class="product-split-text product-info">
       <a href="carta.html" class="product-back-link">← Volver a la carta completa</a>
       <span class="eyebrow">Cómo lo preparamos</span>
       <h2 class="product-split-title">El proceso, paso a paso</h2>
-      <p class="product-split-lead">Así preparamos nuestras salsas.</p>
+      <p class="product-split-lead">Elige una salsa para ver cómo la preparamos.</p>
     <p style="color:var(--cream-mute); font-size:14px; max-width:74ch;">Todas nuestras salsas se preparan en casa, listas para mojar o echar por encima de cualquier pedido.</p>
     <div style="display:grid; gap:20px; margin-top:24px;">
-      <div class="menu-card">
-        <span class="menu-card-name">Tarrina de Salsa FRY.</span>
-        <span class="menu-card-price">3,95€</span>
-        <span class="menu-card-desc">Cremosa, con paprika, mostaza y un toque de miel. Tarrina grande (±200 g) para sumergir la pieza entera.</span>
-        <div class="qty-control" data-qty-control data-name="Tarrina de Salsa FRY." data-price="3,95€"></div>
+      <div class="menu-card salsa-item is-open" data-salsa="fry">
+        <button type="button" class="salsa-head" id="salsa-head-fry" aria-expanded="true" aria-controls="salsa-panel-fry">
+          <span class="menu-card-name">Tarrina de Salsa FRY.</span>
+          <span class="menu-card-price">3,95€</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-fry" role="region" aria-labelledby="salsa-head-fry">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Cremosa, con paprika, mostaza y un toque de miel. Tarrina grande (±200 g) para sumergir la pieza entera.</span>
+            <div class="qty-control" data-qty-control data-name="Tarrina de Salsa FRY." data-price="3,95€"></div>
+          </div>
+        </div>
       </div>
-      <div class="menu-card">
-        <span class="menu-card-name">Salsa Ranch FRY</span>
-        
-        <span class="menu-card-desc">Mayonesa, yogur griego, zumo de limón, zumo de pepinillo y cilantro fresco.</span>
-        <div class="menu-card-variant">
+      <div class="menu-card salsa-item" data-salsa="ranch">
+        <button type="button" class="salsa-head" id="salsa-head-ranch" aria-expanded="false" aria-controls="salsa-panel-ranch">
+          <span class="menu-card-name">Salsa Ranch FRY</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-ranch" role="region" aria-labelledby="salsa-head-ranch">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Mayonesa, yogur griego, zumo de limón, zumo de pepinillo y cilantro fresco.</span>
+            <div class="menu-card-variant">
               <select class="menu-card-select" data-variant-select aria-label="Elegir tamaño de Salsa Ranch FRY">
                 <option value="Salsa Ranch FRY — Tarrina 30g" data-price="1,20€">Tarrina (30 g) — 1,20€</option>
-<option value="Salsa Ranch FRY — Tarrina 200g" data-price="4,50€">Tarrina grande (±200 g) — 4,50€</option>
+                <option value="Salsa Ranch FRY — Tarrina 200g" data-price="4,50€">Tarrina grande (±200 g) — 4,50€</option>
               </select>
               <div class="qty-control" data-qty-control-variant data-price="1,20€"></div>
             </div>
+          </div>
+        </div>
       </div>
-      <div class="menu-card">
-        <span class="menu-card-name">Miel</span>
-        
-        <span class="menu-card-desc">Miel líquida en tarrina, para mojar o echar por encima.</span>
-        <div class="menu-card-variant">
+      <div class="menu-card salsa-item" data-salsa="miel">
+        <button type="button" class="salsa-head" id="salsa-head-miel" aria-expanded="false" aria-controls="salsa-panel-miel">
+          <span class="menu-card-name">Miel</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-miel" role="region" aria-labelledby="salsa-head-miel">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Miel líquida en tarrina, para mojar o echar por encima.</span>
+            <div class="menu-card-variant">
               <select class="menu-card-select" data-variant-select aria-label="Elegir tamaño de Miel">
                 <option value="Miel — Tarrina 30g" data-price="1,50€">Tarrina (30 g) — 1,50€</option>
               </select>
               <div class="qty-control" data-qty-control-variant data-price="1,50€"></div>
             </div>
+          </div>
+        </div>
       </div>
       <div class="menu-card is-comingsoon">
         <span class="menu-card-name">Salsa Bourbon<span class="menu-card-soldout-badge menu-card-comingsoon-badge">Próximamente</span></span>
@@ -150,9 +175,10 @@
 
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
-<script defer src="lib/manifest.js?v=20261044"></script>
+<script defer src="lib/manifest.js?v=20261050"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
+<script defer src="salsas-page.js?v=20261050"></script>
 <script defer src="cart.js?v=20261031"></script>
 </body>
 </html>
