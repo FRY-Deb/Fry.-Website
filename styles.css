@@ -1535,3 +1535,27 @@ body.fry-intro-finished .fry-intro {
 .menu-card.salsa-opt .menu-card-name { font-size: clamp(17px, 2.4vw, 21px); }
 .menu-card.salsa-opt .menu-card-price { font-size: clamp(17px, 2.4vw, 21px); }
 .salsa-panel-inner > .menu-card-desc { margin-bottom: 8px; }
+
+/* Patatas: versión compacta (menos altura, menos scroll) */
+.product-split--compact .product-split-title { font-size: clamp(26px, 3.4vw, 38px); margin-bottom: 8px; }
+.product-split--compact .product-split-lead { font-size: 15px; margin-bottom: 10px; }
+.product-split--compact .product-split-text > p { margin-top: 0; }
+.product-split--compact .product-back-link { margin-bottom: 14px; }
+.salsa-compact .salsa-head { padding: 12px 0; }
+.salsa-compact .salsa-item.is-open .salsa-panel-inner { padding-bottom: 6px; }
+.salsa-compact .salsa-panel-inner > .menu-card-desc { font-size: 13px; line-height: 1.45; margin-bottom: 2px; }
+.menu-card.salsa-opt {
+  grid-template-columns: 1fr auto auto; grid-template-areas: "name price ctrl" "desc price ctrl";
+  gap: 2px 14px; align-items: center; padding: 8px 0;
+}
+.salsa-opt .menu-card-name { grid-area: name; font-size: 16px; }
+.salsa-opt .menu-card-price { grid-area: price; font-size: 17px; }
+.salsa-opt .menu-card-desc { grid-area: desc; font-size: 12.5px; line-height: 1.4; margin: 0; }
+.salsa-opt .qty-control { grid-area: ctrl; grid-column: auto; margin-top: 0; justify-self: end; }
+.salsa-opt .menu-card-add { margin-top: 0; padding: 6px 14px; font-size: 11px; }
+.salsa-opt .qty-stepper { padding: 2px 6px; }
+.salsa-opt .qty-stepper-btn { width: 30px; height: 30px; font-size: 17px; }
+@media (max-width: 899px) {
+  .salsa-stage { aspect-ratio: auto; height: 38vh; min-height: 220px; max-height: 340px; }
+  .product-split--compact .product-split-media, .product-split:has(.salsa-stage) .product-split-media { max-width: none; }
+}
