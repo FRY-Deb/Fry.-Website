@@ -1527,4 +1527,4 @@ body.fry-intro-finished .fry-intro {
   .salsa-slot, .salsa-panel, .salsa-chev { transition: none; }
 }
 
-.salsa-head .menu-card-price small { font-family: var(--sans); font-size: 11px; font-weight: 600; letter-spacing: .04em; color: var(--cream-mute); text-transform: uppercase; margin: 0 2px; }
+.salsa-head .menu-card-price small { font-family: var(--sans); font-size: 9px; font-weight: 500; letter-spacing: 0; color: var(--cream-mute); text-transform: none; margin: 0 1px; }
