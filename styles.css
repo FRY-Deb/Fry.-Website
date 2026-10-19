@@ -1603,3 +1603,8 @@ body.fry-intro-finished .fry-intro {
 @media (max-width: 899px) {
   .product-stickybar { position: static; margin-top: var(--nav-h); }
 }
+
+/* Botones con forma de píldora (todos) */
+.btn, .nav-cta, .nav-account, .nav-mobile .nav-mobile-cta, .upsell-btn, .cart-discount-btn, .cookie-banner-accept { border-radius: 999px; }
+.menu-card-soldout-whatsapp { border-radius: 999px; }
+@media (max-width: 959px) { .menu-sidebar a { border-radius: 999px; } }
