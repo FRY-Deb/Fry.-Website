@@ -1559,3 +1559,27 @@ body.fry-intro-finished .fry-intro {
   .salsa-stage { aspect-ratio: auto; height: 38vh; min-height: 220px; max-height: 340px; }
   .product-split--compact .product-split-media, .product-split:has(.salsa-stage) .product-split-media { max-width: none; }
 }
+
+/* Móvil: también en dos columnas (vídeo a la izquierda, texto a la derecha) */
+@media (max-width: 899px) {
+  .product-split { grid-template-columns: minmax(104px, 36%) 1fr; gap: 12px; align-items: start; padding-top: 18px; padding-bottom: 48px; }
+  .product-split-media { max-width: none; margin: 0; position: sticky; top: 96px; }
+  .product-split-video { max-height: none; }
+  .salsa-stage { height: auto; min-height: 0; max-height: none; aspect-ratio: 9 / 16; }
+  .salsa-slot { padding: 8px; gap: 6px; font-size: 10px; }
+  .salsa-slot-label { font-size: 14px; line-height: 1.1; }
+  .product-split-text { min-width: 0; }
+  .product-split-title { font-size: 22px; margin-bottom: 6px; }
+  .product-split--compact .product-split-title { font-size: 22px; }
+  .product-split-lead { font-size: 13px; margin-bottom: 10px; }
+  .product-split-text .menu-card-desc { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
+  .product-split .eyebrow { font-size: 10px; }
+  .product-back-link { font-size: 11px; margin-bottom: 10px; }
+  .product-split-text .product-allergens { padding: 12px; font-size: 11px; }
+  .salsa-head { grid-template-columns: 1fr auto; padding: 12px 0; gap: 2px 8px; }
+  .salsa-head .menu-card-name { font-size: 16px; grid-column: 1; }
+  .salsa-head .menu-card-price { font-size: 15px; grid-column: 1; white-space: normal; }
+  .salsa-head .salsa-chev { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
+  .menu-card.salsa-opt { grid-template-columns: 1fr auto; grid-template-areas: "name price" "desc desc" "ctrl ctrl"; }
+  .salsa-opt .qty-control { justify-self: start; margin-top: 4px; }
+}
