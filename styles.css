@@ -1601,5 +1601,5 @@ body.fry-intro-finished .fry-intro {
 
 /* Móvil / estrecho: la barra del producto no se queda pegada, para no tapar el texto */
 @media (max-width: 899px) {
-  .product-stickybar { position: static; }
+  .product-stickybar { position: static; margin-top: var(--nav-h); }
 }
