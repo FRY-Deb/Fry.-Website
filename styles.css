@@ -1560,26 +1560,39 @@ body.fry-intro-finished .fry-intro {
   .product-split--compact .product-split-media, .product-split:has(.salsa-stage) .product-split-media { max-width: none; }
 }
 
-/* Móvil: también en dos columnas (vídeo a la izquierda, texto a la derecha) */
+/* Móvil / pantallas estrechas: una columna + vídeo en miniatura flotante (toca para ampliar) */
 @media (max-width: 899px) {
-  .product-split { grid-template-columns: minmax(104px, 36%) 1fr; gap: 12px; align-items: start; padding-top: 18px; padding-bottom: 48px; }
-  .product-split-media { max-width: none; margin: 0; position: sticky; top: 96px; }
-  .product-split-video { max-height: none; }
-  .salsa-stage { height: auto; min-height: 0; max-height: none; aspect-ratio: 9 / 16; }
-  .salsa-slot { padding: 8px; gap: 6px; font-size: 10px; }
-  .salsa-slot-label { font-size: 14px; line-height: 1.1; }
-  .product-split-text { min-width: 0; }
-  .product-split-title { font-size: 22px; margin-bottom: 6px; }
-  .product-split--compact .product-split-title { font-size: 22px; }
-  .product-split-lead { font-size: 13px; margin-bottom: 10px; }
-  .product-split-text .menu-card-desc { font-size: 13px; line-height: 1.5; margin-bottom: 12px; }
-  .product-split .eyebrow { font-size: 10px; }
-  .product-back-link { font-size: 11px; margin-bottom: 10px; }
-  .product-split-text .product-allergens { padding: 12px; font-size: 11px; }
-  .salsa-head { grid-template-columns: 1fr auto; padding: 12px 0; gap: 2px 8px; }
-  .salsa-head .menu-card-name { font-size: 16px; grid-column: 1; }
-  .salsa-head .menu-card-price { font-size: 15px; grid-column: 1; white-space: normal; }
-  .salsa-head .salsa-chev { grid-column: 2; grid-row: 1 / span 2; align-self: center; }
-  .menu-card.salsa-opt { grid-template-columns: 1fr auto; grid-template-areas: "name price" "desc desc" "ctrl ctrl"; }
-  .salsa-opt .qty-control { justify-self: start; margin-top: 4px; }
+  .product-split { display: block; padding-top: 18px; padding-bottom: 120px; }
+  .product-split-text { min-width: 0; max-width: none; }
+  .product-split-title, .product-split--compact .product-split-title { font-size: 28px; margin-bottom: 8px; }
+  .product-split-lead { font-size: 14px; margin-bottom: 12px; }
+  .product-split-text .menu-card-desc { font-size: 14px; line-height: 1.55; margin-bottom: 14px; }
+  .salsa-head { grid-template-columns: 1fr auto auto; }
+
+  .product-split-media {
+    position: fixed; z-index: 90; margin: 0; max-width: none; cursor: pointer;
+    right: 14px; bottom: 18px; width: 92px; top: auto; left: auto;
+    border-radius: 14px; overflow: hidden;
+    box-shadow: 0 8px 26px rgba(0, 0, 0, .65), 0 0 0 2px var(--red);
+    transform: none;
+    transition: right .5s cubic-bezier(.22, .61, .36, 1), bottom .5s cubic-bezier(.22, .61, .36, 1), width .5s cubic-bezier(.22, .61, .36, 1), transform .5s cubic-bezier(.22, .61, .36, 1), border-radius .5s ease;
+  }
+  .product-split-media::after {
+    content: "⤢"; position: absolute; top: 5px; right: 5px; z-index: 3; width: 20px; height: 20px; border-radius: 50%;
+    background: rgba(0, 0, 0, .6); color: var(--cream); font-size: 12px; line-height: 20px; text-align: center; transition: opacity .3s ease;
+  }
+  .product-split-media.is-expanded {
+    right: 50%; bottom: 50%; transform: translate(50%, 50%);
+    width: min(86vw, calc(78vh * 9 / 16)); border-radius: 18px; z-index: 120; cursor: zoom-out;
+  }
+  .product-split-media.is-expanded::after { content: "✕"; }
+  .product-split-video, .salsa-stage { max-height: none; height: auto; min-height: 0; aspect-ratio: 9 / 16; width: 100%; border: 0; }
+  .salsa-slot { padding: 6px; gap: 4px; font-size: 9px; }
+  .salsa-slot-label { font-size: 12px; line-height: 1.1; }
+  .product-split-media.is-expanded .salsa-slot { padding: 16px; gap: 10px; font-size: 14px; }
+  .product-split-media.is-expanded .salsa-slot-label { font-size: 26px; }
+  .product-float-backdrop { position: fixed; inset: 0; z-index: 110; background: rgba(0, 0, 0, .82); opacity: 0; visibility: hidden; transition: opacity .4s ease, visibility 0s linear .4s; }
+  .product-float-backdrop.is-on { opacity: 1; visibility: visible; transition: opacity .4s ease; }
 }
+@media (min-width: 900px) { .product-float-backdrop { display: none; } }
+@media (prefers-reduced-motion: reduce) { .product-split-media { transition: none; } }
