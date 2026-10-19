@@ -1596,3 +1596,5 @@ body.fry-intro-finished .fry-intro {
 }
 @media (min-width: 900px) { .product-float-backdrop { display: none; } }
 @media (prefers-reduced-motion: reduce) { .product-split-media { transition: none; } }
+
+.salsa-panel-inner .salsa-note { color: var(--cream-mute); font-size: 12.5px; line-height: 1.45; margin: 6px 0 2px; }

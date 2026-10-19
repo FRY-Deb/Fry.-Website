@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261060" />
+<link rel="stylesheet" href="styles.css?v=20261061" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -58,7 +58,7 @@
     </div>
   </div>
 
-  <section class="container product-split">
+  <section class="container product-split product-split--compact">
     <div class="product-split-media">
       <div class="product-split-video product-split-empty"><span>Vídeo del proceso próximamente</span></div>
     </div>
@@ -67,8 +67,32 @@
       <span class="eyebrow">Cómo lo preparamos</span>
       <h2 class="product-split-title">El proceso, paso a paso</h2>
       <p class="product-split-lead">Así montamos cada hamburguesa, paso a paso.</p>
-    <span class="menu-card-desc">200 g de pollo rebozado, loncha de queso, pepinillos agridulces, salsa FRY, pan brioche.</span>
-    <p style="color:var(--cream-mute); font-size:14px;">200 g de pollo rebozado entero, sin picar. Brioche, loncha de queso, pepinillos, salsa FRY.</p>
+    <div class="salsa-compact" style="display:grid; gap:0; margin-top:14px;">
+      <div class="menu-card salsa-item is-open" data-salsa="hamburguesa">
+        <button type="button" class="salsa-head" id="salsa-head-hamburguesa" aria-expanded="true" aria-controls="salsa-panel-hamburguesa">
+          <span class="menu-card-name">Hamburguesa FRY.</span>
+          <span class="menu-card-price">9,00€ · 11,50€</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-hamburguesa" role="region" aria-labelledby="salsa-head-hamburguesa">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">200 g de pollo rebozado entero, sin picar. Brioche, loncha de queso, pepinillos agridulces y salsa FRY.</span>
+            <div class="menu-card salsa-opt" data-stock-name="Hamburguesa FRY.">
+              <span class="menu-card-name">Sin filete extra</span>
+              <span class="menu-card-price">9,00€</span>
+              <span class="menu-card-desc">La hamburguesa de siempre.</span>
+              <div class="qty-control" data-qty-control data-name="Hamburguesa FRY." data-price="9,00€"></div>
+            </div>
+            <div class="menu-card salsa-opt" data-stock-name="Hamburguesa FRY. + filete extra">
+              <span class="menu-card-name">Con 1 filete extra</span>
+              <span class="menu-card-price">11,50€</span>
+              <span class="menu-card-desc">+2,50€ sobre la hamburguesa normal.</span>
+              <div class="qty-control" data-qty-control data-name="Hamburguesa FRY. + filete extra" data-price="11,50€"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
     <div class="product-allergens">
       <strong>Alérgenos e información:</strong> Gluten (pan brioche y rebozado), huevo, leche (marinado y Salsa FRY), mostaza (pepinillos agridulces y Salsa FRY), pescado (salsa Worcestershire de la Salsa FRY).
       <br><span style="opacity:.75;">Información orientativa — <a href="alergenos.html" style="color:inherit; text-decoration:underline;">ver tabla de alérgenos</a> o confírmanos cualquier alergia o intolerancia antes de pedir por WhatsApp.</span>
@@ -117,6 +141,7 @@
 <script defer src="lib/manifest.js?v=20261053"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
+<script defer src="salsas-page.js?v=20261061"></script>
 <script defer src="product-float.js?v=20261060"></script>
 <script defer src="cart.js?v=20261031"></script>
 </body>
