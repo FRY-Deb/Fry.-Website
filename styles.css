@@ -1471,3 +1471,7 @@ body.fry-intro-finished .fry-intro {
 .alg-none { font-size: 13px; color: var(--cream-mute); }
 .alg-card:hover .alg-none { color: var(--cream); }
 .alg-legend .alg-chip { margin-right: 10px; }
+
+/* Hero con vídeo vertical: se ve entero, sin recortar manos ni producto */
+.product-hero--vertical { background: #050505; }
+.product-hero--vertical .product-hero-video { object-fit: contain; opacity: 1; }
