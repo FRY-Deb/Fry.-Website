@@ -1528,3 +1528,10 @@ body.fry-intro-finished .fry-intro {
 }
 
 .salsa-head .menu-card-price small { font-family: var(--sans); font-size: 9px; font-weight: 500; letter-spacing: 0; color: var(--cream-mute); text-transform: none; margin: 0 1px; }
+
+/* Opciones dentro del desplegable (patatas) */
+.menu-card.salsa-opt { border-top: 1px solid var(--line); padding: 16px 0; }
+.menu-card.salsa-opt:hover { background: none; padding-left: 0; }
+.menu-card.salsa-opt .menu-card-name { font-size: clamp(17px, 2.4vw, 21px); }
+.menu-card.salsa-opt .menu-card-price { font-size: clamp(17px, 2.4vw, 21px); }
+.salsa-panel-inner > .menu-card-desc { margin-bottom: 8px; }

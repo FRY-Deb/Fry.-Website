@@ -98,6 +98,7 @@
       if (!nameEl) continue;
       // el badge puede haberse insertado antes: cogemos solo el texto del nombre real
       var name = nameEl.childNodes[0] ? nameEl.childNodes[0].textContent.trim() : nameEl.textContent.trim();
+      if (card.getAttribute("data-stock-name")) name = card.getAttribute("data-stock-name");
 
       // Productos con tamaños/variantes: cada opción se puede agotar por separado
       // (el interruptor del admin usa el nombre completo de la opción).

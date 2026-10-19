@@ -31,7 +31,7 @@
     })(items[k]);
   }
 
-  // enlace directo: salsas.html#ranch · salsas.html#miel (por defecto, la Salsa FRY.)
+  // enlace directo: salsas.html#ranch · salsas.html#miel (por defecto, la primera)
   var h = (location.hash || "").replace("#", "");
-  activate(h || "fry", false);
+  activate(h || items[0].getAttribute("data-salsa"), false);
 })();

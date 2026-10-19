@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261052" />
+<link rel="stylesheet" href="styles.css?v=20261054" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -52,44 +52,73 @@
 
   <section class="container product-split">
     <div class="product-split-media">
-      <div class="product-split-video product-split-empty"><span>Vídeo del proceso próximamente</span></div>
+      <!-- Para poner el vídeo de una opción: dentro de su <div class="salsa-slot"> cambia el <span> por
+           <video class="salsa-slot-video" src="assets/videos/NOMBRE.mp4" muted loop playsinline preload="metadata"></video> -->
+      <div class="salsa-stage" data-salsa-stage>
+        <div class="salsa-slot is-active" data-salsa="especiales"><span class="salsa-slot-label">Patatas Especiales FRY.</span><span>Vídeo del proceso próximamente</span></div>
+        <div class="salsa-slot" data-salsa="fritas"><span class="salsa-slot-label">Patatas Fritas</span><span>Vídeo del proceso próximamente</span></div>
+      </div>
     </div>
     <div class="product-split-text product-info">
       <a href="carta.html" class="product-back-link">← Volver a la carta completa</a>
       <span class="eyebrow">Cómo lo preparamos</span>
       <h2 class="product-split-title">El proceso, paso a paso</h2>
-      <p class="product-split-lead">Así preparamos cada ración de patatas.</p>
+      <p class="product-split-lead">Elige una opción para ver cómo la preparamos.</p>
     <p style="color:var(--cream-mute); font-size:14px; max-width:74ch;">Patatas con nuestra propia mezcla de especias picante. Elige entre las clásicas o las Especiales FRY., con Ranch y miel incluidos.</p>
-    <div style="display:grid; gap:20px; margin-top:24px;">
-      <div class="menu-card">
-        <span class="menu-card-name">Patatas Especiales FRY.</span>
-        
-        <span class="menu-card-desc">Patatas con sazón cajún, tarrina de Salsa Ranch FRY y tarrina de miel aparte.</span>
-        <div class="menu-card-variant">
-              <select class="menu-card-select" data-variant-select aria-label="Elegir tamaño de Patatas Especiales FRY.">
-                <option value="Patatas Especiales FRY. — Pequeña" data-price="5,20€">Pequeña (150g + Ranch 30g + miel 30g) — 5,20€</option>
-<option value="Patatas Especiales FRY. — Grande" data-price="10,00€">Grande (800g + Ranch 200g + miel 2×30g) — 10,00€</option>
-              </select>
-              <div class="qty-control" data-qty-control-variant data-price="5,20€"></div>
+    <div style="display:grid; gap:0; margin-top:24px;">
+      <div class="menu-card salsa-item is-open" data-salsa="especiales">
+        <button type="button" class="salsa-head" id="salsa-head-especiales" aria-expanded="true" aria-controls="salsa-panel-especiales">
+          <span class="menu-card-name">Patatas Especiales FRY.</span>
+          <span class="menu-card-price">5,20€ · 10,00€</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-especiales" role="region" aria-labelledby="salsa-head-especiales">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Patatas con sazón cajún, tarrina de Salsa Ranch FRY y tarrina de miel aparte.</span>
+            <div class="menu-card salsa-opt" data-stock-name="Patatas Especiales FRY. — Pequeña">
+              <span class="menu-card-name">Pequeña</span>
+              <span class="menu-card-price">5,20€</span>
+              <span class="menu-card-desc">150 g + Ranch 30 g + miel 30 g.</span>
+              <div class="qty-control" data-qty-control data-name="Patatas Especiales FRY. — Pequeña" data-price="5,20€"></div>
             </div>
+            <div class="menu-card salsa-opt" data-stock-name="Patatas Especiales FRY. — Grande">
+              <span class="menu-card-name">Grande (familiar)</span>
+              <span class="menu-card-price">10,00€</span>
+              <span class="menu-card-desc">800 g + Ranch 200 g + miel 2×30 g.</span>
+              <div class="qty-control" data-qty-control data-name="Patatas Especiales FRY. — Grande" data-price="10,00€"></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="menu-card">
-        <span class="menu-card-name">Patatas Fritas — Pequeña</span>
-        <span class="menu-card-price">3,40€</span>
-        <span class="menu-card-desc">Para 1-2 personas.</span>
-        <div class="qty-control" data-qty-control data-name="Patatas Fritas — Pequeña" data-price="3,40€"></div>
-      </div>
-      <div class="menu-card">
-        <span class="menu-card-name">Patatas Fritas — Mediana</span>
-        <span class="menu-card-price">5,20€</span>
-        <span class="menu-card-desc">Para 2-3 personas.</span>
-        <div class="qty-control" data-qty-control data-name="Patatas Fritas — Mediana" data-price="5,20€"></div>
-      </div>
-      <div class="menu-card">
-        <span class="menu-card-name">Patatas Fritas — Grande</span>
-        <span class="menu-card-price">6,50€</span>
-        <span class="menu-card-desc">Para 4-5 personas.</span>
-        <div class="qty-control" data-qty-control data-name="Patatas Fritas — Grande" data-price="6,50€"></div>
+      <div class="menu-card salsa-item" data-salsa="fritas">
+        <button type="button" class="salsa-head" id="salsa-head-fritas" aria-expanded="false" aria-controls="salsa-panel-fritas">
+          <span class="menu-card-name">Patatas Fritas</span>
+          <span class="menu-card-price">3,40€ · 5,20€ · 6,50€</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-fritas" role="region" aria-labelledby="salsa-head-fritas">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Con nuestra sazón cajún picante.</span>
+            <div class="menu-card salsa-opt" data-stock-name="Patatas Fritas — Pequeña">
+              <span class="menu-card-name">Pequeña</span>
+              <span class="menu-card-price">3,40€</span>
+              <span class="menu-card-desc">Para 1-2 personas.</span>
+              <div class="qty-control" data-qty-control data-name="Patatas Fritas — Pequeña" data-price="3,40€"></div>
+            </div>
+            <div class="menu-card salsa-opt" data-stock-name="Patatas Fritas — Mediana">
+              <span class="menu-card-name">Mediana</span>
+              <span class="menu-card-price">5,20€</span>
+              <span class="menu-card-desc">Para 2-3 personas.</span>
+              <div class="qty-control" data-qty-control data-name="Patatas Fritas — Mediana" data-price="5,20€"></div>
+            </div>
+            <div class="menu-card salsa-opt" data-stock-name="Patatas Fritas — Grande">
+              <span class="menu-card-name">Grande (familiar)</span>
+              <span class="menu-card-price">6,50€</span>
+              <span class="menu-card-desc">Para 4-5 personas.</span>
+              <div class="qty-control" data-qty-control data-name="Patatas Fritas — Grande" data-price="6,50€"></div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
     <div class="product-allergens" style="max-width:74ch;">
@@ -140,6 +169,7 @@
 <script defer src="lib/manifest.js?v=20261053"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
+<script defer src="salsas-page.js?v=20261054"></script>
 <script defer src="cart.js?v=20261031"></script>
 </body>
 </html>
