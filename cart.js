@@ -55,7 +55,15 @@
     "Hamburguesa FRY. + filete extra": 11.5,
     "FRY BITES — 10 uds": 4.5,
     "FRY BITES — 20 uds": 7.5,
-    "FRY BITES — 30 uds": 10.5
+    "FRY BITES — 30 uds": 10.5,
+    "Tarrina de Salsa FRY.": 2.5,
+    "Tarrina de Salsa Ranch FRY.": 2.5
+  };
+
+  // Nombres antiguos de la Ranch (30 g y 200 g) en carritos guardados antes del cambio.
+  var LEGACY_NAMES = {
+    "Salsa Ranch FRY — Tarrina 30g": "Tarrina de Salsa Ranch FRY.",
+    "Salsa Ranch FRY — Tarrina 200g": "Tarrina de Salsa Ranch FRY."
   };
 
   function getCart() {
@@ -63,6 +71,7 @@
       var raw = localStorage.getItem(CART_KEY);
       var cart = raw ? JSON.parse(raw) : [];
       cart.forEach(function (i) {
+        if (LEGACY_NAMES.hasOwnProperty(i.name)) i.name = LEGACY_NAMES[i.name];
         if (CURRENT_PRICES.hasOwnProperty(i.name)) i.price = CURRENT_PRICES[i.name];
       });
       return cart;

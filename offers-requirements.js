@@ -9,12 +9,12 @@ var FRY_OFFERS = {
     rate: 0.10
   },
   "SALSA50": {
-    label: "SALSA50 — 50% en tarrinas grandes de Salsa FRY y Ranch FRY",
+    label: "SALSA50 — 50% en las tarrinas de Salsa FRY. y Ranch FRY.",
     scope: "items",
     rate: 0.50,
     // Debe coincidir EXACTAMENTE con el nombre que queda guardado en el
     // carrito para esos productos (carta.html / salsas.html).
-    items: ["Tarrina de Salsa FRY.", "Salsa Ranch FRY — Tarrina 200g"]
+    items: ["Tarrina de Salsa FRY.", "Tarrina de Salsa Ranch FRY."]
   },
   "PATATAZO": {
     label: "PATATAZO — patatas pequeñas gratis en pedidos de más de 18€ (miércoles y jueves)",
