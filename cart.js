@@ -52,7 +52,10 @@
     "Ración 2 Piezas": 11.5,
     "Ración 4 Tiras": 9.5,
     "Hamburguesa FRY.": 9,
-    "Hamburguesa FRY. + filete extra": 11.5
+    "Hamburguesa FRY. + filete extra": 11.5,
+    "FRY BITES — 10 uds": 4.5,
+    "FRY BITES — 20 uds": 7.5,
+    "FRY BITES — 30 uds": 10.5
   };
 
   function getCart() {
