@@ -483,6 +483,30 @@
   }
 
   // ---------------------------------------------------------------
+  // Correo "ya puedes canjear tus puntos" (sale desde la cuenta de Gmail que publicó el script)
+  // ---------------------------------------------------------------
+  function sendPointsEmail(key, d, newBal, pts) {
+    if (!sheetsEnabled() || !d || !d.customerEmail || d.emailSent || !(pts > 0)) return Promise.resolve();
+    var email = String(d.customerEmail).toLowerCase();
+    if (FRY_RANKING_EXCLUDE.indexOf(email) !== -1) return Promise.resolve();   // dueño y pareja: sin correos
+    var can = [], next = null;
+    FRY_REWARD_ORDER.forEach(function (id) {
+      var r = FRY_REWARDS[id];
+      if (newBal >= r.points) can.push({ label: r.label, points: r.points });
+      else if (!next) next = { label: r.label, points: r.points, missing: r.points - newBal };
+    });
+    var payload = { token: FRY_SHEETS.token, action: "points_email", to: d.customerEmail, name: d.customerName || "",
+      orderCode: key.slice(-6).toUpperCase(), earned: pts, balance: newBal, rewards: can, next: next };
+    return fetch(FRY_SHEETS.url, { method: "POST", body: JSON.stringify(payload) })
+      .then(function (r) { return r.json(); })
+      .then(function (res) {
+        if (res && res.ok) return db.ref("orders/" + key + "/emailSent").set(true);
+        alert("Pedido confirmado, pero no se ha podido enviar el correo de puntos" + (res && res.error ? ": " + res.error : "") + ".");
+      })
+      .catch(function () { /* sin respuesta legible: no se marca como enviado */ });
+  }
+
+  // ---------------------------------------------------------------
   // Hoja de cálculo de Google (pedidos, costes y beneficio)
   // ---------------------------------------------------------------
   function sheetsEnabled() { return typeof FRY_SHEETS !== "undefined" && FRY_SHEETS.url; }
@@ -555,7 +579,8 @@
         up["orders/" + key + "/confirmedAt"] = T;
         if (pts > 0) up["points/" + d.uid + "/log/" + key] = { type: "earn", points: pts, orderCode: code, ts: T };
         if (d.rewardId) up["points/" + d.uid + "/log/" + key + "_canje"] = { type: "redeem", points: FRY_REWARDS[d.rewardId].points, reward: FRY_REWARDS[d.rewardId].label, orderCode: code, ts: T };
-        return db.ref().update(up).then(function () { return Promise.all([sendOrderToSheet(key), syncRankingFor(d.uid).catch(function () {})]); });
+        var newBal = bal + pts - (d.rewardId ? FRY_REWARDS[d.rewardId].points : 0);
+        return db.ref().update(up).then(function () { return Promise.all([sendOrderToSheet(key), syncRankingFor(d.uid).catch(function () {}), sendPointsEmail(key, d, newBal, pts)]); });
       });
     }).catch(function () { alert("No se ha podido confirmar el pedido. Revisa la conexión y las reglas de Firebase."); });
   }
