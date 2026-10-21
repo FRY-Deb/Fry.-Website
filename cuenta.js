@@ -94,9 +94,19 @@
 
     auth.createUserWithEmailAndPassword(email, pass).then(function (cred) {
       return db.ref("users/" + cred.user.uid).set({
-        name: name, phone: phone, email: email, createdAt: firebase.database.ServerValue.TIMESTAMP
+        name: name, phone: phone, email: email, rankingOptIn: !!document.getElementById("regRanking").checked, createdAt: firebase.database.ServerValue.TIMESTAMP
       });
     }).catch(function (err) { showError(regForm, authMessage(err)); });
+  });
+
+  var rkBox = document.getElementById("accRanking");
+  if (rkBox) rkBox.addEventListener("change", function () {
+    var user = auth.currentUser, msg = document.getElementById("accRankingMsg");
+    if (!user) return;
+    db.ref("users/" + user.uid + "/rankingOptIn").set(rkBox.checked).then(function () {
+      msg.textContent = rkBox.checked ? "Listo: aparecerás en el ranking en cuanto FRY. lo actualice (cuando se confirme tu próximo pedido)." : "Listo: ya no aparecerás en el ranking.";
+      msg.style.display = "block";
+    }).catch(function () { rkBox.checked = !rkBox.checked; msg.textContent = "No se ha podido guardar. Inténtalo de nuevo."; msg.style.display = "block"; });
   });
 
   document.getElementById("accLogout").addEventListener("click", function () { auth.signOut(); });
@@ -200,6 +210,8 @@
     profileRef = db.ref("users/" + user.uid);
     profileRef.on("value", function (s) {
       profile = s.val();
+      var rk = document.getElementById("accRanking");
+      if (rk) rk.checked = !!(profile && profile.rankingOptIn === true);
       // Cuentas que ya existían sin perfil (p. ej. la del dueño): se crea uno básico.
       if (!profile && !profileCreating) {
         profileCreating = true;

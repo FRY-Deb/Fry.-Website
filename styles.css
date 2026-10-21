@@ -1608,3 +1608,38 @@ body.fry-intro-finished .fry-intro {
 .btn, .nav-cta, .nav-account, .nav-mobile .nav-mobile-cta, .upsell-btn, .cart-discount-btn, .cookie-banner-accept { border-radius: 999px; }
 .menu-card-soldout-whatsapp { border-radius: 999px; }
 @media (max-width: 959px) { .menu-sidebar a { border-radius: 999px; } }
+
+/* ---------- Ranking de clientes ---------- */
+.nav-rank { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; margin-right: 6px; border-radius: 999px; color: var(--cream); transition: color .25s var(--ease-out), background .25s var(--ease-out); }
+.nav-rank:hover { color: var(--red); background: rgba(255,255,255,.06); }
+body.rk-lock { overflow: hidden; }
+.rk-overlay { position: fixed; inset: 0; z-index: 600; display: flex; align-items: center; justify-content: center; padding: 20px; background: rgba(10,10,10,.86); opacity: 0; visibility: hidden; transition: opacity .3s var(--ease-out), visibility 0s linear .3s; }
+.rk-overlay.is-open { opacity: 1; visibility: visible; transition: opacity .3s var(--ease-out), visibility 0s linear 0s; }
+.rk-box { position: relative; width: 100%; max-width: 460px; max-height: 88vh; overflow-y: auto; background: var(--bg); border: 1px solid var(--line-strong); border-radius: 22px; padding: 30px 24px 24px; transform: translateY(14px); transition: transform .35s var(--ease-soft); }
+.rk-overlay.is-open .rk-box { transform: none; }
+.rk-close { position: absolute; top: 10px; right: 14px; width: 34px; height: 34px; font-size: 24px; color: var(--cream-mute); }
+.rk-close:hover { color: var(--red); }
+.rk-eyebrow { display: block; margin-bottom: 6px; }
+.rk-title { font-family: var(--display); text-transform: uppercase; font-size: clamp(26px, 6vw, 32px); line-height: 1; margin-bottom: 24px; }
+.rk-podium { display: grid; grid-template-columns: repeat(3, 1fr); align-items: end; gap: 8px; margin-bottom: 20px; min-height: 150px; }
+.rk-podium > .rk-empty { grid-column: 1 / -1; }
+.rk-col { display: flex; flex-direction: column; align-items: center; gap: 8px; min-width: 0; }
+.rk-name { font-family: var(--display); text-transform: uppercase; font-size: 17px; text-align: center; line-height: 1.1; overflow-wrap: anywhere; }
+.rk-bar { width: 100%; display: flex; align-items: flex-start; justify-content: center; padding-top: 8px; border-radius: 12px 12px 0 0; background: #2a2a2a; }
+.rk-num { font-family: var(--display); font-size: 34px; color: var(--cream); }
+.rk-pos1 .rk-bar { height: 110px; background: var(--red); }
+.rk-pos2 .rk-bar { height: 78px; }
+.rk-pos3 .rk-bar { height: 56px; background: #3a2a22; }
+.rk-pos1 .rk-name { font-size: 20px; color: var(--cream); }
+.rk-col.is-empty { opacity: .35; }
+.rk-empty { color: var(--cream-mute); font-size: 14px; text-align: center; padding: 18px 8px; }
+.rk-more { display: block; width: 100%; padding: 11px 16px; border: 1px solid var(--line-strong); border-radius: 999px; font-size: 12px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--cream); transition: background .25s var(--ease-out), color .25s var(--ease-out); }
+.rk-more:hover { background: var(--cream); color: var(--bg); }
+.rk-list { list-style: none; margin: 0; padding: 0; max-height: 0; overflow: hidden; opacity: 0; transition: max-height .5s var(--ease-out), opacity .35s ease, margin .35s ease; }
+.rk-overlay.is-full .rk-list { max-height: 900px; opacity: 1; margin: 14px 0 4px; }
+.rk-item { display: flex; align-items: center; gap: 14px; padding: 9px 4px; border-top: 1px solid var(--line); }
+.rk-item-pos { font-family: var(--display); font-size: 18px; color: var(--red); min-width: 28px; }
+.rk-item-name { font-size: 15px; color: var(--cream); }
+.rk-note { margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: var(--cream-mute); }
+.account-rank { margin: 6px 0 14px; }
+@media (max-width: 380px) { .nav-rank { width: 32px; height: 32px; margin-right: 2px; } }

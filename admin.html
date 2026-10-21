@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261065" />
+<link rel="stylesheet" href="styles.css?v=20261100" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -140,6 +140,7 @@
       <div class="admin-category" id="adminClientsSection">
         <h2 class="admin-category-title">Clientes con puntos</h2>
         <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Perfiles creados en la web y sus puntos. Los puntos se suman al pulsar "Sí se hizo" en un pedido. Aquí puedes ajustarlos a mano.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-bottom:12px;"><button type="button" id="rankingSyncBtn" class="admin-logout">Actualizar ranking de clientes</button><span id="rankingSyncMsg" style="color:var(--cream-mute); font-size:13px;"></span></div>
         <div id="adminClients"></div>
       </div>
 
@@ -174,7 +175,7 @@
 <script src="lib/manifest.js?v=20261092"></script>
 <script src="stock-requirements.js"></script>
 <script src="offers-requirements.js"></script>
-<script src="rewards-config.js"></script>
+<script src="rewards-config.js?v=20261100"></script>
 <script src="hours-config.js"></script>
 <script src="sheets-config.js?v=2"></script>
 <script>
@@ -244,6 +245,7 @@
       buildPanel();
       loadOrders();
       loadClients();
+      syncRankingAll().catch(function () {});
       buildHoursPanel();
     } else if (user) {
       loginBox.style.display = "none";
@@ -458,6 +460,28 @@
   }
 
   // ---------------------------------------------------------------
+  // Ranking público de clientes (nombre + puntos ganados en total)
+  // ---------------------------------------------------------------
+  function syncRankingFor(uid) {
+    return Promise.all([db.ref("users/" + uid).once("value"), db.ref("points/" + uid + "/log").once("value")]).then(function (res) {
+      var u = res[0].val();
+      var email = ((u && u.email) || "").toLowerCase();
+      var total = FRY_totalEarned(res[1].val() || {});
+      var ok = u && u.rankingOptIn === true && FRY_RANKING_EXCLUDE.indexOf(email) === -1 && total > 0;
+      return db.ref("ranking/" + uid).set(ok ? { name: FRY_rankingName(u.name), pts: total } : null);
+    });
+  }
+
+  function syncRankingAll() {
+    return Promise.all([db.ref("users").once("value"), db.ref("ranking").once("value")]).then(function (res) {
+      var users = res[0].val() || {}, current = res[1].val() || {};
+      var jobs = Object.keys(users).map(syncRankingFor);
+      Object.keys(current).forEach(function (uid) { if (!users[uid]) jobs.push(db.ref("ranking/" + uid).set(null)); });
+      return Promise.all(jobs).then(function () { return Object.keys(users).length; });
+    });
+  }
+
+  // ---------------------------------------------------------------
   // Hoja de cálculo de Google (pedidos, costes y beneficio)
   // ---------------------------------------------------------------
   function sheetsEnabled() { return typeof FRY_SHEETS !== "undefined" && FRY_SHEETS.url; }
@@ -530,7 +554,7 @@
         up["orders/" + key + "/confirmedAt"] = T;
         if (pts > 0) up["points/" + d.uid + "/log/" + key] = { type: "earn", points: pts, orderCode: code, ts: T };
         if (d.rewardId) up["points/" + d.uid + "/log/" + key + "_canje"] = { type: "redeem", points: FRY_REWARDS[d.rewardId].points, reward: FRY_REWARDS[d.rewardId].label, orderCode: code, ts: T };
-        return db.ref().update(up).then(function () { return sendOrderToSheet(key); });
+        return db.ref().update(up).then(function () { return Promise.all([sendOrderToSheet(key), syncRankingFor(d.uid).catch(function () {})]); });
       });
     }).catch(function () { alert("No se ha podido confirmar el pedido. Revisa la conexión y las reglas de Firebase."); });
   }
@@ -547,7 +571,7 @@
         up["points/" + d.uid + "/log/" + key] = null;
         up["points/" + d.uid + "/log/" + key + "_canje"] = null;
       }
-      return db.ref().update(up).then(function () { return sendOrderToSheet(key); });
+      return db.ref().update(up).then(function () { return Promise.all([sendOrderToSheet(key), d.uid ? syncRankingFor(d.uid).catch(function () {}) : null]); });
     }).catch(function () { alert("No se ha podido deshacer."); });
   }
 
@@ -711,6 +735,13 @@
   }
 
 
+
+  var rankingBtn = document.getElementById("rankingSyncBtn"), rankingMsg = document.getElementById("rankingSyncMsg");
+  if (rankingBtn) rankingBtn.addEventListener("click", function () {
+    rankingMsg.textContent = "Actualizando…";
+    syncRankingAll().then(function (n) { rankingMsg.textContent = "Ranking actualizado (" + n + " clientes revisados)."; })
+      .catch(function () { rankingMsg.textContent = "No se ha podido actualizar (¿has publicado las reglas nuevas de Firebase?)."; });
+  });
   // ---- Exportar todos los pedidos ----
   function loadAllOrders() {
     return db.ref("orders").orderByChild("timestamp").once("value").then(function (snap) {

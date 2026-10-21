@@ -75,3 +75,29 @@ function FRY_computeBalance(log, now, email) {
 function FRY_formatPoints(n) {
   return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
 }
+
+// ---------------------------------------------------------------
+// Ranking de clientes
+// ---------------------------------------------------------------
+// Cuentas que NO salen en el ranking (dueño y pareja).
+var FRY_RANKING_EXCLUDE = ["info.frygroup@gmail.com", "yaimaruramirez@gmail.com"];
+var FRY_RANKING_SIZE = 20;
+
+// "Laura García Pérez" -> "Laura G."   |   "Laura" -> "Laura"
+function FRY_rankingName(full) {
+  var parts = String(full || "").trim().split(/\s+/).filter(Boolean);
+  if (!parts.length) return "Cliente";
+  var cap = function (w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); };
+  if (parts.length === 1) return cap(parts[0]);
+  return cap(parts[0]) + " " + parts[parts.length - 1].charAt(0).toUpperCase() + ".";
+}
+
+// Puntos ganados con pedidos hasta hoy (no se restan los canjes ni caducan).
+function FRY_totalEarned(log) {
+  var t = 0;
+  Object.keys(log || {}).forEach(function (k) {
+    var e = log[k] || {};
+    if (e.type === "earn") t += Number(e.points) || 0;
+  });
+  return t;
+}

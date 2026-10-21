@@ -33,6 +33,11 @@
         ".validate": "newData.hasChildren(['name', 'email'])"
       }
     },
+    "ranking": {
+      ".read": true,
+      ".indexOn": ["pts"],
+      ".write": "auth != null && auth.token.email == 'info.frygroup@gmail.com'"
+    },
     "points": {
       ".read": "auth != null && auth.token.email == 'info.frygroup@gmail.com'",
       "$uid": {

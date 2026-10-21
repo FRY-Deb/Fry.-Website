@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261065" />
+<link rel="stylesheet" href="styles.css?v=20261100" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -75,6 +75,7 @@
         <div class="cf-field"><label for="regEmail">Email</label><input type="email" id="regEmail" autocomplete="username" required /></div>
         <div class="cf-field"><label for="regPass">Contraseña (mínimo 6 caracteres)</label><input type="password" id="regPass" autocomplete="new-password" required /></div>
         <div class="cf-field"><label for="regPass2">Repite la contraseña</label><input type="password" id="regPass2" autocomplete="new-password" required /></div>
+        <label class="cf-consent"><input type="checkbox" id="regRanking" /> Quiero aparecer en el ranking de clientes de la web, solo con mi nombre y la inicial del apellido (por ejemplo, «Laura G.»). Es opcional y puedo cambiarlo cuando quiera.</label>
         <label class="cf-consent"><input type="checkbox" id="regConsent" /> He leído la <a href="privacidad.html" target="_blank" rel="noopener">Política de Privacidad</a> y acepto que FRY. guarde mis datos y mis puntos. *</label>
         <p class="cf-error" data-acc-error style="display:none;"></p>
         <button type="submit" class="btn btn-primary">Crear mi cuenta</button>
@@ -96,6 +97,9 @@
         <span class="account-balance-num" id="accBalance">0</span>
         <span class="account-balance-note" id="accExpiry"></span>
       </div>
+
+      <label class="cf-consent account-rank"><input type="checkbox" id="accRanking" /> Quiero aparecer en el ranking de clientes de la web, solo con mi nombre y la inicial del apellido (por ejemplo, «Laura G.»).</label>
+      <p class="account-note" id="accRankingMsg" style="display:none;"></p>
 
       <h2 class="account-h2">Recompensas</h2>
       <div class="account-rewards" id="accRewards"></div>
@@ -149,12 +153,13 @@
 <script defer src="lib/manifest.js?v=20261092"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
+<script defer src="ranking.js?v=1"></script>
 <script defer src="cart.js?v=20261091"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script defer src="firebase-config.js"></script>
-<script defer src="rewards-config.js"></script>
-<script defer src="cuenta.js?v=20261032"></script>
+<script defer src="rewards-config.js?v=20261100"></script>
+<script defer src="cuenta.js?v=20261100"></script>
 </body>
 </html>
