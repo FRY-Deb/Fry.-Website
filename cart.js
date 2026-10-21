@@ -244,11 +244,23 @@
   // ---------------------------------------------------------------
   var UPSELL_KEY = "fryUpsellShown";
   var upsellOpen = false, accountPromptPending = false;
+  var UPSELL_POTATOES = [
+    { value: "Patatas Fritas — Pequeña", price: "3,40€", label: "Fritas pequeñas — 3,40€" },
+    { value: "Patatas Fritas — Mediana", price: "5,20€", label: "Fritas medianas — 5,20€" },
+    { value: "Patatas Fritas — Grande", price: "6,50€", label: "Fritas familiares — 6,50€" },
+    { value: "Patatas Especiales FRY. — Pequeña", price: "5,20€", label: "Especiales pequeñas (con Ranch y miel) — 5,20€" },
+    { value: "Patatas Especiales FRY. — Grande", price: "10,00€", label: "Especiales familiares (con Ranch y miel) — 10,00€" }
+  ];
+  var UPSELL_BITES = [
+    { value: "FRY BITES — 10 uds", price: "4,50€", label: "10 uds — 4,50€" },
+    { value: "FRY BITES — 20 uds", price: "7,50€", label: "20 uds + tarrina de Salsa FRY. — 7,50€" },
+    { value: "FRY BITES — 30 uds", price: "10,50€", label: "30 uds + tarrina de Salsa FRY. — 10,50€" }
+  ];
   var UPSELL_DRINKS = [
-    { value: "Coca-Cola 2L", label: "Coca-Cola" },
-    { value: "Coca-Cola Zero 2L", label: "Coca-Cola Zero" },
-    { value: "Fanta Naranja 2L", label: "Fanta Naranja" },
-    { value: "Nestea 1,5L", label: "Nestea (1,5 L)" }
+    { value: "Coca-Cola 2L", price: "3,50€", label: "Coca-Cola — 3,50€" },
+    { value: "Coca-Cola Zero 2L", price: "3,50€", label: "Coca-Cola Zero — 3,50€" },
+    { value: "Fanta Naranja 2L", price: "3,50€", label: "Fanta Naranja — 3,50€" },
+    { value: "Nestea 1,5L", price: "3,50€", label: "Nestea (1,5 L) — 3,50€" }
   ];
 
   function upsellSuggestions() {
@@ -256,9 +268,9 @@
     var has = function (re) { return names.some(function (n) { return re.test(n); }); };
     var fiesta = has(/^Fiesta Mixta/);
     var list = [];
-    if (!fiesta && !has(/^Patatas/)) list.push({ kind: "item", name: "Patatas Fritas — Mediana", price: "5,20€", title: "Patatas fritas medianas", text: "Para 2-3 personas, con nuestra sazón cajún picante." });
-    if (!has(/^FRY BITES/)) list.push({ kind: "item", name: "FRY BITES — 10 uds", price: "4,50€", title: "FRY BITES (10 uds)", text: "Bocaditos de pollo rebozado, crujientes y picantes, para picar." });
-    if (!fiesta && !has(/(Coca-Cola|Fanta|Nestea|Refresco)/i)) list.push({ kind: "drink", price: "3,50€", title: "Bebida de 2 L", text: "Para compartir. Elige tu sabor." });
+    if (!fiesta && !has(/^Patatas/)) list.push({ title: "Patatas", text: "Fritas con sazón cajún o especiales. Elige el tamaño.", options: UPSELL_POTATOES, sel: 1 });
+    if (!has(/^FRY BITES/)) list.push({ title: "FRY BITES", text: "Bocaditos de pollo rebozado, crujientes y picantes, para picar.", options: UPSELL_BITES, sel: 0 });
+    if (!fiesta && !has(/(Coca-Cola|Fanta|Nestea|Refresco)/i)) list.push({ title: "Bebida de 2 L", text: "Para compartir. Elige tu sabor.", options: UPSELL_DRINKS, sel: 0 });
     return list;
   }
 
@@ -286,14 +298,12 @@
     overlay.setAttribute("role", "dialog");
     overlay.setAttribute("aria-modal", "true");
     var items = sugg.map(function (g, idx) {
-      var opts = g.kind === "drink"
-        ? '<select class="upsell-sauce-select" data-upsell-drink aria-label="Sabor de la bebida">' +
-            UPSELL_DRINKS.map(function (d) { return '<option value="' + escHTML(d.value) + '">' + escHTML(d.label) + "</option>"; }).join("") + "</select>"
-        : "";
+      var opts = '<select class="menu-card-select upsell-select" data-upsell-select aria-label="Elegir ' + escHTML(g.title) + '">' +
+        g.options.map(function (o, k) { return '<option value="' + escHTML(o.value) + '" data-price="' + escHTML(o.price) + '"' + (k === g.sel ? " selected" : "") + ">" + escHTML(o.label) + "</option>"; }).join("") + "</select>";
       return '<div class="upsell-item" data-upsell-idx="' + idx + '">' +
-        '<p class="upsell-item-text"><strong>' + escHTML(g.title) + '</strong> · <span class="upsell-item-price">' + escHTML(g.price) + "</span><br>" + escHTML(g.text) + "</p>" +
-        opts +
-        '<button type="button" class="upsell-btn upsell-btn-small" data-upsell-add>+ Añadir</button>' +
+        '<p class="upsell-item-text"><strong>' + escHTML(g.title) + "</strong><br>" + escHTML(g.text) + "</p>" +
+        '<div class="upsell-row">' + opts +
+        '<button type="button" class="menu-card-add upsell-add" data-upsell-add>+ Añadir</button></div>' +
       "</div>";
     }).join("");
     overlay.innerHTML =
@@ -316,10 +326,9 @@
     for (var k = 0; k < addBtns.length; k++) {
       addBtns[k].addEventListener("click", function () {
         var row = this.closest(".upsell-item");
-        var g = sugg[Number(row.getAttribute("data-upsell-idx"))];
-        var name = g.name;
-        if (g.kind === "drink") name = row.querySelector("[data-upsell-drink]").value;
-        addToCart(name, g.price);
+        var sel = row.querySelector("[data-upsell-select]");
+        var opt = sel.options[sel.selectedIndex];
+        addToCart(opt.value, opt.getAttribute("data-price"));
         this.textContent = "✓ Añadido";
         this.disabled = true;
         row.classList.add("is-added");

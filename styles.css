@@ -1654,3 +1654,9 @@ body.rk-lock { overflow: hidden; }
 .upsell-item-price { color: var(--red); font-family: var(--display); }
 .upsell-item .upsell-sauce-select { width: 100%; margin: 4px 0 10px; }
 .upsell-btn[disabled] { opacity: .7; cursor: default; background: #2a2a2a; color: var(--cream); }
+
+/* Venta sugerida: mismos desplegables que la carta */
+.upsell-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 8px; }
+.upsell-row .upsell-select { flex: 1 1 200px; min-width: 0; width: auto; }
+.upsell-row .upsell-add { margin-top: 0; grid-column: auto; }
+.upsell-add[disabled] { opacity: .7; cursor: default; background: var(--red); color: var(--cream); border-color: var(--red); }
