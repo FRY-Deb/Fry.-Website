@@ -594,9 +594,19 @@
         return '<div class="admin-item" style="gap:12px; flex-wrap:wrap;">' +
           '<span class="admin-item-name">' + esc(r.u.name) + ' · ' + esc(r.u.email) + ' · ' + esc(r.u.phone) + '</span>' +
           '<span><strong>' + FRY_formatPoints(r.bal) + '</strong> pts ' +
-          '<button type="button" class="admin-logout" style="padding:4px 10px;" data-adjust="' + esc(r.uid) + '">Ajustar</button></span>' +
+          '<button type="button" class="admin-logout" style="padding:4px 10px;" data-adjust="' + esc(r.uid) + '">Ajustar</button> ' +
+          '<button type="button" class="admin-logout" style="padding:4px 10px;" data-rankopt="' + esc(r.uid) + '">Ranking: ' + (r.u.rankingOptIn === true ? 'SÍ (quitar)' : 'NO (añadir)') + '</button></span>' +
         '</div>';
       }).join("");
+      var rankBtns = el.querySelectorAll("[data-rankopt]");
+      for (var k = 0; k < rankBtns.length; k++) {
+        rankBtns[k].addEventListener("click", function () {
+          var uid = this.dataset.rankopt, cur = users[uid] && users[uid].rankingOptIn === true;
+          if (!cur && !confirm("Esta persona aparecerá en el ranking público con su nombre de pila y la inicial del apellido. ¿Está de acuerdo? ¿Añadirla?")) return;
+          db.ref("users/" + uid + "/rankingOptIn").set(!cur).then(function () { return syncRankingFor(uid); }).then(loadClients)
+            .catch(function () { alert("No se ha podido cambiar (¿reglas de Firebase publicadas?)."); });
+        });
+      }
       var btns = el.querySelectorAll("[data-adjust]");
       for (var i = 0; i < btns.length; i++) {
         btns[i].addEventListener("click", function () {
