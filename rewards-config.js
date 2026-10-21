@@ -89,7 +89,7 @@ function FRY_rankingName(full) {
   if (!parts.length) return "Cliente";
   var cap = function (w) { return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(); };
   if (parts.length === 1) return cap(parts[0]);
-  return cap(parts[0]) + " " + parts[parts.length - 1].charAt(0).toUpperCase() + ".";
+  return cap(parts[0]) + " " + parts[1].charAt(0).toUpperCase() + ".";   // nombre + inicial del primer apellido
 }
 
 // Puntos ganados con pedidos hasta hoy (no se restan los canjes ni caducan).
