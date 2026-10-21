@@ -23,6 +23,8 @@
     });
   }
 
+  function fmt(n) { return String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g, "."); }
+
   function el(tag, cls, text) {
     var e = document.createElement(tag);
     if (cls) e.className = cls;
@@ -40,7 +42,7 @@
     var pod = el("div", "rk-podium"); pod.setAttribute("data-rk-podium", ""); box.appendChild(pod);
     var more = el("button", "rk-more", "Ver listado completo"); more.type = "button"; more.setAttribute("data-rk-more", ""); box.appendChild(more);
     var ol = el("ol", "rk-list"); ol.setAttribute("data-rk-list", ""); box.appendChild(ol);
-    box.appendChild(el("p", "rk-note", "Cuenta todos los puntos ganados con pedidos, se hayan gastado o no. Si tienes cuenta, puedes aparecer activándolo en «Mi cuenta»."));
+    box.appendChild(el("p", "rk-note", "Puntos totales acumulados con pedidos, se hayan gastado o no. Si tienes cuenta, puedes aparecer activándolo en «Mi cuenta»."));
     o.appendChild(box); document.body.appendChild(o);
 
     close.addEventListener("click", closeModal);
@@ -65,6 +67,7 @@
       var r = rows[i];
       var col = el("div", "rk-col rk-pos" + (i + 1) + (r ? "" : " is-empty"));
       col.appendChild(el("span", "rk-name", r ? r.name : "—"));
+      col.appendChild(el("span", "rk-pts", r ? fmt(r.pts) + " pts" : ""));
       var bar = el("div", "rk-bar"); bar.appendChild(el("span", "rk-num", String(i + 1)));
       col.appendChild(bar); pod.appendChild(col);
     });
@@ -72,6 +75,7 @@
       var li = el("li", "rk-item"); li.value = k + 4;
       li.appendChild(el("span", "rk-item-pos", String(k + 4)));
       li.appendChild(el("span", "rk-item-name", r.name));
+      li.appendChild(el("span", "rk-item-pts", fmt(r.pts) + " pts"));
       ol.appendChild(li);
     });
     more.style.display = rows.length > 3 ? "" : "none";
@@ -92,7 +96,7 @@
       listRef.on("value", function (snap) {
         var rows = [];
         snap.forEach(function (c) { var v = c.val(); if (v && v.name) rows.push({ name: String(v.name), pts: Number(v.pts) || 0 }); });
-        rows.sort(function (a, b) { return b.pts - a.pts; });     // más puntos primero (no se muestran los puntos)
+        rows.sort(function (a, b) { return b.pts - a.pts; });     // más puntos primero
         render(rows.slice(0, 20));
       }, function () {
         overlay.querySelector("[data-rk-podium]").innerHTML = "";

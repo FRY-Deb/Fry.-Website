@@ -1643,3 +1643,8 @@ body.rk-lock { overflow: hidden; }
 .rk-note { margin: 16px 0 0; font-size: 12px; line-height: 1.5; color: var(--cream-mute); }
 .account-rank { margin: 6px 0 14px; }
 @media (max-width: 380px) { .nav-rank { width: 32px; height: 32px; margin-right: 2px; } }
+
+.rk-pts { font-family: var(--sans); font-size: 12px; font-weight: 700; color: var(--red); letter-spacing: .02em; margin-top: -4px; }
+.rk-pos1 .rk-pts { font-size: 13px; }
+.rk-item-name { flex: 1; }
+.rk-item-pts { font-size: 13px; font-weight: 700; color: var(--cream-mute); white-space: nowrap; }

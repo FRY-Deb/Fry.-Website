@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261100" />
+<link rel="stylesheet" href="styles.css?v=20261103" />
 <style>
   .admin-wrap { max-width: 640px; margin: 0 auto; padding: 100px 24px 80px; }
   .admin-login {
@@ -603,7 +603,7 @@
       for (var k = 0; k < rankBtns.length; k++) {
         rankBtns[k].addEventListener("click", function () {
           var uid = this.dataset.rankopt, cur = users[uid] && users[uid].rankingOptIn === true;
-          if (!cur && !confirm("Esta persona aparecerá en el ranking público con su nombre de pila y la inicial del apellido. ¿Está de acuerdo? ¿Añadirla?")) return;
+          if (!cur && !confirm("Esta persona aparecerá en el ranking público con su nombre, la inicial del apellido y sus puntos acumulados. ¿Está de acuerdo? ¿Añadirla?")) return;
           db.ref("users/" + uid + "/rankingOptIn").set(!cur).then(function () { return syncRankingFor(uid); }).then(loadClients)
             .catch(function () { alert("No se ha podido cambiar (¿reglas de Firebase publicadas?)."); });
         });
