@@ -57,11 +57,13 @@
     "FRY BITES — 20 uds": 7.5,
     "FRY BITES — 30 uds": 10.5,
     "Tarrina de Salsa FRY.": 2.5,
+    "Miel": 1.5,
     "Tarrina de Salsa Ranch FRY.": 2.5
   };
 
   // Nombres antiguos de la Ranch (30 g y 200 g) en carritos guardados antes del cambio.
   var LEGACY_NAMES = {
+    "Miel — Tarrina 30g": "Miel",
     "Salsa Ranch FRY — Tarrina 30g": "Tarrina de Salsa Ranch FRY.",
     "Salsa Ranch FRY — Tarrina 200g": "Tarrina de Salsa Ranch FRY."
   };
