@@ -651,8 +651,70 @@
     });
   }
 
+  // ---- Aviso de pedido nuevo (sonido, banner, título, notificación, pantalla encendida) ----
+  var knownOrders = null, alertOn = true, audioCtx = null, wakeLock = null, titleTimer = null, baseTitle = document.title;
+  try { alertOn = localStorage.getItem("fryAlertOn") !== "0"; } catch (e) {}
+  function getAudio() {
+    try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch (e) {}
+    return audioCtx;
+  }
+  function beep() {
+    var ctx = getAudio(); if (!ctx) return;
+    [0, 0.35, 0.7].forEach(function (t) {
+      var o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = "square"; o.frequency.value = t === 0.35 ? 660 : 880;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime + t); g.gain.exponentialRampToValueAtTime(0.35, ctx.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + t + 0.3);
+      o.connect(g); g.connect(ctx.destination); o.start(ctx.currentTime + t); o.stop(ctx.currentTime + t + 0.32);
+    });
+  }
+  function requestWake() {
+    if (!alertOn || !navigator.wakeLock || wakeLock) return;
+    navigator.wakeLock.request("screen").then(function (l) { wakeLock = l; l.addEventListener("release", function () { wakeLock = null; }); }).catch(function () {});
+  }
+  document.addEventListener("visibilitychange", function () { if (document.visibilityState === "visible") requestWake(); });
+  function stopTitleFlash() { if (titleTimer) { clearInterval(titleTimer); titleTimer = null; } document.title = baseTitle; }
+  function showNewOrder(list) {
+    var bar = document.getElementById("newOrderBar");
+    if (!bar) {
+      bar = document.createElement("div"); bar.id = "newOrderBar";
+      bar.style.cssText = "position:sticky;top:0;z-index:50;background:#d62621;color:#fff;padding:14px 18px;border-radius:999px;margin:0 0 12px;font-weight:700;cursor:pointer;text-align:center;";
+      bar.addEventListener("click", function () { bar.style.display = "none"; stopTitleFlash(); });
+      ordersEl.parentNode.insertBefore(bar, ordersEl);
+    }
+    var total = list.reduce(function (a, o) { return a + (Number(o.data.total) || 0); }, 0);
+    bar.textContent = "🔔 ¡Pedido nuevo! " + (list.length > 1 ? list.length + " pedidos · " : "") + formatEuro(total) + " (toca para cerrar)";
+    bar.style.display = "block";
+    beep();
+    if (!titleTimer) { var on = false; titleTimer = setInterval(function () { on = !on; document.title = on ? "🔔 PEDIDO NUEVO" : baseTitle; }, 900); }
+    try { if (window.Notification && Notification.permission === "granted") new Notification("FRY. — Pedido nuevo", { body: formatEuro(total), tag: "fry-order" }); } catch (e) {}
+    if (navigator.vibrate) navigator.vibrate([300, 150, 300]);
+  }
+  function detectNewOrders(orders) {
+    var fresh = [];
+    if (knownOrders) orders.forEach(function (o) { if (!knownOrders[o.key] && o.data.status !== "confirmed") fresh.push(o); });
+    knownOrders = {}; orders.forEach(function (o) { knownOrders[o.key] = 1; });
+    if (fresh.length && alertOn) showNewOrder(fresh);
+  }
+  function buildAlertToggle() {
+    var b = document.createElement("button");
+    b.type = "button"; b.className = "admin-logout"; b.style.cssText = "margin:0 0 12px;";
+    function label() { b.textContent = alertOn ? "🔔 Aviso de pedidos: ACTIVO (toca para silenciar)" : "🔕 Aviso de pedidos: desactivado (toca para activar)"; }
+    label();
+    b.addEventListener("click", function () {
+      alertOn = !alertOn; try { localStorage.setItem("fryAlertOn", alertOn ? "1" : "0"); } catch (e) {}
+      label(); if (alertOn) { beep(); requestWake(); if (window.Notification && Notification.permission === "default") Notification.requestPermission(); } else { stopTitleFlash(); if (wakeLock) wakeLock.release(); }
+    });
+    var hint = document.createElement("p"); hint.className = "admin-orders-empty"; hint.style.cssText = "margin:0 0 12px;font-size:.85rem;";
+    hint.textContent = "Para que suene y avise, deja esta página abierta (el móvil con la pantalla encendida y el volumen subido).";
+    ordersEl.parentNode.insertBefore(hint, ordersEl); ordersEl.parentNode.insertBefore(b, hint);
+    var first = function () { getAudio(); requestWake(); if (alertOn && window.Notification && Notification.permission === "default") Notification.requestPermission(); document.removeEventListener("click", first); };
+    document.addEventListener("click", first);
+  }
+
   function loadOrders() {
     if (ordersLoaded) return;
+    buildAlertToggle();
     ordersLoaded = true;
 
     db.ref("orders").orderByChild("timestamp").limitToLast(20).on("value", function (snapshot) {
@@ -661,6 +723,7 @@
         orders.push({ key: child.key, data: child.val() });
       });
       orders.reverse(); // el más reciente primero
+      detectNewOrders(orders);
 
       if (!orders.length) {
         ordersEl.innerHTML = '<p class="admin-orders-empty">Todavía no ha llegado ningún pedido.</p>';
@@ -680,6 +743,9 @@
           ? "<div>Canje de puntos: " + esc(d.rewardLabel) + " (" + FRY_formatPoints(d.rewardPoints) + " pts)</div>"
           : "";
         var confirmed = d.status === "confirmed";
+        var prep = d.prep || "nuevo";
+        var prepHtml = confirmed ? "" : '<div class="admin-order-meta" style="margin-top:10px;">Estado: <strong>' + ({ nuevo: "Nuevo", preparando: "Preparando", encamino: "En camino" }[prep] || "Nuevo") + "</strong></div><div style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;\">" +
+          [["preparando", "👨‍🍳 Preparando"], ["encamino", "🛵 En camino"]].map(function (p) { return '<button type="button" class="admin-logout" data-order-prep="' + o.key + '" data-prep="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div>";
         var pts = d.uid ? Math.floor((Number(d.pointsBase) || 0) * FRY_POINTS_PER_EURO) : 0;
         var profileHtml;
         if (d.uid) {
@@ -704,7 +770,7 @@
               '<div class="admin-order-summary-left">' +
                 '<span class="admin-order-code">#' + code + "</span>" +
                 '<span class="admin-order-total" style="margin-top:0;">' + formatEuro(d.total) + "</span>" +
-                (confirmed ? ' <span class="admin-computed is-ok">Hecho</span>' : "") +
+                (confirmed ? ' <span class="admin-computed is-ok">Hecho</span>' : (prep !== "nuevo" ? ' <span class="admin-computed">' + (prep === "encamino" ? "En camino" : "Preparando") + "</span>" : ' <span class="admin-computed" style="background:#d62621;color:#fff;">Nuevo</span>')) +
               "</div>" +
               '<span class="admin-order-arrow">▶</span>' +
             "</div>" +
@@ -716,7 +782,7 @@
                 "Envío: " + formatEuro(d.shippingCost) + " · " +
                 "Pago: " + esc(d.paymentMethod || "-") +
               "</div>" +
-              profileHtml +
+              prepHtml + profileHtml +
               '<button type="button" class="admin-order-delete" data-order-delete="' + o.key + '">Eliminar este pedido</button>' +
             "</div>" +
           "</div>"
@@ -741,6 +807,13 @@
         confirmBtns[c].addEventListener("click", function (e) {
           e.stopPropagation();
           confirmOrder(this.dataset.orderConfirm);
+        });
+      }
+      var prepBtns = ordersEl.querySelectorAll("[data-order-prep]");
+      for (var pb = 0; pb < prepBtns.length; pb++) {
+        prepBtns[pb].addEventListener("click", function (e) {
+          e.stopPropagation();
+          db.ref("orders/" + this.dataset.orderPrep + "/prep").set(this.dataset.prep);
         });
       }
       var undoBtns = ordersEl.querySelectorAll("[data-order-undo]");
