@@ -128,6 +128,11 @@
       <div class="admin-category" id="adminOrdersSection">
         <h2 class="admin-category-title">Pedidos recientes</h2>
         <p style="color:var(--cream-mute); font-size:13px; margin-bottom:16px;">Cuando te llegue un pedido por WhatsApp con un código (ej. "Pedido #A3F92"), búscalo aquí y compara el total real con el que te diga el mensaje.</p>
+        <div style="display:flex; flex-wrap:wrap; gap:10px; margin-bottom:8px;">
+          <button type="button" id="exportSheetBtn" class="admin-logout">Enviar TODOS los pedidos a la hoja de cálculo</button>
+          <button type="button" id="exportCsvBtn" class="admin-logout">Descargar todos en CSV</button>
+        </div>
+        <p id="exportMsg" style="color:var(--cream-mute); font-size:13px; margin:0 0 16px;"></p>
         <button type="button" id="deleteAllOrdersBtn" class="admin-logout" style="margin-bottom:16px;">Borrar todos los pedidos</button>
         <div id="adminOrders"></div>
       </div>
@@ -171,6 +176,7 @@
 <script src="offers-requirements.js"></script>
 <script src="rewards-config.js"></script>
 <script src="hours-config.js"></script>
+<script src="sheets-config.js"></script>
 <script>
 (function () {
   "use strict";
@@ -451,11 +457,61 @@
     });
   }
 
+  // ---------------------------------------------------------------
+  // Hoja de cálculo de Google (pedidos, costes y beneficio)
+  // ---------------------------------------------------------------
+  function sheetsEnabled() { return typeof FRY_SHEETS !== "undefined" && FRY_SHEETS.url; }
+
+  function orderPayload(key, d) {
+    return {
+      code: key.slice(-6).toUpperCase(),
+      ts: Number(d.timestamp) || Date.now(),
+      status: d.status === "confirmed" ? "confirmed" : "pending",
+      customerName: d.customerName || "",
+      deliveryMode: d.deliveryMode || "delivery",
+      shippingZone: d.shippingZone || "",
+      paymentMethod: d.paymentMethod || "",
+      offerCode: d.offerCode || "",
+      subtotal: Number(d.subtotal) || 0,
+      discountAmount: Number(d.discountAmount) || 0,
+      rewardDiscount: Number(d.rewardDiscount) || 0,
+      shippingCost: d.shippingCost == null ? 0 : Number(d.shippingCost) || 0,
+      total: d.total == null ? null : Number(d.total),
+      items: (d.items || []).map(function (i) { return { name: i.name, qty: Number(i.qty) || 0, price: Number(i.price) || 0 }; })
+    };
+  }
+
+  function sendToSheet(list) {
+    if (!sheetsEnabled()) return Promise.resolve({ skipped: true });
+    return fetch(FRY_SHEETS.url, { method: "POST", body: JSON.stringify({ token: FRY_SHEETS.token, orders: list }) })
+      .then(function (r) { return r.json(); })
+      .catch(function () { return { unknown: true }; });
+  }
+
+  function sendOrderToSheet(key) {
+    if (!sheetsEnabled()) return Promise.resolve();
+    return db.ref("orders/" + key).once("value").then(function (snap) {
+      var d = snap.val();
+      if (!d) return;
+      return sendToSheet([orderPayload(key, d)]).then(function (res) {
+        if (res && res.error) alert("La hoja de cálculo ha respondido con un error: " + res.error);
+        else if (res && res.unknown) alert("El pedido se ha confirmado, pero no he podido comprobar que llegara a la hoja de cálculo. Revísala o usa «Enviar TODOS los pedidos».");
+      });
+    });
+  }
+
   function confirmOrder(key) {
     db.ref("orders/" + key).once("value").then(function (snap) {
       var d = snap.val();
-      if (!d || !d.uid) { alert("Este pedido no tiene perfil."); return; }
+      if (!d) return;
       if (d.status === "confirmed") return;
+      if (!d.uid) {
+        // pedido sin perfil: no hay puntos, pero se marca como hecho y va a la hoja de cálculo
+        var upNp = {};
+        upNp["orders/" + key + "/status"] = "confirmed";
+        upNp["orders/" + key + "/confirmedAt"] = firebase.database.ServerValue.TIMESTAMP;
+        return db.ref().update(upNp).then(function () { return sendOrderToSheet(key); });
+      }
       return db.ref("points/" + d.uid + "/log").once("value").then(function (ls) {
         var bal = FRY_computeBalance(ls.val() || {}, Date.now(), d.customerEmail).available;
         if (d.rewardId) {
@@ -474,7 +530,7 @@
         up["orders/" + key + "/confirmedAt"] = T;
         if (pts > 0) up["points/" + d.uid + "/log/" + key] = { type: "earn", points: pts, orderCode: code, ts: T };
         if (d.rewardId) up["points/" + d.uid + "/log/" + key + "_canje"] = { type: "redeem", points: FRY_REWARDS[d.rewardId].points, reward: FRY_REWARDS[d.rewardId].label, orderCode: code, ts: T };
-        return db.ref().update(up);
+        return db.ref().update(up).then(function () { return sendOrderToSheet(key); });
       });
     }).catch(function () { alert("No se ha podido confirmar el pedido. Revisa la conexión y las reglas de Firebase."); });
   }
@@ -491,7 +547,7 @@
         up["points/" + d.uid + "/log/" + key] = null;
         up["points/" + d.uid + "/log/" + key + "_canje"] = null;
       }
-      return db.ref().update(up);
+      return db.ref().update(up).then(function () { return sendOrderToSheet(key); });
     }).catch(function () { alert("No se ha podido deshacer."); });
   }
 
@@ -577,7 +633,10 @@
               ? '<div class="admin-order-done">✔ Pedido hecho — puntos sumados.</div><button type="button" class="admin-order-delete" data-order-undo="' + o.key + '">Deshacer</button>'
               : '<button type="button" class="admin-logout" data-order-confirm="' + o.key + '" style="margin-top:10px;">Sí se hizo — sumar ' + FRY_formatPoints(pts) + " puntos" + (d.rewardId ? " y descontar " + FRY_formatPoints(d.rewardPoints) : "") + "</button>");
         } else {
-          profileHtml = '<div class="admin-order-profile" style="color:var(--cream-mute);">Pedido sin perfil: no suma puntos.</div>';
+          profileHtml = '<div class="admin-order-profile" style="color:var(--cream-mute);">Pedido sin perfil: no suma puntos.</div>' +
+            (confirmed
+              ? '<div class="admin-order-done">✔ Pedido hecho.</div><button type="button" class="admin-order-delete" data-order-undo="' + o.key + '">Deshacer</button>'
+              : '<button type="button" class="admin-logout" data-order-confirm="' + o.key + '" style="margin-top:10px;">Sí se hizo</button>');
         }
         return (
           '<div class="admin-order-card">' +
@@ -651,6 +710,54 @@
     });
   }
 
+
+  // ---- Exportar todos los pedidos ----
+  function loadAllOrders() {
+    return db.ref("orders").orderByChild("timestamp").once("value").then(function (snap) {
+      var list = [];
+      snap.forEach(function (child) { list.push({ key: child.key, data: child.val() }); });
+      return list;
+    });
+  }
+  var exportMsg = document.getElementById("exportMsg");
+  var exportSheetBtn = document.getElementById("exportSheetBtn");
+  var exportCsvBtn = document.getElementById("exportCsvBtn");
+  if (exportSheetBtn) exportSheetBtn.addEventListener("click", function () {
+    if (!sheetsEnabled()) { exportMsg.textContent = "La hoja de cálculo todavía no está conectada (falta la dirección en sheets-config.js)."; return; }
+    exportMsg.textContent = "Enviando…";
+    loadAllOrders().then(function (list) {
+      var payload = list.map(function (o) { return orderPayload(o.key, o.data); });
+      var sent = 0, chain = Promise.resolve();
+      for (var i = 0; i < payload.length; i += 25) {
+        (function (chunk) {
+          chain = chain.then(function () { return sendToSheet(chunk); }).then(function (res) {
+            if (res && res.error) throw new Error(res.error);
+            sent += chunk.length; exportMsg.textContent = "Enviando… " + sent + " de " + payload.length;
+          });
+        })(payload.slice(i, i + 25));
+      }
+      return chain.then(function () { exportMsg.textContent = "Listo: " + payload.length + " pedidos enviados (los que ya estaban en la hoja no se duplican)."; });
+    }).catch(function (e) { exportMsg.textContent = "No se ha podido enviar: " + (e && e.message ? e.message : "error de conexión"); });
+  });
+  if (exportCsvBtn) exportCsvBtn.addEventListener("click", function () {
+    exportMsg.textContent = "Preparando…";
+    loadAllOrders().then(function (list) {
+      var q = function (v) { return '"' + String(v == null ? "" : v).replace(/"/g, '""') + '"'; };
+      var rows = [["Codigo", "Fecha", "Estado", "Cliente", "Entrega", "Zona", "Pago", "Oferta", "Subtotal", "Descuento oferta", "Descuento canje", "Envio", "Total", "Productos"]];
+      list.forEach(function (o) {
+        var d = o.data, t = d.timestamp ? new Date(Number(d.timestamp)) : null;
+        rows.push([o.key.slice(-6).toUpperCase(), t ? t.toLocaleString("es-ES") : "", d.status === "confirmed" ? "Confirmado" : "Pendiente",
+          d.customerName, d.deliveryMode, d.shippingZone, d.paymentMethod, d.offerCode, d.subtotal, d.discountAmount, d.rewardDiscount || 0,
+          d.shippingCost == null ? "" : d.shippingCost, d.total == null ? "" : d.total,
+          (d.items || []).map(function (i) { return i.qty + "x " + i.name; }).join(" | ")]);
+      });
+      var csv = "\uFEFF" + rows.map(function (r) { return r.map(q).join(","); }).join("\r\n");
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+      a.download = "pedidos-fry.csv"; document.body.appendChild(a); a.click(); a.remove();
+      exportMsg.textContent = "Descargado: " + list.length + " pedidos.";
+    }).catch(function () { exportMsg.textContent = "No se han podido cargar los pedidos."; });
+  });
   var deleteAllBtn = document.getElementById("deleteAllOrdersBtn");
   if (deleteAllBtn && !deleteAllBtn.dataset.bound) {
     deleteAllBtn.dataset.bound = "1";
