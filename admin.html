@@ -175,7 +175,7 @@
 <script src="lib/manifest.js?v=20261092"></script>
 <script src="stock-requirements.js"></script>
 <script src="offers-requirements.js"></script>
-<script src="rewards-config.js?v=20261101"></script>
+<script src="rewards-config.js?v=20261102"></script>
 <script src="hours-config.js"></script>
 <script src="sheets-config.js?v=2"></script>
 <script>
@@ -467,8 +467,9 @@
       var u = res[0].val();
       var email = ((u && u.email) || "").toLowerCase();
       var total = FRY_totalEarned(res[1].val() || {});
-      var ok = u && u.rankingOptIn === true && FRY_RANKING_EXCLUDE.indexOf(email) === -1 && total > 0;
-      return db.ref("ranking/" + uid).set(ok ? { name: FRY_rankingName(u.name), pts: total } : null);
+      var forced = FRY_RANKING_FORCE[email];
+      var ok = u && (u.rankingOptIn === true || !!forced) && FRY_RANKING_EXCLUDE.indexOf(email) === -1 && total > 0;
+      return db.ref("ranking/" + uid).set(ok ? { name: forced || FRY_rankingName(u.name), pts: total } : null);
     });
   }
 

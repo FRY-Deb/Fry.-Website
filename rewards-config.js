@@ -101,3 +101,10 @@ function FRY_totalEarned(log) {
   });
   return t;
 }
+
+// Clientas que salen en el ranking aunque no hayan marcado la casilla (el dueño lo ha decidido),
+// con el nombre exacto que se muestra. Clave = email en minúsculas.
+var FRY_RANKING_FORCE = {
+  "sindijaguilar@gmail.com": "Sindi A.",
+  "aillencoronel1928@gmail.com": "Aillen R."
+};
