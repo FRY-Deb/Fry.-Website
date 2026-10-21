@@ -237,10 +237,102 @@
     if (o) o.classList.remove("is-open");
   }
 
+  // ---------------------------------------------------------------
+  // Venta sugerida: ventana "¿Completamos tu pedido?" al abrir el carrito.
+  // Sale UNA vez por sesión, solo con sugerencias que aún no están en el pedido,
+  // y se cierra con la X, "Continuar", Esc o tocando fuera (nunca bloquea el resto).
+  // ---------------------------------------------------------------
+  var UPSELL_KEY = "fryUpsellShown";
+  var upsellOpen = false, accountPromptPending = false;
+  var UPSELL_DRINKS = [
+    { value: "Coca-Cola 2L", label: "Coca-Cola" },
+    { value: "Coca-Cola Zero 2L", label: "Coca-Cola Zero" },
+    { value: "Fanta Naranja 2L", label: "Fanta Naranja" },
+    { value: "Nestea 1,5L", label: "Nestea (1,5 L)" }
+  ];
+
+  function upsellSuggestions() {
+    var names = getCart().map(function (i) { return i.name; });
+    var has = function (re) { return names.some(function (n) { return re.test(n); }); };
+    var fiesta = has(/^Fiesta Mixta/);
+    var list = [];
+    if (!fiesta && !has(/^Patatas/)) list.push({ kind: "item", name: "Patatas Fritas — Mediana", price: "5,20€", title: "Patatas fritas medianas", text: "Para 2-3 personas, con nuestra sazón cajún picante." });
+    if (!has(/^FRY BITES/)) list.push({ kind: "item", name: "FRY BITES — 10 uds", price: "4,50€", title: "FRY BITES (10 uds)", text: "Bocaditos de pollo rebozado, crujientes y picantes, para picar." });
+    if (!fiesta && !has(/(Coca-Cola|Fanta|Nestea|Refresco)/i)) list.push({ kind: "drink", price: "3,50€", title: "Bebida de 2 L", text: "Para compartir. Elige tu sabor." });
+    return list;
+  }
+
+  function closeUpsell() {
+    var o = document.querySelector("[data-upsell-overlay]");
+    if (o) o.classList.remove("is-open");
+    upsellOpen = false;
+    if (accountPromptPending) { accountPromptPending = false; maybeShowAccountPrompt(); }
+  }
+
+  function maybeShowUpsell() {
+    if (!document.querySelector("[data-cart-items]")) return;       // solo en la página del carrito
+    if (!getCart().length) return;
+    try {
+      if (sessionStorage.getItem(UPSELL_KEY)) return;
+    } catch (e) { /* sin sessionStorage: se muestra igualmente */ }
+    var sugg = upsellSuggestions();
+    if (!sugg.length) return;
+    try { sessionStorage.setItem(UPSELL_KEY, "1"); } catch (e) {}
+
+    upsellOpen = true;
+    var overlay = document.createElement("div");
+    overlay.className = "upsell-overlay";
+    overlay.setAttribute("data-upsell-overlay", "");
+    overlay.setAttribute("role", "dialog");
+    overlay.setAttribute("aria-modal", "true");
+    var items = sugg.map(function (g, idx) {
+      var opts = g.kind === "drink"
+        ? '<select class="upsell-sauce-select" data-upsell-drink aria-label="Sabor de la bebida">' +
+            UPSELL_DRINKS.map(function (d) { return '<option value="' + escHTML(d.value) + '">' + escHTML(d.label) + "</option>"; }).join("") + "</select>"
+        : "";
+      return '<div class="upsell-item" data-upsell-idx="' + idx + '">' +
+        '<p class="upsell-item-text"><strong>' + escHTML(g.title) + '</strong> · <span class="upsell-item-price">' + escHTML(g.price) + "</span><br>" + escHTML(g.text) + "</p>" +
+        opts +
+        '<button type="button" class="upsell-btn upsell-btn-small" data-upsell-add>+ Añadir</button>' +
+      "</div>";
+    }).join("");
+    overlay.innerHTML =
+      '<div class="upsell-box">' +
+        '<button type="button" class="upsell-close" data-upsell-close aria-label="Cerrar">×</button>' +
+        '<span class="eyebrow upsell-eyebrow">Para completar tu pedido</span>' +
+        '<h2 class="upsell-title">¿Te apetece añadir algo?</h2>' +
+        items +
+        '<button type="button" class="upsell-dismiss" data-upsell-close>Continuar con mi pedido</button>' +
+      "</div>";
+    document.body.appendChild(overlay);
+
+    overlay.addEventListener("click", function (e) { if (e.target === overlay) closeUpsell(); });
+    var closers = overlay.querySelectorAll("[data-upsell-close]");
+    for (var i = 0; i < closers.length; i++) closers[i].addEventListener("click", closeUpsell);
+    document.addEventListener("keydown", function onKey(e) {
+      if (e.key === "Escape" && upsellOpen) { closeUpsell(); document.removeEventListener("keydown", onKey); }
+    });
+    var addBtns = overlay.querySelectorAll("[data-upsell-add]");
+    for (var k = 0; k < addBtns.length; k++) {
+      addBtns[k].addEventListener("click", function () {
+        var row = this.closest(".upsell-item");
+        var g = sugg[Number(row.getAttribute("data-upsell-idx"))];
+        var name = g.name;
+        if (g.kind === "drink") name = row.querySelector("[data-upsell-drink]").value;
+        addToCart(name, g.price);
+        this.textContent = "✓ Añadido";
+        this.disabled = true;
+        row.classList.add("is-added");
+      });
+    }
+    setTimeout(function () { overlay.classList.add("is-open"); }, 30);
+  }
+
   // Ventana que invita a crear una cuenta (solo a quien no ha iniciado sesión,
   // una vez por sesión del navegador).
   function maybeShowAccountPrompt() {
     if (!document.querySelector("[data-cart-items]")) return;
+    if (upsellOpen) { accountPromptPending = true; return; }       // primero las sugerencias; después, este aviso
     if (authUser || !getCart().length) return;
     try {
       if (sessionStorage.getItem(ACCOUNT_PROMPT_KEY)) return;
@@ -1347,6 +1439,7 @@
     renderCartPage();
     refreshHoursFromFirebase();
     refreshOffersFromFirebase();
+    maybeShowUpsell();
     initAuth();
     initRepeatOrderButton();
   }

@@ -1648,3 +1648,9 @@ body.rk-lock { overflow: hidden; }
 .rk-pos1 .rk-pts { font-size: 13px; }
 .rk-item-name { flex: 1; }
 .rk-item-pts { font-size: 13px; font-weight: 700; color: var(--cream-mute); white-space: nowrap; }
+
+/* Venta sugerida del carrito */
+.upsell-item.is-added .upsell-item-text strong { color: var(--red); }
+.upsell-item-price { color: var(--red); font-family: var(--display); }
+.upsell-item .upsell-sauce-select { width: 100%; margin: 4px 0 10px; }
+.upsell-btn[disabled] { opacity: .7; cursor: default; background: #2a2a2a; color: var(--cream); }
