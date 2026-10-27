@@ -6,6 +6,12 @@
 //   image:  (opcional) ruta a la foto que subió, p. ej. "assets/reviews/maria.jpg"
 var FRY_REVIEWS = [
   {
+    author: "Jonathan Ascanta",
+    stars: 5,
+    text: "Hicimos un pedido para toda la familia y no nos arrepentimos en absoluto! ¡Nuestros favoritos, los new fry bites y la…",
+    image: "assets/reviews/jonathan.jpg"
+  },
+  {
     author: "Carlos Tranguñon",
     stars: 5,
     text: "Experiencia de 10 todo llego en su sitio, a tiempo y caliente, con el picante justo y la salsa una locura. Sin duda algo fijo para todos los meses.",
@@ -21,10 +27,5 @@ var FRY_REVIEWS = [
     author: "Sindi Aguilar",
     stars: 5,
     text: "Soy amante del pollo en todas las formas que se puede hacer y este pollo superó todas mis expectativas súper crujiente por fuera y jugoso por dentro, exquisito y la atención espectacular. 100x100 recomendado!!"
-  },
-  {
-    author: "Aillen Coronel",
-    stars: 5,
-    text: "Sabor exquisito, el pollo estaba muyyy rico, pero lo que más me encantó fue la salsa Fry picante. 🥰 Repetiremos!!!!"
   }
 ];
