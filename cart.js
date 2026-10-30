@@ -1455,13 +1455,7 @@
     return today === FRY_PAUSE_DATE;
   }
   function showPauseBanner() {
-    if (!isPausedToday() || document.getElementById("fryPauseBanner")) return;
-    var b = document.createElement("div");
-    b.id = "fryPauseBanner";
-    b.setAttribute("role", "alert");
-    b.style.cssText = "position:sticky;top:0;z-index:99999;background:#e0201c;color:#000;font:700 15px/1.35 Inter,Arial,sans-serif;text-align:center;padding:12px 16px";
-    b.textContent = "Hoy no podemos aceptar más pedidos: nos hemos quedado sin producto. ¡Mañana volvemos con más FRY.! 🔥";
-    document.body.insertBefore(b, document.body.firstChild);
+    if (!isPausedToday()) return;
     // los botones de añadir se (re)dibujan solos: los bloqueamos con un clic en fase de captura y con estilo
     var addSel = "[data-qty-add], [data-qty-inc], [data-qty-plus], [data-add-to-cart], [data-add-to-cart-variant]";
     var st = document.createElement("style");
