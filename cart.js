@@ -1448,7 +1448,7 @@
   // --- pausa de pedidos por falta de producto ---
   // Cierra los pedidos SOLO el día indicado (fecha local, AAAA-MM-DD);
   // al día siguiente se desactiva sola. Para quitarla antes, vaciar la constante.
-  var FRY_PAUSE_DATE = "2026-10-30";
+  var FRY_PAUSE_DATE = "";
   function isPausedToday() {
     var d = new Date();
     var today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
