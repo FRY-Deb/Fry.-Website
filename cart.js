@@ -1339,6 +1339,9 @@
       if (blockReason === "contact") {
         blockMsgEl.textContent = getDeliveryMode() === "pickup" ? "Necesitamos tu nombre para preparar tu pedido." : "Necesitamos tu nombre y tu dirección para poder enviarte el pedido.";
         blockMsgEl.style.display = "block";
+      } else if (blockReason === "paused") {
+        blockMsgEl.textContent = "Hoy ya no aceptamos más pedidos: nos hemos quedado sin producto. ¡Mañana volvemos!";
+        blockMsgEl.style.display = "block";
       } else if (blockReason === "hours") {
         var hoursText = (typeof fryTodayHoursText === "function" && cachedHours) ? fryTodayHoursText(new Date(), cachedHours) : "";
         blockMsgEl.textContent = "Ahora mismo estamos cerrados. " + hoursText + " — puedes programar tu pedido para más tarde.";
@@ -1355,7 +1358,7 @@
       // Guardamos un href "de reserva" sin código, por si algo falla en
       // el proceso de guardado — el pedido nunca debe quedarse bloqueado.
       var fallbackMsg = buildWhatsAppMessage(null);
-      orderBtn.setAttribute("href", "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(fallbackMsg));
+      if (!isPausedToday()) orderBtn.setAttribute("href", "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(fallbackMsg));
 
       if (!orderBtn.dataset.clickBound) {
         orderBtn.dataset.clickBound = "1";
@@ -1394,6 +1397,7 @@
   }
 
   function getOrderBlockReason(shipping) {
+    if (isPausedToday()) return "paused";
     if (shipping.zone === "") return "zone";
     var name = getField(NAME_KEY);
     var street = getField(STREET_KEY);
@@ -1441,7 +1445,35 @@
     if (select) select.classList.remove("is-required");
   }
 
+  // --- pausa de pedidos por falta de producto ---
+  // Cierra los pedidos SOLO el día indicado (fecha local, AAAA-MM-DD);
+  // al día siguiente se desactiva sola. Para quitarla antes, vaciar la constante.
+  var FRY_PAUSE_DATE = "2026-10-30";
+  function isPausedToday() {
+    var d = new Date();
+    var today = d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+    return today === FRY_PAUSE_DATE;
+  }
+  function showPauseBanner() {
+    if (!isPausedToday() || document.getElementById("fryPauseBanner")) return;
+    var b = document.createElement("div");
+    b.id = "fryPauseBanner";
+    b.setAttribute("role", "alert");
+    b.style.cssText = "position:sticky;top:0;z-index:99999;background:#e0201c;color:#000;font:700 15px/1.35 Inter,Arial,sans-serif;text-align:center;padding:12px 16px";
+    b.textContent = "Hoy no podemos aceptar más pedidos: nos hemos quedado sin producto. ¡Mañana volvemos con más FRY.! 🔥";
+    document.body.insertBefore(b, document.body.firstChild);
+    // los botones de añadir se (re)dibujan solos: los bloqueamos con un clic en fase de captura y con estilo
+    var addSel = "[data-qty-add], [data-qty-inc], [data-qty-plus], [data-add-to-cart], [data-add-to-cart-variant]";
+    var st = document.createElement("style");
+    st.textContent = "[data-qty-add],[data-qty-inc],[data-qty-plus],[data-add-to-cart],[data-add-to-cart-variant]{opacity:.35!important;cursor:not-allowed!important}";
+    document.head.appendChild(st);
+    document.addEventListener("click", function (e) {
+      if (e.target.closest && e.target.closest(addSel)) { e.stopImmediatePropagation(); e.preventDefault(); }
+    }, true);
+  }
+
   function boot() {
+    showPauseBanner();
     bindAddButtons();
     initQtyControls();
     updateBadge();
