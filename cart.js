@@ -177,7 +177,15 @@
     var id = getRewardId();
     if (!id || !authUser || typeof FRY_REWARDS === "undefined" || !FRY_REWARDS[id]) return null;
     if (userBalance < FRY_REWARDS[id].points) return null;
+    if (FRY_REWARDS[id].type === "shipping" && !rewardShippingFits(FRY_REWARDS[id], parseShippingRaw(getShippingValue()))) return null;
     return { id: id, def: FRY_REWARDS[id] };
+  }
+
+  // ¿Vale esta recompensa de envío gratis para la zona elegida? (solo a domicilio)
+  function rewardShippingFits(def, shipping) {
+    if (getDeliveryMode() === "pickup" || shipping.zone === "") return false;
+    if (shipping.cost === null) return !!def.outside;
+    return def.zones.indexOf(shipping.zone) !== -1;
   }
 
   function currentRewardFreeItem() {
@@ -405,6 +413,9 @@
     if (act) {
       msg.textContent = "Canje aplicado: " + act.def.label + ". Se descontarán " + FRY_formatPoints(act.def.points) + " puntos cuando FRY. confirme el pedido.";
       msg.className = "cart-points-msg is-ok";
+    } else if (applied && FRY_REWARDS[applied] && FRY_REWARDS[applied].type === "shipping" && userBalance >= FRY_REWARDS[applied].points) {
+      msg.textContent = "Ese canje de envío no vale para la zona que has elegido (o para recogida). Cambia de zona o elige otra recompensa; no se te descontarán puntos.";
+      msg.className = "cart-points-msg is-error";
     }
     applyBtn.addEventListener("click", function () {
       if (!sel.value) { msg.textContent = "Elige primero una recompensa."; msg.className = "cart-points-msg is-error"; return; }
@@ -432,11 +443,28 @@
     }
   }
 
-  function parseShippingValue(value) {
+  function parseShippingRaw(value) {
     var parts = String(value).split("|");
     var zone = parts[0];
     var cost = parts[1] ? parseFloat(parts[1]) : null; // null = "fuera de zona, a consultar"
     return { zone: zone, cost: cost };
+  }
+
+  // Envío a pagar: si hay un canje de envío gratis que vale para la zona, se descuenta (hasta su tope).
+  // waived = euros de envío que cubre el canje; fuera de zona sigue "a consultar".
+  function parseShippingValue(value) {
+    var s = parseShippingRaw(value);
+    s.waived = 0;
+    var r = activeReward();
+    if (r && r.def.type === "shipping") {
+      if (s.cost !== null) {
+        s.waived = Math.min(s.cost, r.def.maxShipping);
+        s.cost = Math.round((s.cost - s.waived) * 100) / 100;
+      } else {
+        s.waived = r.def.maxShipping;
+      }
+    }
+    return s;
   }
 
   function getPaymentMethod() {
@@ -915,11 +943,11 @@
       lines.push("");
       lines.push("Total: " + formatPrice(subtotalConDescuento));
     } else if (shipping.cost === null) {
-      lines.push("Envío: a consultar con el local (fuera del radio habitual)");
+      lines.push("Envío: a consultar con el local (fuera del radio habitual)" + (shipping.waived > 0 ? ". Con tu canje se cubren hasta " + formatPrice(shipping.waived) + " del envío" : ""));
       lines.push("");
       lines.push("Total (sin envío): " + formatPrice(subtotalConDescuento));
     } else {
-      lines.push("Envío: " + formatPrice(shipping.cost));
+      lines.push("Envío: " + (shipping.waived > 0 ? "GRATIS por canje de puntos (se cubren " + formatPrice(shipping.waived) + ")" + (shipping.cost > 0 ? ", pagas la diferencia: " + formatPrice(shipping.cost) : "") : formatPrice(shipping.cost)));
       lines.push("");
       lines.push("Total: " + formatPrice(subtotalConDescuento + shipping.cost));
     }
@@ -958,8 +986,9 @@
       subtotal: round2(subtotal),
       offerCode: getAppliedOfferCode(),
       discountAmount: round2(discountAmount),
-      shippingZone: shipping.zone,
+      shippingZone: shipping.zone + (shipping.waived > 0 ? " (envío gratis)" : ""),
       shippingCost: shipping.cost === null ? null : round2(shipping.cost),
+      shippingWaived: round2(shipping.waived || 0),
       total: total === null ? null : round2(total),
       paymentMethod: getPaymentMethod(),
       scheduleType: getScheduleType(),
@@ -1317,7 +1346,7 @@
       if (shippingCostEl) shippingCostEl.textContent = "A consultar";
       if (shippingHintEl) shippingHintEl.style.display = "block";
     } else {
-      if (shippingCostEl) shippingCostEl.textContent = formatPrice(shipping.cost);
+      if (shippingCostEl) shippingCostEl.textContent = shipping.waived > 0 ? (shipping.cost > 0 ? formatPrice(shipping.cost) + " (canje: −" + formatPrice(shipping.waived) + ")" : "Gratis (canje de puntos)") : formatPrice(shipping.cost);
       if (shippingHintEl) shippingHintEl.style.display = "none";
     }
 

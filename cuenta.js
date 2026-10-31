@@ -174,7 +174,7 @@
         '<h3 class="upsell-title">Vas a canjear</h3>' +
         '<p class="upsell-item-text"><strong>' + esc(r.label) + '</strong><br>Se descontarán ' + FRY_formatPoints(r.points) + ' puntos cuando FRY. confirme tu pedido. ' +
         (cartHasItems ? "Se aplicará ahora a tu pedido." : "Se guardará y se aplicará en cuanto añadas productos al carrito.") +
-        ' Recuerda que el envío siempre se paga.</p>' +
+        (r.type === "shipping" ? ' Vale solo para las zonas indicadas y a domicilio; si el envío cuesta más que el tope, pagas la diferencia.</p>' : ' Recuerda que el envío siempre se paga.</p>') +
         '<button type="button" class="upsell-btn" data-rd-ok>Sí, canjear</button>' +
         '<a href="#" class="upsell-dismiss" data-rd-cancel>Cancelar</a>' +
       '</div>';

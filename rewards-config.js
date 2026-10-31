@@ -6,6 +6,10 @@ var FRY_POINTS_EXPIRY_MONTHS = 12;
 // Recompensas canjeables. "points" = puntos necesarios.
 //   freeitem: añade ese producto al pedido a 0€
 //   percent:  descuento sobre el subtotal de productos, con tope en euros
+//   shipping: envío gratis. Solo vale si la zona elegida está en "zones" (o es "fuera de zona" si outside=true);
+//             maxShipping = lo máximo de envío que cubre (si el envío cuesta más, el cliente paga la diferencia).
+//   Precio en puntos = coste medio del envío de esas zonas / 4 % de lo gastado, igual que el resto de recompensas
+//   (hamburguesa y refresco le cuestan a FRY. entre el 3,7 % y el 4 % de lo que el cliente gasta para ganar los puntos).
 var FRY_REWARDS = {
   patatas: {
     label: "Patatas pequeñas gratis",
@@ -25,6 +29,28 @@ var FRY_REWARDS = {
     type: "freeitem",
     itemName: "Hamburguesa FRY. (canje de puntos)"
   },
+  envio_villaverde: {
+    label: "Envío gratis a Villaverde",
+    points: 5000,
+    type: "shipping",
+    zones: ["Villaverde"],
+    maxShipping: 2
+  },
+  envio_cerca: {
+    label: "Envío gratis a Puente de Vallecas, Usera, Getafe o Villa de Vallecas",
+    points: 11000,
+    type: "shipping",
+    zones: ["Puente de Vallecas", "Usera", "Getafe", "Villa de Vallecas"],
+    maxShipping: 4.5
+  },
+  envio_lejos: {
+    label: "Envío gratis a Arganzuela, Carabanchel, Leganés o Moratalaz (o fuera de zona, hasta 5,40 €)",
+    points: 13500,
+    type: "shipping",
+    zones: ["Arganzuela", "Carabanchel", "Leganés", "Moratalaz"],
+    outside: true,
+    maxShipping: 5.4
+  },
   mitad: {
     label: "50% en tu pedido (máx. 10€ de descuento)",
     points: 15000,
@@ -35,7 +61,7 @@ var FRY_REWARDS = {
 };
 
 // Orden en que se muestran las recompensas.
-var FRY_REWARD_ORDER = ["patatas", "bebida", "hamburguesa", "mitad"];
+var FRY_REWARD_ORDER = ["patatas", "bebida", "envio_villaverde", "hamburguesa", "envio_cerca", "envio_lejos", "mitad"];
 
 // Calcula los puntos disponibles a partir del historial (log) de un cliente.
 // log: objeto { clave: { type: "earn"|"redeem"|"adjust", points, ts, ... } }
