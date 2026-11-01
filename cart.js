@@ -49,13 +49,16 @@
   // Precios vigentes. Un carrito guardado antes de un cambio de precio
   // conserva el precio viejo en el navegador del cliente; aquí se corrige.
   var CURRENT_PRICES = {
-    "Ración 2 Piezas": 11.5,
     "Ración 4 Tiras": 9.5,
-    "Hamburguesa FRY.": 9,
-    "Hamburguesa FRY. + filete extra": 11.5,
+    "Hamburguesa FRY.": 9.5,
+    "Hamburguesa FRY. + filete extra": 13.5,
+    "Patatas Especiales FRY. — Grande": 10.5,
+    "Coca-Cola 2L": 3.9,
+    "Coca-Cola Zero 2L": 3.9,
+    "Fanta Naranja 2L": 3.9,
     "FRY BITES — 10 uds": 4.5,
-    "FRY BITES — 20 uds": 7.5,
-    "FRY BITES — 30 uds": 10.5,
+    "FRY BITES — 20 uds": 8.5,
+    "FRY BITES — 30 uds": 11.9,
     "Tarrina de Salsa FRY.": 2.5,
     "Miel": 1.5,
     "Tarrina de Salsa Ranch FRY.": 2.5
@@ -72,6 +75,8 @@
     try {
       var raw = localStorage.getItem(CART_KEY);
       var cart = raw ? JSON.parse(raw) : [];
+      // las piezas ya no se venden: si estaban en un carrito guardado, se quitan
+      cart = cart.filter(function (i) { return i.name !== "Ración 2 Piezas"; });
       cart.forEach(function (i) {
         if (LEGACY_NAMES.hasOwnProperty(i.name)) i.name = LEGACY_NAMES[i.name];
         if (CURRENT_PRICES.hasOwnProperty(i.name)) i.price = CURRENT_PRICES[i.name];
@@ -257,17 +262,17 @@
     { value: "Patatas Fritas — Mediana", price: "5,20€", label: "Fritas medianas — 5,20€" },
     { value: "Patatas Fritas — Grande", price: "6,50€", label: "Fritas familiares — 6,50€" },
     { value: "Patatas Especiales FRY. — Pequeña", price: "5,20€", label: "Especiales pequeñas (con Ranch y miel) — 5,20€" },
-    { value: "Patatas Especiales FRY. — Grande", price: "10,00€", label: "Especiales familiares (con Ranch y miel) — 10,00€" }
+    { value: "Patatas Especiales FRY. — Grande", price: "10,50€", label: "Especiales familiares (con Ranch y miel) — 10,50€" }
   ];
   var UPSELL_BITES = [
     { value: "FRY BITES — 10 uds", price: "4,50€", label: "10 uds — 4,50€" },
-    { value: "FRY BITES — 20 uds", price: "7,50€", label: "20 uds + tarrina de Salsa FRY. — 7,50€" },
-    { value: "FRY BITES — 30 uds", price: "10,50€", label: "30 uds + tarrina de Salsa FRY. — 10,50€" }
+    { value: "FRY BITES — 20 uds", price: "8,50€", label: "20 uds + tarrina de Salsa FRY. — 8,50€" },
+    { value: "FRY BITES — 30 uds", price: "11,90€", label: "30 uds + tarrina de Salsa FRY. — 11,90€" }
   ];
   var UPSELL_DRINKS = [
-    { value: "Coca-Cola 2L", price: "3,50€", label: "Coca-Cola — 3,50€" },
-    { value: "Coca-Cola Zero 2L", price: "3,50€", label: "Coca-Cola Zero — 3,50€" },
-    { value: "Fanta Naranja 2L", price: "3,50€", label: "Fanta Naranja — 3,50€" },
+    { value: "Coca-Cola 2L", price: "3,90€", label: "Coca-Cola — 3,90€" },
+    { value: "Coca-Cola Zero 2L", price: "3,90€", label: "Coca-Cola Zero — 3,90€" },
+    { value: "Fanta Naranja 2L", price: "3,90€", label: "Fanta Naranja — 3,90€" },
     { value: "Nestea 1,5L", price: "3,50€", label: "Nestea (1,5 L) — 3,50€" }
   ];
 
