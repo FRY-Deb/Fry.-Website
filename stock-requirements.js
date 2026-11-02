@@ -2,16 +2,15 @@
 // Si un producto no aparece aquí, su disponibilidad se controla
 // a mano con el interruptor normal (soldOut) en el panel de admin.
 var FRY_STOCK_REQUIREMENTS = {
-  "Ración 2 Piezas": { piezas: 2 },
   "Ración 4 Tiras": { tiras: 4 },
   "Hamburguesa FRY.": { hamburguesas: 1 },
-  "Fiesta Mixta": { piezas: 4, hamburguesas: 4 }
+  // 4 hamburguesas + 2 raciones de tiras (8 tiras = la carne de 4 hamburguesas): 8 hamburguesas de carne en total
+  "Fiesta Mixta": { hamburguesas: 8 }
 };
 
 // Ingredientes base que se gestionan a mano como cantidad numérica en el
 // panel de admin.
 var FRY_STOCK_LABELS = {
-  piezas: "Piezas de pechuga",
   hamburguesas: "Carne (en hamburguesas)"
 };
 

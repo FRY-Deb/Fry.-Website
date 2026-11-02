@@ -80,6 +80,7 @@
       cart.forEach(function (i) {
         if (LEGACY_NAMES.hasOwnProperty(i.name)) i.name = LEGACY_NAMES[i.name];
         if (CURRENT_PRICES.hasOwnProperty(i.name)) i.price = CURRENT_PRICES[i.name];
+        if (/^Fiesta Mixta/.test(i.name)) i.price = 61.9;
       });
       return cart;
     } catch (e) {
