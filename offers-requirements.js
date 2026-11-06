@@ -17,7 +17,7 @@ var FRY_OFFERS = {
     items: ["Tarrina de Salsa FRY.", "Tarrina de Salsa Ranch FRY."]
   },
   "PATATAZO": {
-    label: "PATATAZO — patatas pequeñas gratis en pedidos de más de 18€ (miércoles y jueves)",
+    label: "PATATAZO — patatas pequeñas gratis en pedidos de más de 18 (miércoles y jueves)",
     scope: "freeitem",
     minSubtotal: 18,
     days: [3, 4], // 0 = domingo ... 3 = miércoles, 4 = jueves

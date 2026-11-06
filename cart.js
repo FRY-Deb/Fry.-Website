@@ -105,7 +105,7 @@
   }
 
   function formatPrice(num) {
-    return num.toFixed(2).replace(".", ",") + "€";
+    return num.toFixed(2).replace(".", ",");
   }
 
   function addToCart(name, priceStr) {
@@ -233,7 +233,7 @@
   }
 
 
-  // Puntos que daría el pedido actual (100 por cada 1€ pagado, sin envío).
+  // Puntos que daría el pedido actual (100 por cada 1 pagado, sin envío).
   function pointsForCurrentOrder() {
     var cart = getCart();
     var subtotal = cartTotal();
@@ -259,22 +259,22 @@
   var UPSELL_KEY = "fryUpsellShown";
   var upsellOpen = false, accountPromptPending = false;
   var UPSELL_POTATOES = [
-    { value: "Patatas Fritas — Pequeña", price: "3,40€", label: "Fritas pequeñas — 3,40€" },
-    { value: "Patatas Fritas — Mediana", price: "5,20€", label: "Fritas medianas — 5,20€" },
-    { value: "Patatas Fritas — Grande", price: "6,50€", label: "Fritas familiares — 6,50€" },
-    { value: "Patatas Especiales FRY. — Pequeña", price: "5,20€", label: "Especiales pequeñas (con Ranch y miel) — 5,20€" },
-    { value: "Patatas Especiales FRY. — Grande", price: "10,50€", label: "Especiales familiares (con Ranch y miel) — 10,50€" }
+    { value: "Patatas Fritas — Pequeña", price: "3,40", label: "Fritas pequeñas — 3,40" },
+    { value: "Patatas Fritas — Mediana", price: "5,20", label: "Fritas medianas — 5,20" },
+    { value: "Patatas Fritas — Grande", price: "6,50", label: "Fritas familiares — 6,50" },
+    { value: "Patatas Especiales FRY. — Pequeña", price: "5,20", label: "Especiales pequeñas (con Ranch y miel) — 5,20" },
+    { value: "Patatas Especiales FRY. — Grande", price: "10,50", label: "Especiales familiares (con Ranch y miel) — 10,50" }
   ];
   var UPSELL_BITES = [
-    { value: "FRY BITES — 10 uds", price: "4,50€", label: "10 uds — 4,50€" },
-    { value: "FRY BITES — 20 uds", price: "8,50€", label: "20 uds + tarrina de Salsa FRY. — 8,50€" },
-    { value: "FRY BITES — 30 uds", price: "11,90€", label: "30 uds + tarrina de Salsa FRY. — 11,90€" }
+    { value: "FRY BITES — 10 uds", price: "4,50", label: "10 uds — 4,50" },
+    { value: "FRY BITES — 20 uds", price: "8,50", label: "20 uds + tarrina de Salsa FRY. — 8,50" },
+    { value: "FRY BITES — 30 uds", price: "11,90", label: "30 uds + tarrina de Salsa FRY. — 11,90" }
   ];
   var UPSELL_DRINKS = [
-    { value: "Coca-Cola 2L", price: "3,90€", label: "Coca-Cola — 3,90€" },
-    { value: "Coca-Cola Zero 2L", price: "3,90€", label: "Coca-Cola Zero — 3,90€" },
-    { value: "Fanta Naranja 2L", price: "3,90€", label: "Fanta Naranja — 3,90€" },
-    { value: "Nestea 1,5L", price: "3,50€", label: "Nestea (1,5 L) — 3,50€" }
+    { value: "Coca-Cola 2L", price: "3,90", label: "Coca-Cola — 3,90" },
+    { value: "Coca-Cola Zero 2L", price: "3,90", label: "Coca-Cola Zero — 3,90" },
+    { value: "Fanta Naranja 2L", price: "3,90", label: "Fanta Naranja — 3,90" },
+    { value: "Nestea 1,5L", price: "3,50", label: "Nestea (1,5 L) — 3,50" }
   ];
 
   function upsellSuggestions() {
@@ -391,7 +391,7 @@
     if (typeof FRY_REWARDS === "undefined") { box.parentNode.style.display = "none"; return; }
     if (!authReady) { box.innerHTML = '<p class="cart-points-line">Cargando tus puntos…</p>'; return; }
     if (!authUser) {
-      box.innerHTML = '<p class="cart-points-line" style="margin:0;"><a href="cuenta.html">Inicia sesión o crea tu cuenta</a> y gana <strong>100 puntos por cada 1€</strong> que gastes.</p>';
+      box.innerHTML = '<p class="cart-points-line" style="margin:0;"><a href="cuenta.html">Inicia sesión o crea tu cuenta</a> y gana <strong>100 puntos por cada 1</strong> que gastes.</p>';
       return;
     }
     var applied = getRewardId();
@@ -546,7 +546,7 @@
     } catch (e) { /* sin ofertas en vivo: ninguna se considera activa */ }
   }
 
-  // Regalo (0€) del código aplicado, si está activo y se cumplen las condiciones.
+  // Regalo (0) del código aplicado, si está activo y se cumplen las condiciones.
   function currentFreeItem(subtotal) {
     var code = getAppliedOfferCode();
     if (!code || !isOfferActive(code) || typeof FRY_computeFreeItem !== "function") return null;
@@ -907,9 +907,9 @@
       lines.push("- " + i.qty + "x " + i.name + " (" + formatPrice(i.price) + ") = " + formatPrice(i.price * i.qty));
     });
     var freeItem = currentFreeItem(subtotal);
-    if (freeItem) lines.push("- 1x " + freeItem.name + " (0,00€) = 0,00€");
+    if (freeItem) lines.push("- 1x " + freeItem.name + " (0,00) = 0,00");
     var rewardFree = currentRewardFreeItem();
-    if (rewardFree) lines.push("- 1x " + rewardFree.name + " (0,00€) = 0,00€");
+    if (rewardFree) lines.push("- 1x " + rewardFree.name + " (0,00) = 0,00");
     lines.push("");
 
     if (orderNotes) {
@@ -1275,7 +1275,7 @@
           saveAppliedOfferCode(entered);
           if (discountMsgEl) {
             discountMsgEl.textContent = "¡Código aplicado! " + offer.label + "." +
-              (offer.scope === "freeitem" && !(cartTotal() > offer.minSubtotal) ? " Se añadirá cuando tu pedido supere los " + offer.minSubtotal + "€." : "");
+              (offer.scope === "freeitem" && !(cartTotal() > offer.minSubtotal) ? " Se añadirá cuando tu pedido supere los " + offer.minSubtotal + "." : "");
             discountMsgEl.className = "cart-discount-msg is-ok";
           }
         }
@@ -1343,7 +1343,7 @@
     var blockReason = getOrderBlockReason(shipping);
 
     if (mode === "pickup") {
-      if (shippingCostEl) shippingCostEl.textContent = "Recogida (0,00€)";
+      if (shippingCostEl) shippingCostEl.textContent = "Recogida (0,00)";
       if (shippingHintEl) shippingHintEl.style.display = "none";
     } else if (shipping.zone === "") {
       if (shippingCostEl) shippingCostEl.textContent = "—";

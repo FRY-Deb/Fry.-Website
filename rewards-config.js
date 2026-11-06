@@ -1,10 +1,10 @@
 // Sistema de puntos de FRY.
-// 100 puntos por cada 1€ gastado (sin contar el envío), tras descuentos.
+// 100 puntos por cada 1 gastado (sin contar el envío), tras descuentos.
 var FRY_POINTS_PER_EURO = 100;
 var FRY_POINTS_EXPIRY_MONTHS = 12;
 
 // Recompensas canjeables. "points" = puntos necesarios.
-//   freeitem: añade ese producto al pedido a 0€
+//   freeitem: añade ese producto al pedido a 0
 //   percent:  descuento sobre el subtotal de productos, con tope en euros
 //   shipping: envío gratis. Solo vale si la zona elegida está en "zones" (o es "fuera de zona" si outside=true);
 //             maxShipping = lo máximo de envío que cubre (si el envío cuesta más, el cliente paga la diferencia).
@@ -44,7 +44,7 @@ var FRY_REWARDS = {
     maxShipping: 4.5
   },
   envio_lejos: {
-    label: "Envío gratis a Arganzuela, Carabanchel, Leganés o Moratalaz (o fuera de zona, hasta 5,40 €)",
+    label: "Envío gratis a Arganzuela, Carabanchel, Leganés o Moratalaz (o fuera de zona, hasta 5,40)",
     points: 13500,
     type: "shipping",
     zones: ["Arganzuela", "Carabanchel", "Leganés", "Moratalaz"],
@@ -52,7 +52,7 @@ var FRY_REWARDS = {
     maxShipping: 5.4
   },
   mitad: {
-    label: "50% en tu pedido (máx. 10€ de descuento)",
+    label: "50% en tu pedido (máx. 10 de descuento)",
     points: 15000,
     type: "percent",
     rate: 0.5,
