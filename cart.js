@@ -62,7 +62,7 @@
     "Tarrina de Salsa FRY.": 2.5,
     "Miel": 1.5,
     "Tarrina de Salsa Ranch FRY.": 2.5,
-    "Maple Syrup Bourbon": 3
+    "Maple Syrup Bourbon": 4
   };
 
   // Nombres antiguos de la Ranch (30 g y 200 g) en carritos guardados antes del cambio.
