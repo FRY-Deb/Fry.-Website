@@ -61,7 +61,8 @@
     "FRY BITES — 30 uds": 11.9,
     "Tarrina de Salsa FRY.": 2.5,
     "Miel": 1.5,
-    "Tarrina de Salsa Ranch FRY.": 2.5
+    "Tarrina de Salsa Ranch FRY.": 2.5,
+    "Salsa Bourbon": 3
   };
 
   // Nombres antiguos de la Ranch (30 g y 200 g) en carritos guardados antes del cambio.

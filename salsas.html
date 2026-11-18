@@ -106,9 +106,18 @@
           </div>
         </div>
       </div>
-      <div class="menu-card is-comingsoon">
-        <span class="menu-card-name">Salsa Bourbon<span class="menu-card-soldout-badge menu-card-comingsoon-badge">Próximamente</span></span>
-        <span class="menu-card-desc">Glaseado dulce y ahumado con bourbon real, sirope de arce puro y un fondo de mostaza y soja.</span>
+      <div class="menu-card salsa-item" data-salsa="bourbon">
+        <button type="button" class="salsa-head" id="salsa-head-bourbon" aria-expanded="false" aria-controls="salsa-panel-bourbon">
+          <span class="menu-card-name">Salsa Bourbon</span>
+          <span class="menu-card-price">3,00</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-bourbon" role="region" aria-labelledby="salsa-head-bourbon">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Glaseado dulce y ahumado con bourbon real, sirope de arce puro y un fondo de mostaza y soja. Tarrina de ≈40 g.</span>
+            <div class="qty-control" data-qty-control data-name="Salsa Bourbon" data-price="3,00"></div>
+          </div>
+        </div>
       </div>
       <div class="menu-card is-comingsoon">
         <span class="menu-card-name">Salsa Sweet Chilli<span class="menu-card-soldout-badge menu-card-comingsoon-badge">Próximamente</span></span>
@@ -122,7 +131,7 @@
       </div>
     </div>
     <div class="product-allergens" style="max-width:74ch;">
-      <strong>Alérgenos e información:</strong> Huevo y mostaza (Salsa FRY y Ranch FRY), leche (Ranch FRY, Salsa FRY), pescado (salsa Worcestershire de la Salsa FRY). Miel sin alérgenos comunes, envasada junto a productos con lácteos.
+      <strong>Alérgenos e información:</strong> Huevo y mostaza (Salsa FRY y Ranch FRY), leche (Ranch FRY, Salsa FRY, Salsa Bourbon), soja y mostaza (Salsa Bourbon), pescado (salsa Worcestershire de la Salsa FRY). Miel sin alérgenos comunes, envasada junto a productos con lácteos.
       <br><span style="opacity:.75;">Información orientativa — <a href="alergenos.html" style="color:inherit; text-decoration:underline;">ver tabla de alérgenos</a> o confírmanos cualquier alergia o intolerancia antes de pedir por WhatsApp.</span>
     </div>
     </div>
@@ -166,12 +175,12 @@
 
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
-<script defer src="lib/manifest.js?v=20261123"></script>
+<script defer src="lib/manifest.js?v=20261124"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
 <script defer src="ranking.js?v=2"></script>
 <script defer src="salsas-page.js?v=20261061"></script>
 <script defer src="product-float.js?v=20261060"></script>
-<script defer src="cart.js?v=20261123"></script>
+<script defer src="cart.js?v=20261124"></script>
 </body>
 </html>
