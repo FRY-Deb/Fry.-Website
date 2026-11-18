@@ -29,28 +29,6 @@ var FRY_REWARDS = {
     type: "freeitem",
     itemName: "Hamburguesa FRY. (canje de puntos)"
   },
-  envio_villaverde: {
-    label: "Envío gratis a Villaverde",
-    points: 5000,
-    type: "shipping",
-    zones: ["Villaverde"],
-    maxShipping: 2
-  },
-  envio_cerca: {
-    label: "Envío gratis a Puente de Vallecas, Usera, Getafe o Villa de Vallecas",
-    points: 11000,
-    type: "shipping",
-    zones: ["Puente de Vallecas", "Usera", "Getafe", "Villa de Vallecas"],
-    maxShipping: 4.5
-  },
-  envio_lejos: {
-    label: "Envío gratis a Arganzuela, Carabanchel, Leganés o Moratalaz (o fuera de zona, hasta 5,40)",
-    points: 13500,
-    type: "shipping",
-    zones: ["Arganzuela", "Carabanchel", "Leganés", "Moratalaz"],
-    outside: true,
-    maxShipping: 5.4
-  },
   mitad: {
     label: "50% en tu pedido (máx. 10 de descuento)",
     points: 15000,
@@ -61,7 +39,7 @@ var FRY_REWARDS = {
 };
 
 // Orden en que se muestran las recompensas.
-var FRY_REWARD_ORDER = ["patatas", "bebida", "envio_villaverde", "hamburguesa", "envio_cerca", "envio_lejos", "mitad"];
+var FRY_REWARD_ORDER = ["patatas", "bebida", "hamburguesa", "mitad"];
 
 // Calcula los puntos disponibles a partir del historial (log) de un cliente.
 // log: objeto { clave: { type: "earn"|"redeem"|"adjust", points, ts, ... } }
