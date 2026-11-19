@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261112" />
+<link rel="stylesheet" href="styles.css?v=20261129" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -55,6 +55,19 @@
       <!-- Para poner el vídeo de una salsa: dentro de su <div class="salsa-slot"> cambia el <span> por
            <video class="salsa-slot-video" src="assets/videos/NOMBRE.mp4" muted loop playsinline preload="metadata"></video> -->
       <div class="salsa-stage" data-salsa-stage>
+      <div class="menu-card salsa-item" data-salsa="bourbon">
+        <button type="button" class="salsa-head" id="salsa-head-bourbon" aria-expanded="false" aria-controls="salsa-panel-bourbon">
+          <span class="menu-card-name">Maple Syrup Bourbon<span class="menu-card-new-badge">Nuevo</span></span>
+          <span class="menu-card-price">4,00</span>
+          <span class="salsa-chev" aria-hidden="true"></span>
+        </button>
+        <div class="salsa-panel" id="salsa-panel-bourbon" role="region" aria-labelledby="salsa-head-bourbon">
+          <div class="salsa-panel-inner">
+            <span class="menu-card-desc">Glaseado dulce y ahumado con bourbon, sirope de arce puro y un fondo de mostaza y soja. Tarrina de ≈100 g.</span>
+            <div class="qty-control" data-qty-control data-name="Maple Syrup Bourbon" data-price="4,00"></div>
+          </div>
+        </div>
+      </div>
         <div class="salsa-slot is-active" data-salsa="fry"><span class="salsa-slot-label">Salsa FRY.</span><span>Vídeo del proceso próximamente</span></div>
         <div class="salsa-slot" data-salsa="ranch"><span class="salsa-slot-label">Salsa Ranch FRY</span><span>Vídeo del proceso próximamente</span></div>
         <div class="salsa-slot" data-salsa="miel"><span class="salsa-slot-label">Miel</span><span>Vídeo del proceso próximamente</span></div>
@@ -103,19 +116,6 @@
           <div class="salsa-panel-inner">
             <span class="menu-card-desc">Miel líquida en tarrina de 30 g, para mojar o echar por encima.</span>
             <div class="qty-control" data-qty-control data-name="Miel" data-price="1,50"></div>
-          </div>
-        </div>
-      </div>
-      <div class="menu-card salsa-item" data-salsa="bourbon">
-        <button type="button" class="salsa-head" id="salsa-head-bourbon" aria-expanded="false" aria-controls="salsa-panel-bourbon">
-          <span class="menu-card-name">Maple Syrup Bourbon</span>
-          <span class="menu-card-price">4,00</span>
-          <span class="salsa-chev" aria-hidden="true"></span>
-        </button>
-        <div class="salsa-panel" id="salsa-panel-bourbon" role="region" aria-labelledby="salsa-head-bourbon">
-          <div class="salsa-panel-inner">
-            <span class="menu-card-desc">Glaseado dulce y ahumado con bourbon real, sirope de arce puro y un fondo de mostaza y soja. Tarrina de ≈100 g.</span>
-            <div class="qty-control" data-qty-control data-name="Maple Syrup Bourbon" data-price="4,00"></div>
           </div>
         </div>
       </div>
@@ -175,7 +175,7 @@
 
 <script defer src="lib/gsap.min.js"></script>
 <script defer src="lib/ScrollTrigger.min.js"></script>
-<script defer src="lib/manifest.js?v=20261126"></script>
+<script defer src="lib/manifest.js?v=20261129"></script>
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
 <script defer src="ranking.js?v=2"></script>
