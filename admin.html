@@ -88,6 +88,23 @@
     color: var(--red); border: 1px solid var(--red); padding: 6px 14px; margin-top: 12px;
   }
   .admin-order-delete:hover { background: var(--red); color: var(--cream); }
+
+  .ed-back { position: fixed; inset: 0; background: rgba(0,0,0,.78); z-index: 9999; display: none; overflow-y: auto; padding: 24px 12px; }
+  .ed-back.is-open { display: block; }
+  .ed-box { max-width: 600px; margin: 0 auto; background: var(--bg); border: 1px solid var(--line-strong); padding: 20px; }
+  .ed-box h3 { font-family: var(--display); font-size: 22px; text-transform: uppercase; margin-bottom: 4px; }
+  .ed-sub { font-size: 12px; color: var(--cream-mute); margin-bottom: 14px; }
+  .ed-sec { margin-top: 16px; font-size: 12px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--cream-mute); }
+  .ed-row { display: grid; grid-template-columns: 1fr 64px 84px 34px; gap: 6px; margin-top: 6px; align-items: center; }
+  .ed-box input, .ed-box select { width: 100%; background: var(--bg-2); color: var(--cream); border: 1px solid var(--line-strong); padding: 8px; font-family: var(--sans); font-size: 14px; }
+  .ed-x { color: var(--red); border: 1px solid var(--red); height: 36px; font-weight: 700; }
+  .ed-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+  .ed-grid label { font-size: 11px; color: var(--cream-mute); display: block; margin-bottom: 3px; }
+  .ed-totals { margin-top: 16px; padding: 12px; border: 1px solid var(--line-strong); font-size: 13px; line-height: 1.7; }
+  .ed-totals strong { font-family: var(--display); font-size: 22px; }
+  .ed-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+  .ed-save { background: var(--red); color: #fff; border: 1px solid var(--red); padding: 12px 18px; font-weight: 700; text-transform: uppercase; font-size: 13px; letter-spacing: .04em; }
+  .ed-note { font-size: 12px; color: var(--cream-mute); margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -601,6 +618,220 @@
     }).catch(function () { alert("No se ha podido deshacer."); });
   }
 
+
+  // ---------------------------------------------------------------
+  // Modificar un pedido (productos, descuento, canje, envío) y avisar al cliente por WhatsApp
+  // ---------------------------------------------------------------
+  function round2(n) { return Math.round(n * 100) / 100; }
+  function toNum(v) { var n = parseFloat(String(v == null ? "" : v).replace(",", ".")); return isFinite(n) ? n : 0; }
+  function priceTxt(n) { return round2(n).toFixed(2).replace(".", ","); }   // sin símbolo de euro (lo ve el cliente)
+  function normalizePhone(p) {
+    var s = String(p || "").replace(/[^\d]/g, "");
+    if (s.indexOf("00") === 0) s = s.slice(2);
+    if (s.length === 9) s = "34" + s;
+    return s;
+  }
+  function menuProducts() {
+    var out = [];
+    ((window.__BRAND__ && window.__BRAND__.categories) || []).forEach(function (c) {
+      (c.items || []).forEach(function (i) { if (i && i.name && i.price != null) out.push({ name: i.name, price: toNum(i.price) }); });
+    });
+    return out;
+  }
+
+  var editState = null;
+  var editBack = null;
+
+  function editCalc(st) {
+    var sub = 0;
+    st.items.forEach(function (i) { sub += toNum(i.price) * (Number(i.qty) || 0); });
+    sub = round2(sub);
+    var disc = round2(Math.min(Math.max(0, toNum(st.discount)), sub));
+    var rw = st.rewardId ? FRY_REWARDS[st.rewardId] : null;
+    var rwDisc = rw && rw.type === "percent" ? round2(Math.max(0, Math.min((sub - disc) * rw.rate, rw.maxDiscount))) : 0;
+    var payable = round2(Math.max(0, sub - disc - rwDisc));
+    var ship = Math.max(0, toNum(st.shipping));
+    return { subtotal: sub, discount: disc, rewardDiscount: rwDisc, payable: payable, shipping: ship, total: round2(payable + ship),
+             pts: st.uid ? Math.floor(payable * FRY_POINTS_PER_EURO) : 0 };
+  }
+
+  function editTotalsHtml(st) {
+    var c = editCalc(st);
+    var rw = st.rewardId ? FRY_REWARDS[st.rewardId] : null;
+    return "Subtotal: " + priceTxt(c.subtotal) + "€" +
+      (c.discount > 0 ? "<br>Descuento: -" + priceTxt(c.discount) + "€" : "") +
+      (rw ? "<br>Canje: " + esc(rw.label) + " (" + FRY_formatPoints(rw.points) + " pts)" + (c.rewardDiscount > 0 ? ": -" + priceTxt(c.rewardDiscount) + "€" : "") : "") +
+      "<br>Envío: " + priceTxt(c.shipping) + "€<br>Total: <strong>" + priceTxt(c.total) + "€</strong>" +
+      (st.uid ? "<br>Puntos que suma: <strong>" + FRY_formatPoints(c.pts) + "</strong>" : "<br>Pedido sin perfil: no suma puntos.");
+  }
+
+  function closeEdit() { editState = null; if (editBack) editBack.classList.remove("is-open"); }
+
+  function renderEdit() {
+    var st = editState; if (!st) return;
+    if (!editBack) {
+      editBack = document.createElement("div");
+      editBack.className = "ed-back";
+      document.body.appendChild(editBack);
+    }
+    var prods = menuProducts();
+    var rowsHtml = st.items.map(function (i, idx) {
+      return '<div class="ed-row"><input type="text" data-ed="name" data-i="' + idx + '" value="' + esc(i.name) + '">' +
+        '<input type="number" min="0" step="1" data-ed="qty" data-i="' + idx + '" value="' + esc(i.qty) + '">' +
+        '<input type="number" min="0" step="0.01" data-ed="price" data-i="' + idx + '" value="' + esc(i.price) + '">' +
+        '<button type="button" class="ed-x" data-ed-del="' + idx + '">✕</button></div>';
+    }).join("");
+    var optsHtml = '<option value="">+ Añadir producto…</option>' + prods.map(function (p, k) {
+      return '<option value="' + k + '">' + esc(p.name) + " — " + priceTxt(p.price) + "</option>";
+    }).join("") + '<option value="x">Otro (escribir nombre y precio)</option>';
+    var rwOpts = '<option value="">Sin canje</option>' + FRY_REWARD_ORDER.map(function (id) {
+      return '<option value="' + id + '"' + (st.rewardId === id ? " selected" : "") + ">" + esc(FRY_REWARDS[id].label) + " (" + FRY_formatPoints(FRY_REWARDS[id].points) + " pts)</option>";
+    }).join("");
+    editBack.innerHTML =
+      '<div class="ed-box"><h3>Modificar pedido #' + esc(st.code) + "</h3>" +
+      '<div class="ed-sub">' + esc(st.name || "Sin nombre") + (st.confirmed ? " · pedido ya confirmado: se ajustarán los puntos del cliente" : "") + "</div>" +
+      '<div class="ed-sec">Productos (nombre · cantidad · precio unidad)</div>' + rowsHtml +
+      '<div style="margin-top:8px;"><select data-ed-add>' + optsHtml + "</select></div>" +
+      '<div class="ed-sec">Descuento, canje y envío</div>' +
+      '<div class="ed-grid">' +
+        '<div><label>Descuento (importe)</label><input type="number" min="0" step="0.01" data-ed-f="discount" value="' + esc(st.discount) + '"></div>' +
+        '<div><label>Envío (importe)</label><input type="number" min="0" step="0.01" data-ed-f="shipping" value="' + esc(st.shipping) + '"></div>' +
+        (st.uid ? '<div style="grid-column:1/3;"><label>Canje de puntos</label><select data-ed-reward>' + rwOpts + "</select></div>" : "") +
+        '<div style="grid-column:1/3;"><label>Zona / nota de envío</label><input type="text" data-ed-f="zone" value="' + esc(st.zone) + '"></div>' +
+        '<div style="grid-column:1/3;"><label>Teléfono del cliente (para abrir su WhatsApp)</label><input type="tel" data-ed-f="phone" value="' + esc(st.phone) + '" placeholder="Ej. 612345678"></div>' +
+      "</div>" +
+      '<div class="ed-totals" data-ed-totals>' + editTotalsHtml(st) + "</div>" +
+      '<div class="ed-actions"><button type="button" class="ed-save" data-ed-save>Guardar y abrir WhatsApp</button><button type="button" class="admin-logout" data-ed-cancel>Cancelar</button></div>' +
+      '<div class="ed-note">Al guardar se actualiza el pedido y se abre WhatsApp al cliente con el mensaje ya escrito (tú le das a enviar).</div></div>';
+    editBack.classList.add("is-open");
+
+    function refreshTotals() { editBack.querySelector("[data-ed-totals]").innerHTML = editTotalsHtml(st); }
+    editBack.querySelectorAll("[data-ed]").forEach(function (el) {
+      el.addEventListener("input", function () {
+        var it = st.items[Number(el.dataset.i)]; if (!it) return;
+        it[el.dataset.ed] = el.value;
+        refreshTotals();
+      });
+    });
+    editBack.querySelectorAll("[data-ed-del]").forEach(function (el) {
+      el.addEventListener("click", function () {
+        var it = st.items[Number(el.dataset.edDel)];
+        if (it && st.rewardId && FRY_REWARDS[st.rewardId].type === "freeitem" && it.name === FRY_REWARDS[st.rewardId].itemName) st.rewardId = "";
+        st.items.splice(Number(el.dataset.edDel), 1); renderEdit();
+      });
+    });
+    editBack.querySelector("[data-ed-add]").addEventListener("change", function () {
+      var v = this.value; if (v === "") return;
+      if (v === "x") st.items.push({ name: "", qty: 1, price: 0 });
+      else {
+        var p = prods[Number(v)];
+        var ex = st.items.filter(function (i) { return i.name === p.name && toNum(i.price) === p.price; })[0];
+        if (ex) ex.qty = (Number(ex.qty) || 0) + 1; else st.items.push({ name: p.name, qty: 1, price: p.price });
+      }
+      renderEdit();
+    });
+    editBack.querySelectorAll("[data-ed-f]").forEach(function (el) {
+      el.addEventListener("input", function () { st[el.dataset.edF] = el.value; if (el.dataset.edF !== "zone" && el.dataset.edF !== "phone") refreshTotals(); });
+    });
+    var rwSel = editBack.querySelector("[data-ed-reward]");
+    if (rwSel) rwSel.addEventListener("change", function () {
+      // quitar el producto gratis del canje anterior y poner el del nuevo
+      var old = st.rewardId ? FRY_REWARDS[st.rewardId] : null;
+      if (old && old.type === "freeitem") st.items = st.items.filter(function (i) { return !(i.name === old.itemName && toNum(i.price) === 0); });
+      st.rewardId = rwSel.value;
+      var nw = st.rewardId ? FRY_REWARDS[st.rewardId] : null;
+      if (nw && nw.type === "freeitem") st.items.push({ name: nw.itemName, qty: 1, price: 0 });
+      renderEdit();
+    });
+    editBack.querySelector("[data-ed-cancel]").addEventListener("click", closeEdit);
+    editBack.querySelector("[data-ed-save]").addEventListener("click", saveEdit);
+  }
+
+  function openEdit(key) {
+    db.ref("orders/" + key).once("value").then(function (snap) {
+      var d = snap.val(); if (!d) return;
+      var phone = d.customerPhone || "";
+      var getPhone = d.uid && !phone
+        ? db.ref("users/" + d.uid + "/phone").once("value").then(function (s) { return s.val() || ""; }).catch(function () { return ""; })
+        : Promise.resolve(phone);
+      return getPhone.then(function (ph) {
+        editState = {
+          key: key, code: key.slice(-6).toUpperCase(), uid: d.uid || "", name: d.customerName || "",
+          confirmed: d.status === "confirmed",
+          items: (d.items || []).map(function (i) { return { name: i.name, qty: Number(i.qty) || 0, price: Number(i.price) || 0 }; }),
+          discount: Number(d.discountAmount) || 0, shipping: d.shippingCost == null ? 0 : Number(d.shippingCost) || 0,
+          rewardId: d.rewardId || "", zone: d.shippingZone || "", phone: ph || "", offerCode: d.offerCode || ""
+        };
+        renderEdit();
+      });
+    }).catch(function () { alert("No se ha podido abrir el pedido."); });
+  }
+
+  function saveEdit() {
+    var st = editState; if (!st) return;
+    var items = st.items.map(function (i) { return { name: String(i.name || "").trim(), qty: Math.round(Number(i.qty) || 0), price: round2(toNum(i.price)) }; })
+      .filter(function (i) { return i.name && i.qty > 0; });
+    if (!items.length) { alert("El pedido no puede quedarse sin productos."); return; }
+    var phone = normalizePhone(st.phone);
+    if (phone.length < 11) { alert("Pon el teléfono del cliente (9 cifras) para poder abrir su WhatsApp."); return; }
+    var c = editCalc({ items: items, discount: st.discount, shipping: st.shipping, rewardId: st.rewardId, uid: st.uid });
+    var key = st.key, code = st.code;
+    var rw = st.rewardId ? FRY_REWARDS[st.rewardId] : null;
+    var w = window.open("", "_blank");   // se abre ya (dentro del clic) para que el navegador no lo bloquee
+    function fail(msg) { if (w) w.close(); alert(msg); }
+    db.ref("orders/" + key).once("value").then(function (snap) {
+      var d = snap.val(); if (!d) { fail("El pedido ya no existe."); return; }
+      var confirmed = d.status === "confirmed";
+      var logP = confirmed && d.uid ? db.ref("points/" + d.uid + "/log").once("value").then(function (s) { return s.val() || {}; }) : Promise.resolve(null);
+      return logP.then(function (log) {
+        var up = {};
+        if (log) {
+          var oldRedeem = d.rewardId && FRY_REWARDS[d.rewardId] ? FRY_REWARDS[d.rewardId].points : 0;
+          var newRedeem = rw ? rw.points : 0;
+          var bal = FRY_computeBalance(log, Date.now(), d.customerEmail).available;
+          if (bal + oldRedeem < newRedeem) { fail("El cliente no tiene puntos suficientes para ese canje (tiene " + FRY_formatPoints(bal + oldRedeem) + " contando este pedido). No se ha guardado nada."); return; }
+          var earnOld = log[key] || {}, redOld = log[key + "_canje"] || {};
+          up["points/" + d.uid + "/log/" + key] = c.pts > 0 ? { type: "earn", points: c.pts, orderCode: code, ts: earnOld.ts || firebase.database.ServerValue.TIMESTAMP } : null;
+          up["points/" + d.uid + "/log/" + key + "_canje"] = rw ? { type: "redeem", points: rw.points, reward: rw.label, orderCode: code, ts: redOld.ts || firebase.database.ServerValue.TIMESTAMP } : null;
+        }
+        up["orders/" + key + "/items"] = items;
+        up["orders/" + key + "/subtotal"] = c.subtotal;
+        up["orders/" + key + "/discountAmount"] = c.discount;
+        up["orders/" + key + "/shippingCost"] = c.shipping;
+        up["orders/" + key + "/shippingZone"] = st.zone || d.shippingZone || "";
+        up["orders/" + key + "/total"] = c.total;
+        up["orders/" + key + "/customerPhone"] = phone;
+        up["orders/" + key + "/modifiedAt"] = firebase.database.ServerValue.TIMESTAMP;
+        if (d.uid) {
+          up["orders/" + key + "/pointsBase"] = c.payable;
+          up["orders/" + key + "/rewardId"] = rw ? st.rewardId : null;
+          up["orders/" + key + "/rewardLabel"] = rw ? rw.label : null;
+          up["orders/" + key + "/rewardPoints"] = rw ? rw.points : null;
+          up["orders/" + key + "/rewardDiscount"] = rw ? c.rewardDiscount : null;
+        }
+        return db.ref().update(up).then(function () {
+          var jobs = [sendOrderToSheet(key)];
+          if (log) jobs.push(syncRankingFor(d.uid).catch(function () {}));
+          return Promise.all(jobs);
+        }).then(function () {
+          var L = ["Hola" + (st.name ? " " + st.name : "") + "! Tras la incidencia que hemos recibido, esta es la modificación de tu pedido #" + code + ":", ""];
+          items.forEach(function (i) { L.push("- " + i.qty + "x " + i.name + " (" + priceTxt(i.price) + ") = " + priceTxt(i.price * i.qty)); });
+          L.push("");
+          L.push("Subtotal: " + priceTxt(c.subtotal));
+          if (c.discount > 0) L.push("Descuento" + (st.offerCode ? " (" + st.offerCode + ")" : "") + ": -" + priceTxt(c.discount));
+          if (rw) L.push("Canje de puntos: " + rw.label + (c.rewardDiscount > 0 ? ": -" + priceTxt(c.rewardDiscount) : ""));
+          L.push("Envío: " + priceTxt(c.shipping));
+          L.push("Total: " + priceTxt(c.total));
+          L.push("");
+          L.push("Si algo no te cuadra, dínoslo por aquí. Gracias por tu paciencia.");
+          var url = "https://wa.me/" + phone + "?text=" + encodeURIComponent(L.join("\n"));
+          closeEdit();
+          if (w) w.location.href = url; else window.location.href = url;
+        });
+      });
+    }).catch(function () { fail("No se ha podido guardar la modificación. Revisa la conexión y vuelve a intentarlo."); });
+  }
+
   function loadClients() {
     var el = document.getElementById("adminClients");
     if (!el) return;
@@ -783,6 +1014,7 @@
                 "Pago: " + esc(d.paymentMethod || "-") +
               "</div>" +
               prepHtml + profileHtml +
+              '<button type="button" class="admin-logout" data-order-edit="' + o.key + '" style="margin-top:12px;display:block;">✏️ Modificar pedido</button>' +
               '<button type="button" class="admin-order-delete" data-order-delete="' + o.key + '">Eliminar este pedido</button>' +
             "</div>" +
           "</div>"
@@ -815,6 +1047,10 @@
           e.stopPropagation();
           db.ref("orders/" + this.dataset.orderPrep + "/prep").set(this.dataset.prep);
         });
+      }
+      var editBtns = ordersEl.querySelectorAll("[data-order-edit]");
+      for (var eb = 0; eb < editBtns.length; eb++) {
+        editBtns[eb].addEventListener("click", function (e) { e.stopPropagation(); openEdit(this.dataset.orderEdit); });
       }
       var undoBtns = ordersEl.querySelectorAll("[data-order-undo]");
       for (var u = 0; u < undoBtns.length; u++) {
