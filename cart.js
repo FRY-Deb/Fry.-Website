@@ -476,7 +476,8 @@
 
   function getPaymentMethod() {
     try {
-      return localStorage.getItem(PAYMENT_KEY) || DEFAULT_PAYMENT;
+      var v = localStorage.getItem(PAYMENT_KEY);
+      return (v === "Efectivo" || v === "Bizum") ? v : DEFAULT_PAYMENT;   // solo Efectivo y Bizum (si quedaba guardado Tarjeta, vuelve al valor por defecto)
     } catch (e) {
       return DEFAULT_PAYMENT;
     }
