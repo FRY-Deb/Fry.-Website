@@ -62,7 +62,8 @@
     "Tarrina de Salsa FRY.": 2.5,
     "Miel": 1.5,
     "Tarrina de Salsa Ranch FRY.": 2.5,
-    "Maple Syrup Bourbon": 4
+    "Maple Syrup Bourbon": 4,
+    "Combo Black": 36   // solo en Black Friday (ver blackfriday-config.js)
   };
 
   // Nombres antiguos de la Ranch (30 g y 200 g) en carritos guardados antes del cambio.
@@ -78,10 +79,13 @@
       var cart = raw ? JSON.parse(raw) : [];
       // las piezas ya no se venden: si estaban en un carrito guardado, se quitan
       cart = cart.filter(function (i) { return i.name !== "Ración 2 Piezas"; });
+      // el Combo Black solo se vende en Black Friday: pasada la fecha se quita de carritos guardados
+      var bfOn = !window.FRY_BF || window.FRY_BF.active();
+      cart = cart.filter(function (i) { return bfOn || i.name !== "Combo Black"; });
       cart.forEach(function (i) {
         if (LEGACY_NAMES.hasOwnProperty(i.name)) i.name = LEGACY_NAMES[i.name];
         if (CURRENT_PRICES.hasOwnProperty(i.name)) i.price = CURRENT_PRICES[i.name];
-        if (/^Fiesta Mixta/.test(i.name)) i.price = 61.9;
+        if (/^Fiesta Mixta/.test(i.name)) i.price = window.FRY_BF ? window.FRY_BF.fiesta() : 61.9;
       });
       return cart;
     } catch (e) {
@@ -241,7 +245,7 @@
     var codeDiscount = currentDiscountAmount(cart, subtotal);
     var rewardDiscount = currentRewardDiscount(subtotal - codeDiscount);
     var payable = Math.max(0, subtotal - codeDiscount - rewardDiscount);
-    var perEuro = typeof FRY_POINTS_PER_EURO !== "undefined" ? FRY_POINTS_PER_EURO : 100;
+    var perEuro = typeof FRY_pointsPerEuro === "function" ? FRY_pointsPerEuro(Date.now()) : (typeof FRY_POINTS_PER_EURO !== "undefined" ? FRY_POINTS_PER_EURO : 100);
     return Math.floor(payable * perEuro);
   }
 
@@ -392,7 +396,7 @@
     if (typeof FRY_REWARDS === "undefined") { box.parentNode.style.display = "none"; return; }
     if (!authReady) { box.innerHTML = '<p class="cart-points-line">Cargando tus puntos…</p>'; return; }
     if (!authUser) {
-      box.innerHTML = '<p class="cart-points-line" style="margin:0;"><a href="cuenta.html">Inicia sesión o crea tu cuenta</a> y gana <strong>100 puntos por cada 1</strong> que gastes.</p>';
+      box.innerHTML = '<p class="cart-points-line" style="margin:0;"><a href="cuenta.html">Inicia sesión o crea tu cuenta</a> y gana <strong>' + (window.FRY_BF && window.FRY_BF.active() ? '200 puntos por cada 1 (doble de puntos Black Friday)' : '100 puntos por cada 1') + '</strong> que gastes.</p>';
       return;
     }
     var applied = getRewardId();
@@ -806,6 +810,7 @@
 
     var baseName = container.dataset.baseName;
     var basePrice = parseFloat(container.dataset.basePrice);
+    if (/^Fiesta Mixta/.test(baseName) && window.FRY_BF) basePrice = window.FRY_BF.fiesta();
 
     function current() {
       var namePart = baseName;

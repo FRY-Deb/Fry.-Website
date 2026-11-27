@@ -1673,3 +1673,20 @@ body.rk-lock { overflow: hidden; }
   vertical-align: middle;
   -webkit-text-fill-color: #fff;
 }
+
+/* --- Black Friday (se muestra solo del 27 al 29 de noviembre, ver blackfriday-config.js) --- */
+[data-bf-show][hidden], [data-bf-hide][hidden] { display: none !important; }
+.bf-old {
+  font-family: var(--display);
+  font-size: .6em;
+  color: var(--cream-mute);
+  text-decoration: line-through;
+  text-decoration-thickness: 2px;
+  text-decoration-color: var(--red);
+  margin-right: 10px;
+  white-space: nowrap;
+}
+.bf-note { color: var(--cream); }
+.bf-lead { margin: -8px 0 28px; font-size: 16px; color: var(--cream-2); max-width: 60ch; }
+.bf-block .menu-card-new-badge { font-size: 10px; margin-left: 8px; }
+.home-bf { padding-bottom: 24px; }

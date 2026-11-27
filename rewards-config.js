@@ -3,6 +3,14 @@
 var FRY_POINTS_PER_EURO = 100;
 var FRY_POINTS_EXPIRY_MONTHS = 12;
 
+// Puntos por cada 1 en el momento "ts" (marca de tiempo del pedido).
+// En Black Friday (ver blackfriday-config.js) cuentan el doble; fuera de esas fechas, 100.
+function FRY_pointsPerEuro(ts) {
+  var perEuro = FRY_POINTS_PER_EURO;
+  if (window.FRY_BF && window.FRY_BF.inRange(ts)) perEuro = perEuro * window.FRY_BF.pointsMultiplier;
+  return perEuro;
+}
+
 // Recompensas canjeables. "points" = puntos necesarios.
 //   freeitem: añade ese producto al pedido a 0
 //   percent:  descuento sobre el subtotal de productos, con tope en euros

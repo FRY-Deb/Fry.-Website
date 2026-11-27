@@ -190,9 +190,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="lib/manifest.js?v=20261129"></script>
-<script src="stock-requirements.js?v=20261122"></script>
+<script src="stock-requirements.js?v=20261127"></script>
 <script src="offers-requirements.js?v=20261123"></script>
-<script src="rewards-config.js?v=20261127"></script>
+<script src="blackfriday-config.js?v=20261127"></script>
+<script src="rewards-config.js?v=20261127b"></script>
 <script src="hours-config.js"></script>
 <script src="sheets-config.js?v=2"></script>
 <script>
@@ -588,7 +589,7 @@
             return;
           }
         }
-        var pts = Math.floor((Number(d.pointsBase) || 0) * FRY_POINTS_PER_EURO);
+        var pts = Math.floor((Number(d.pointsBase) || 0) * FRY_pointsPerEuro(d.timestamp));
         var code = key.slice(-6).toUpperCase();
         var T = firebase.database.ServerValue.TIMESTAMP;
         var up = {};
@@ -652,7 +653,7 @@
     var payable = round2(Math.max(0, sub - disc - rwDisc));
     var ship = Math.max(0, toNum(st.shipping));
     return { subtotal: sub, discount: disc, rewardDiscount: rwDisc, payable: payable, shipping: ship, total: round2(payable + ship),
-             pts: st.uid ? Math.floor(payable * FRY_POINTS_PER_EURO) : 0 };
+             pts: st.uid ? Math.floor(payable * FRY_pointsPerEuro(st.ts)) : 0 };
   }
 
   function editTotalsHtml(st) {
@@ -760,7 +761,7 @@
           confirmed: d.status === "confirmed",
           items: (d.items || []).map(function (i) { return { name: i.name, qty: Number(i.qty) || 0, price: Number(i.price) || 0 }; }),
           discount: Number(d.discountAmount) || 0, shipping: d.shippingCost == null ? 0 : Number(d.shippingCost) || 0,
-          rewardId: d.rewardId || "", zone: d.shippingZone || "", phone: ph || "", offerCode: d.offerCode || ""
+          rewardId: d.rewardId || "", zone: d.shippingZone || "", phone: ph || "", offerCode: d.offerCode || "", ts: Number(d.timestamp) || 0
         };
         renderEdit();
       });
@@ -977,7 +978,7 @@
         var prep = d.prep || "nuevo";
         var prepHtml = confirmed ? "" : '<div class="admin-order-meta" style="margin-top:10px;">Estado: <strong>' + ({ nuevo: "Nuevo", preparando: "Preparando", encamino: "En camino" }[prep] || "Nuevo") + "</strong></div><div style=\"display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;\">" +
           [["preparando", "👨‍🍳 Preparando"], ["encamino", "🛵 En camino"]].map(function (p) { return '<button type="button" class="admin-logout" data-order-prep="' + o.key + '" data-prep="' + p[0] + '">' + p[1] + "</button>"; }).join("") + "</div>";
-        var pts = d.uid ? Math.floor((Number(d.pointsBase) || 0) * FRY_POINTS_PER_EURO) : 0;
+        var pts = d.uid ? Math.floor((Number(d.pointsBase) || 0) * FRY_pointsPerEuro(d.timestamp)) : 0;
         var profileHtml;
         if (d.uid) {
           profileHtml =

@@ -124,7 +124,7 @@
     document.getElementById("accBalance").textContent = FRY_formatPoints(bal.available);
     document.getElementById("accExpiry").textContent = bal.nextExpiry && bal.available > 0
       ? "Los primeros puntos caducan el " + fmtDate(bal.nextExpiry) + "."
-      : "100 puntos por cada 1 gastado.";
+      : (window.FRY_BF && window.FRY_BF.active() ? "Black Friday: 200 puntos por cada 1 gastado hasta el domingo." : "100 puntos por cada 1 gastado.");
 
     document.getElementById("accRewards").innerHTML = FRY_REWARD_ORDER.map(function (id) {
       var r = FRY_REWARDS[id];

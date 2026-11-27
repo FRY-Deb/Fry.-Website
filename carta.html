@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261129" />
+<link rel="stylesheet" href="styles.css?v=20261129b" />
 </head>
 <body>
 <a class="skip-link" href="#main">Saltar al contenido</a>
@@ -54,6 +54,7 @@
   <section class="menu-section container">
     <div class="menu-layout">
       <nav class="menu-sidebar" aria-label="Ir a sección de la carta">
+        <a href="#blackfriday" data-bf-show hidden>Black Friday</a>
         <a href="#novedad">Novedad</a>
         <a href="#combos">Combos</a>
         <a href="#tiras">Tiras</a>
@@ -64,6 +65,35 @@
         <a href="#bebidas">Bebidas</a>
       </nav>
       <div data-menu-categories class="menu-content">
+
+      <div class="menu-category bf-block" id="blackfriday" data-bf-show hidden>
+        <div class="menu-category-head"><h3 class="menu-category-label">Black Friday</h3></div>
+        <p class="menu-category-note bf-note"><strong>Del viernes 27 al domingo 29 de noviembre.</strong> Doble de puntos en todos tus pedidos con la sesión iniciada: <strong>200 puntos por cada 1</strong> que gastes, se suman solos al confirmar el pedido.</p>
+        <p class="menu-category-allergens">Alérgenos: gluten (rebozado y pan), huevo, leche, mostaza y pescado (Salsa FRY). Información orientativa — <a href="alergenos.html">ver tabla de alérgenos</a> o confírmanos cualquier alergia por WhatsApp.</p>
+        <div>
+          <div class="menu-card">
+            <span class="menu-card-name">Fiesta Mixta<span class="menu-card-new-badge">Black Friday</span></span>
+            <span class="menu-card-price"><s class="bf-old">61,90</s>54,90</span>
+            <span class="menu-card-desc">2 raciones de tiras + 4 hamburguesas FRY. + 2 patatas medianas + 1 bebida de 2L + 6 tarrinas de Salsa FRY. (≈100 g) incluidas.</span>
+
+            <div class="menu-card-sauce-variant">
+              <select class="menu-card-select" data-drink-flavor-select aria-label="Sabor de la bebida de 2L incluida">
+                <option value="Coca-Cola">Bebida: Coca-Cola</option>
+                <option value="Coca-Cola Zero">Bebida: Coca-Cola Zero</option>
+                <option value="Fanta Naranja">Bebida: Fanta Naranja</option>
+                <option value="Nestea 1,5L">Bebida: Nestea (1,5L)</option>
+              </select>
+              <div class="qty-control" data-qty-control-sauce data-base-name="Fiesta Mixta" data-base-price="54.90"></div>
+            </div>
+          </div>
+          <div class="menu-card">
+            <span class="menu-card-name">Combo Black<span class="menu-card-new-badge">Black Friday</span></span>
+            <span class="menu-card-price">36,00</span>
+            <span class="menu-card-desc">2 hamburguesas FRY. + 1 ración de tiras + FRY BITES 20 uds + patatas medianas. Solo hasta el domingo 29.</span>
+            <div class="qty-control" data-qty-control data-name="Combo Black" data-price="36,00"></div>
+          </div>
+        </div>
+      </div>
 
       <div class="menu-category" id="novedad" data-reveal>
         <div class="menu-category-head"><h3 class="menu-category-label">Novedad</h3></div>
@@ -81,7 +111,7 @@
         <div class="menu-category-head"><h3 class="menu-category-label">Combos Mixtos</h3></div>
         <p class="menu-category-allergens">Alérgenos: gluten (rebozado y pan), huevo, leche, mostaza y pescado (Salsa FRY). Información orientativa — <a href="alergenos.html">ver tabla de alérgenos</a> o confírmanos cualquier alergia por WhatsApp.</p>
         <div>
-          <div class="menu-card">
+          <div class="menu-card" data-bf-hide>
             <span class="menu-card-name">Fiesta Mixta</span>
             <span class="menu-card-price">61,90</span>
             <span class="menu-card-desc">2 raciones de tiras + 4 hamburguesas FRY. + 2 patatas medianas + 1 bebida de 2L + 6 tarrinas de Salsa FRY. (≈100 g) incluidas.</span>
@@ -312,11 +342,12 @@
 <script defer src="lib/cookie-consent.js?v=20260912"></script>
 <script defer src="main.js?v=20261027"></script>
 <script defer src="ranking.js?v=2"></script>
-<script defer src="cart.js?v=20261130"></script>
+<script defer src="blackfriday-config.js?v=20261127"></script>
+<script defer src="cart.js?v=20261130b"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script defer src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script defer src="firebase-config.js"></script>
-<script defer src="stock-requirements.js?v=20261122"></script>
+<script defer src="stock-requirements.js?v=20261127"></script>
 <script defer src="soldout.js?v=20261025"></script>
 </body>
 </html>

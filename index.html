@@ -8,7 +8,7 @@
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 <link rel="preload" as="font" href="assets/fonts/Anton-Regular.woff2" type="font/woff2" crossorigin />
 <link rel="preload" as="font" href="assets/fonts/Inter-Variable.woff2" type="font/woff2" crossorigin />
-<link rel="stylesheet" href="styles.css?v=20261129" />
+<link rel="stylesheet" href="styles.css?v=20261129b" />
 </head>
 <body>
 <!-- =========================================================
@@ -98,6 +98,26 @@
   </section>
 
 
+  <section class="home-bf container" data-bf-show hidden>
+    <div class="section-header" style="padding-top:0;">
+      <span class="eyebrow">27 al 29 de noviembre</span>
+      <h2 class="section-title">Black Friday</h2>
+    </div>
+    <p class="bf-lead"><strong>Doble de puntos</strong> en todos tus pedidos con la sesión iniciada: <strong>200 puntos por cada 1</strong> que gastes, automático, hasta el domingo.</p>
+    <div class="combos-grid">
+      <a class="combo-card" href="carta.html#blackfriday">
+        <span class="combo-card-name">Fiesta Mixta<span class="menu-card-new-badge">Black Friday</span></span>
+        <span class="combo-card-price"><s class="bf-old">61,90</s>54,90</span>
+        <span class="combo-card-tag">2 raciones de tiras + 4 hamburguesas + 2 patatas medianas + bebida de 2L + 6 tarrinas de Salsa FRY.</span>
+      </a>
+      <a class="combo-card" href="carta.html#blackfriday">
+        <span class="combo-card-name">Combo Black<span class="menu-card-new-badge">Black Friday</span></span>
+        <span class="combo-card-price">36,00</span>
+        <span class="combo-card-tag">2 hamburguesas FRY. + 1 ración de tiras + FRY BITES 20 uds + patatas medianas.</span>
+      </a>
+    </div>
+  </section>
+
   <section class="home-salsas container">
     <div class="section-header" style="padding-top:0;">
       <span class="eyebrow">Para mojar</span>
@@ -140,7 +160,7 @@
       <h2 class="section-title">Combos</h2>
     </div>
     <div class="combos-grid" data-combos>
-      <a class="combo-card" href="carta.html" data-reveal>
+      <a class="combo-card" href="carta.html" data-reveal data-bf-hide>
         <span class="combo-card-name">Fiesta Mixta</span>
         <span class="combo-card-price">61,90</span>
         <span class="combo-card-tag">2 raciones de tiras + 4 hamburguesas + 2 patatas medianas + bebida de 2L + 6 tarrinas de Salsa FRY.</span>
@@ -217,7 +237,8 @@
 <script defer src="reviews.js"></script>
 <script defer src="main.js?v=20261027"></script>
 <script defer src="ranking.js?v=2"></script>
-<script defer src="cart.js?v=20261130"></script>
+<script defer src="blackfriday-config.js?v=20261127"></script>
+<script defer src="cart.js?v=20261130b"></script>
 <script defer src="intro.js?v=20260831"></script>
 </body>
 </html>

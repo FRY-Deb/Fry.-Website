@@ -5,7 +5,9 @@ var FRY_STOCK_REQUIREMENTS = {
   "Ración 4 Tiras": { tiras: 4 },
   "Hamburguesa FRY.": { hamburguesas: 1 },
   // 4 hamburguesas + 2 raciones de tiras (8 tiras = la carne de 4 hamburguesas): 8 hamburguesas de carne en total
-  "Fiesta Mixta": { hamburguesas: 8 }
+  "Fiesta Mixta": { hamburguesas: 8 },
+  // Combo Black (Black Friday): 2 hamburguesas + 1 ración de tiras (4 tiras = la carne de 2 hamburguesas) = 4 de carne
+  "Combo Black": { hamburguesas: 4 }
 };
 
 // Ingredientes base que se gestionan a mano como cantidad numérica en el
